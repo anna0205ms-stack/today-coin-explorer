@@ -7,6 +7,8 @@ on:
     paths:
       - ".github/workflows/scan-and-pages.yml"
       - "scanner/schedule_guard.py"
+      - "scanner/bitcoin_regime.py"
+      - "scanner/unified_dashboard.py"
   schedule:
     # GitHub 예약 지연·누락에 대비해 각 KST 4시간봉 마감 뒤 4회 재시도한다.
     # UTC 기준이며 실제 KST 실행 시각은 01/05/09/13/17/21시의 03·13·23·33분이다.
@@ -34,10 +36,11 @@ jobs:
       - name: 이번 4시간봉 실행 여부 확인
         id: guard
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            python scanner/schedule_guard.py check --force >> "$GITHUB_OUTPUT"
-          else
+          if [ "${{ github.event_name }}" = "schedule" ]; then
             python scanner/schedule_guard.py check >> "$GITHUB_OUTPUT"
+          else
+            # 코드 수정 검증과 수동 실행은 이미 완료된 슬롯도 다시 생성한다.
+            python scanner/schedule_guard.py check --force >> "$GITHUB_OUTPUT"
           fi
 
       - name: 이미 완료된 봉 안내
