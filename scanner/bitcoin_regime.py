@@ -50,6 +50,13 @@ def chart_rows(rows: list[dict], count: int) -> list[list]:
     return [[x["candle_date_time_kst"], x["opening_price"], x["high_price"], x["low_price"], x["trade_price"], x["candle_acc_trade_volume"]] for x in rows[-count:]]
 
 
+def candle_close_kst(candle: dict, unit: str) -> str:
+    """업비트가 주는 봉 시작시각을 실제 봉 마감시각으로 바꾼다."""
+    opened_at = datetime.fromisoformat(candle["candle_date_time_kst"])
+    duration = timedelta(days=1) if unit == "day" else timedelta(hours=4)
+    return (opened_at + duration).isoformat()
+
+
 def classify(position: float, breakout_confirmed: bool, failed_breakout: bool) -> tuple[str, dict]:
     if failed_breakout or position < 0:
         return ("박스 하단 이탈" if position < 0 else "상단 돌파 실패", {"mode": "신규중단", "size_pct": 0, "new_entry": "중단", "existing": "단타 정리·현금 비중 확대"})
@@ -102,7 +109,7 @@ def analyze(daily: list[dict], four: list[dict]) -> dict:
     return {
         "generated_at": datetime.now(KST).isoformat(timespec="minutes"),
         "market": "KRW-BTC",
-        "basis": {"daily_end": daily[-1]["candle_date_time_kst"], "four_hour_end": four[-1]["candle_date_time_kst"]},
+        "basis": {"daily_end": candle_close_kst(daily[-1], "day"), "four_hour_end": candle_close_kst(four[-1], "4h")},
         "price": price,
         "box": {"lookback_days": 30, "low": round(low), "high": round(high), "center": round(center), "position_pct": round(position * 100, 1), "buy_zone": [round(low), round(low + span * .15)], "sell_zone": [round(low + span * .70), round(high)]},
         "daily_state": state,
