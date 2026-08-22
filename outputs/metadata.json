@@ -1,0 +1,114 @@
+{
+  "status": "success",
+  "strategy_version": "upbit-buy-center-sell-flow-v5-learning-risk-control",
+  "generated_at_kst": "2026-08-22T16:21:03+09:00",
+  "market_date": "2026-08-21",
+  "universe_count": 70,
+  "ohlcv_success_count": 50,
+  "candidate_count": 12,
+  "minimum_target_met": false,
+  "tier_counts": {
+    "3순위": 5,
+    "4순위": 4,
+    "2순위": 3
+  },
+  "selection_mode_counts": {
+    "관찰보충": 8,
+    "엄격": 2,
+    "완화": 2
+  },
+  "flow_counts": {
+    "상승": 4,
+    "하단 회복": 4,
+    "하락": 2,
+    "중립·공방": 1,
+    "강한 상승": 1
+  },
+  "execution_gate_counts": {
+    "관망": 12
+  },
+  "failed_tickers_count": 20,
+  "failed_tickers": [
+    "KRW-GRVT",
+    "KRW-RE",
+    "KRW-PROM",
+    "KRW-PRL",
+    "KRW-DOS",
+    "KRW-CAP",
+    "KRW-SLX",
+    "KRW-HOME",
+    "KRW-EDGE",
+    "KRW-O",
+    "KRW-TAO",
+    "KRW-ZAMA",
+    "KRW-CC",
+    "KRW-EUL",
+    "KRW-ARX",
+    "KRW-CHIP",
+    "KRW-UP2",
+    "KRW-CFG",
+    "KRW-QUID",
+    "KRW-BSB"
+  ],
+  "intraday_failed_count": 0,
+  "intraday_failed": [],
+  "rules": {
+    "quote_currency": "KRW",
+    "min_24h_trade_amount": 3000000000.0,
+    "exclude_warning": true,
+    "exclude_caution": true,
+    "lookback_daily_candles": 400,
+    "strict_surge_pct": 40,
+    "analysis_timeframe": "1D",
+    "signal_price_source": "latest_completed_daily_close",
+    "strict_min_box_days": 15,
+    "strict_max_box_width_pct": 60,
+    "strict_max_retrace_pct": 80,
+    "min_output_count": 20,
+    "target_count": 30,
+    "buy_zone_pct": [
+      0,
+      15
+    ],
+    "deep_buy_zone_pct": [
+      0,
+      5
+    ],
+    "sell_zone_pct": [
+      70,
+      100
+    ],
+    "deep_sell_zone_pct": [
+      90,
+      100
+    ],
+    "partial_sell_pct": [
+      35,
+      35,
+      30
+    ],
+    "flow_close_priority": true,
+    "minimum_first_target_rr": 1.0,
+    "live_chase_guard_pct": 5.0,
+    "entry_zone_max_pct": 15,
+    "requires_5m_confirmation": true,
+    "auto_timeframes_minutes": [
+      240,
+      60,
+      15,
+      5
+    ],
+    "uses_completed_intraday_candles_only": true,
+    "planned_entry_weights_pct": [
+      30,
+      30,
+      40
+    ],
+    "averaging_below_stop_forbidden": true,
+    "same_market_max_entries_per_day": 2,
+    "same_market_cooldown_minutes": 30,
+    "loss_cooldown_minutes": 120,
+    "max_consecutive_losses": 2,
+    "daily_loss_limit_pct": 2.0
+  }
+}
