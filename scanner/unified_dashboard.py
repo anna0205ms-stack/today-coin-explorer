@@ -5,7 +5,7 @@ from __future__ import annotations
 import html
 import json
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +20,7 @@ INFO = {
     "D": ("D형", "#5ce2b3", "급등 전 재탈환·압축", "장기 하락 → 바닥 압축 → 매물대 하단 재탈환 → 4H 리테스트 → 상단 시도", "하단선 방어 또는 상단 돌파·재지지", "재탈환선 4H 몸통 이탈·하드스톱", "상단선 → 단기 확장 → 상위 매물대"),
 }
 ACTION_RANK={"진입 검토":0,"확인 대기":1,"진입가 대기":2,"추격 금지":3}
+KST = timezone(timedelta(hours=9))
 
 
 def read(path: Path, default):
@@ -70,7 +71,10 @@ def chart_svg(rows,width=600,height=160,levels=None):
 
 
 def nav(active="dashboard"):
-    links = [("메인 대시보드", "index.html", "dashboard"), ("오늘의 전체 스캔", "scan.html", "today"), ("관심종목 추적", "watchlist.html", "watch"), ("날짜별 기록", "history.html", "history")]
+    links = [("메인 대시보드", "index.html", "dashboard"), ("오늘의 전체 스캔", "scan.html", "today"),
+             ("A형", "type_a.html", "type_a"), ("B형", "type_b.html", "type_b"),
+             ("C형", "type_c.html", "type_c"), ("D형", "type_d.html", "type_d"),
+             ("관심종목 추적", "watchlist.html", "watch"), ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
     return f'<nav><div class="app-brand"><img class="nav-cat" src="{cat}" alt="회색 고양이"><span class="app-title">오늘의 코인 탐험대</span></div>' + "".join(f'<a class="{"active" if active == key else ""}" href="{url}">{name}</a>' for name, url, key in links) + "</nav>"
 
@@ -83,6 +87,7 @@ nav{display:flex;gap:24px;margin:0 0 20px;align-items:center;flex-wrap:wrap}.app
 .dual-chart{display:grid;grid-template-columns:1fr 1fr;gap:14px}.chart-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-weight:800}.chart-title small{color:var(--sub);font-weight:400}@media(max-width:900px){.dual-chart{grid-template-columns:1fr}}
 .page-intro{margin:4px 0 18px}.page-intro h1{margin:0 0 4px}.how{margin-top:7px;color:#c8ffdf}.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:4px;border:1px solid #60756a;border-radius:50%;color:#a9b9b0;font-size:10px;cursor:help}.tip:hover:after{content:attr(data-tip);position:absolute;z-index:20;left:0;top:22px;width:220px;padding:9px;border:1px solid var(--green);border-radius:9px;background:#07100c;color:#fff;font-weight:400;white-space:normal}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.filter{padding:8px 13px;border:1px solid #31473c;border-radius:999px;background:#08100c;color:#fff;cursor:pointer}.filter.active{border-color:var(--accent,var(--green));color:var(--accent,var(--green))}.data-table{width:100%;border-collapse:collapse}.data-table th,.data-table td{padding:11px 9px;border-bottom:1px solid #26372f;text-align:left;white-space:nowrap}.data-table th{color:#a6b8ad;font-size:12px}.type-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.type-tab{padding:17px;border:1px solid var(--c);border-radius:16px;background:#050807}.type-tab strong{font-size:28px;color:var(--c)}.type-tab.active{box-shadow:0 0 16px color-mix(in srgb,var(--c) 35%,transparent);background:color-mix(in srgb,var(--c) 9%,#050807)}.expand{display:none}.expand.open{display:table-row}.expand td{padding:16px;background:#07100c}.expand-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.target-strip{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.target-chip{padding:8px 12px;border:1px solid var(--accent,var(--green));border-radius:10px}.help-note{padding:10px 12px;border-left:2px solid var(--accent,var(--green));background:#0a1510;color:#cbd8d0}.calendar-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{padding:9px;text-align:center;border-radius:8px}.day.has{color:#bfffd9}.day.selected{outline:1px solid var(--green);background:#0a2a19}.outcome{padding:3px 8px;border-radius:999px}.ok{color:#73eaa8;border:1px solid #23754b}.wait{color:#ffd166;border:1px solid #755b22}.bad{color:#ff8b78;border:1px solid #82372c}.muted{color:#a5b0aa;border:1px solid #45534b}@media(max-width:900px){.type-tabs,.calendar-layout,.expand-grid{grid-template-columns:1fr}.data-table{font-size:12px}}
 .hero-guide{display:grid;grid-template-columns:1fr 190px;gap:20px;align-items:center;border-color:var(--accent)}.type-cat-wrap{position:relative;height:190px}.type-cat-wrap img{width:100%;height:100%;object-fit:contain}.type-token{position:absolute;right:7px;top:16px;width:58px;height:58px;border:3px solid var(--accent);border-radius:50%;background:#050807;color:var(--accent);font-size:28px;font-weight:900;text-align:center;line-height:52px}.row-click{cursor:pointer}.row-click:hover{background:#0d1b14}.section-label{margin:20px 0 8px;color:var(--accent,var(--green))}.status-line{display:flex;gap:12px;flex-wrap:wrap}.mini-stat{padding:10px 14px;border:1px solid #294438;border-radius:12px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.date-buttons{display:flex;gap:7px;flex-wrap:wrap}.date-btn{padding:8px 11px;border:1px solid #31473c;border-radius:10px;background:#08100c;color:#fff}.date-btn.active{border-color:var(--green);color:var(--green)}@media(max-width:900px){.hero-guide{grid-template-columns:1fr}.type-cat-wrap{height:150px}}
+.system-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:11px 14px;border:1px solid #244b38;border-radius:14px;background:#07110c}.system-dot{width:9px;height:9px;border-radius:50%;background:#00e783;box-shadow:0 0 10px #00e783}.system-bar.waiting .system-dot{background:#ffc247;box-shadow:0 0 10px #ffc247}.system-bar.late .system-dot{background:#ff5d3a;box-shadow:0 0 10px #ff5d3a}.system-divider{color:#365443}.update-stamp{margin-top:7px;color:var(--sub);font-size:12px}@media(max-width:600px){.system-bar{align-items:flex-start}.system-divider{display:none}.system-item{width:100%}}
 """
 
 
@@ -94,9 +99,15 @@ def page_intro(title, purpose, how):
     return f'<section class="page-intro"><h1>{title}</h1><div class="sub">{purpose}</div><div class="how">{how}</div></section>'
 
 
+def system_status(basis):
+    stamp = str((basis or {}).get("snapshot_at") or "")
+    visible = stamp.replace("T", " ")[:16] if stamp else "기록 전"
+    return f'''<section class="system-bar" id="systemBar" data-last="{html.escape(stamp, quote=True)}"><span class="system-dot"></span><b id="systemState">상태 확인 중</b><span class="system-divider">|</span><span class="system-item">최근 스캔 기준봉 · <b>{visible} KST</b></span><span class="system-divider">|</span><span class="system-item">다음 자동 갱신 · <b id="nextUpdate">계산 중</b></span></section><script>(function(){{const bar=document.getElementById("systemBar"),state=document.getElementById("systemState"),nextEl=document.getElementById("nextUpdate"),hours=[1,5,9,13,17,21],now=new Date(),kst=new Date(now.getTime()+9*3600000),y=kst.getUTCFullYear(),m=kst.getUTCMonth(),d=kst.getUTCDate();const slot=(dd,h)=>new Date(Date.UTC(y,m,dd,h-9));let closed=hours.map(h=>slot(d,h)).filter(x=>x<=now).pop();if(!closed)closed=slot(d-1,21);let next=hours.map(h=>slot(d,h)).find(x=>x>now);if(!next)next=slot(d+1,1);const last=bar.dataset.last?new Date(bar.dataset.last):null,fmt=x=>new Intl.DateTimeFormat("ko-KR",{{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}}).format(x);nextEl.textContent=fmt(next)+" KST";if(last&&last>=closed){{state.textContent="정상 작동"}}else if(now-closed<=40*60000){{bar.classList.add("waiting");state.textContent="마감봉 갱신 중"}}else{{bar.classList.add("late");state.textContent="업데이트 지연 확인 필요"}}}})()</script>'''
+
+
 def shell(title, body, basis, active="dashboard"):
     pins='''<script>function getPins(){try{return JSON.parse(localStorage.getItem("upbitPins")||"[]")}catch(e){return []}}function togglePin(m,b){let p=getPins();p=p.includes(m)?p.filter(x=>x!==m):[...p,m];localStorage.setItem("upbitPins",JSON.stringify(p));if(b){b.classList.toggle("on",p.includes(m));b.textContent=p.includes(m)?"★":"☆"}if(typeof renderWatch==="function")renderWatch()}document.addEventListener("DOMContentLoaded",()=>document.querySelectorAll(".star").forEach(b=>{let on=getPins().includes(b.dataset.market);b.classList.toggle("on",on);b.textContent=on?"★":"☆"}))</script>'''
-    return f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title><style>{css()}</style></head><body><main>{nav(active)}{body}</main>{pins}</body></html>'
+    return f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title><style>{css()}</style></head><body><main>{nav(active)}{system_status(basis)}{body}</main>{pins}</body></html>'
 
 
 def grouped(snapshot):
@@ -117,7 +128,8 @@ def dist_text(row):
 
 def main_page(snapshot, btc):
     groups=grouped(snapshot)
-    cards="".join(f'<a class="type-tab" href="type_{k.lower()}.html" style="--c:{INFO[k][1]}"><strong>{k}형 · {len(groups[k])}</strong><div>{INFO[k][2]}</div></a>' for k in "ABCD")
+    updated=str(snapshot.get("snapshot_at") or "-").replace("T"," ")[:16]
+    cards="".join(f'<a class="type-tab" href="type_{k.lower()}.html" style="--c:{INFO[k][1]}"><strong>{k}형 · {len(groups[k])}</strong><div>{INFO[k][2]}</div><div class="update-stamp">최근 갱신 · {updated} KST</div></a>' for k in "ABCD")
     rows=sum(groups.values(),[]);rows.sort(key=lambda r:(ACTION_RANK.get(r.get("action"),9),-float(r.get("score") or 0),-float(r.get("rr") or 0)))
     trs=[]
     for r in rows:
@@ -179,7 +191,7 @@ def type_page(key, snapshot):
     buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"])
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>단계</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'
     script='''<script>function toggleRow(i){document.getElementById("detail"+i).classList.toggle("open")}function expandAll(open){document.querySelectorAll(".expand").forEach(x=>x.classList.toggle("open",open))}function filterAction(a,b){document.querySelectorAll("#actionFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("tr.row-click").forEach(r=>{const show=a==="전체"||r.textContent.includes(a);r.style.display=show?"":"none";const d=r.nextElementSibling;if(!show)d.classList.remove("open")})}</script>'''
-    return shell(name,intro+guide+table+script,snapshot)
+    return shell(name,intro+guide+table+script,snapshot,f"type_{key.lower()}")
 
 def watchlist_page(watch,basis):
     current={}
