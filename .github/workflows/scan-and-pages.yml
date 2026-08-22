@@ -2,8 +2,9 @@ name: UPBIT ABCD MVP Lite
 
 on:
   schedule:
-    # KST 01:10, 05:10, 09:10, 13:10, 17:10, 21:10
-    - cron: "10 0,4,8,12,16,20 * * *"
+    # GitHub 예약 지연·누락에 대비해 각 KST 4시간봉 마감 뒤 4회 재시도한다.
+    # UTC 기준이며 실제 KST 실행 시각은 01/05/09/13/17/21시의 03·13·23·33분이다.
+    - cron: "3,13,23,33 0,4,8,12,16,20 * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,33 +22,37 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
-      - name: 소스 불러오기
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Python 준비
-        uses: actions/setup-python@v5
+      - name: 이번 4시간봉 실행 여부 확인
+        id: guard
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python scanner/schedule_guard.py check --force >> "$GITHUB_OUTPUT"
+          else
+            python scanner/schedule_guard.py check >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 이미 완료된 봉 안내
+        if: steps.guard.outputs.should_run != 'true'
+        run: echo "${{ steps.guard.outputs.slot }} 봉은 이미 갱신되어 건너뜁니다."
+
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.should_run == 'true'
         with:
           python-version: "3.12"
           cache: pip
-
-      - name: 필요한 프로그램 설치
+      - if: steps.guard.outputs.should_run == 'true'
         run: pip install -r scanner/requirements.txt
-
-      - name: A/B/C형 전체 스캔
+      - name: Scan A/B/C
+        if: steps.guard.outputs.should_run == 'true'
         run: python scanner/box_screener.py
-
-      - name: D형 전체 스캔
-        run: >
-          python scanner/pre_breakout_reclaim.py
-          --all
-          --workers 8
-          --min-trade-amount 3000000000
-          --output-json outputs/pre_breakout_reclaim.json
-          --output-csv outputs/pre_breakout_reclaim.csv
-
-      - name: BTC 분석과 화면 갱신
+      - name: Scan D
+        if: steps.guard.outputs.should_run == 'true'
+        run: python scanner/pre_breakout_reclaim.py --all --workers 8 --min-trade-amount 3000000000 --output-json outputs/pre_breakout_reclaim.json --output-csv outputs/pre_breakout_reclaim.csv
+      - name: Append record and render pages
+        if: steps.guard.outputs.should_run == 'true'
         run: |
           python scanner/bitcoin_regime.py
           python scanner/chart_cache.py
@@ -55,23 +60,38 @@ jobs:
           python scanner/watchlist_store.py
           python scanner/outcome_tracker.py
           python scanner/unified_dashboard.py
+      - name: Send selected Kakao alerts
+        if: steps.guard.outputs.should_run == 'true'
+        env:
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_WATCH_MARKETS: ${{ vars.KAKAO_WATCH_MARKETS }}
+        run: python scanner/kakao_notifier.py
 
-      - name: 최신 스캔과 과거 기록 저장
+      - name: Save latest scan and history
+        if: steps.guard.outputs.should_run == 'true'
         run: |
-          git config user.name "오늘의 코인 탐험대"
+          git config user.name "UPBIT Scanner"
           git config user.email "scanner@users.noreply.github.com"
-          git add history/snapshots.json history/watchlist.json outputs/
-          git diff --cached --quiet || git commit -m "자동 스캔 결과 갱신"
+          git add history/snapshots.json history/watchlist.json history/notification_state.json outputs/
+          git diff --cached --quiet || git commit -m "scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
           git push
-
-      - name: GitHub Pages 준비
-        uses: actions/configure-pages@v5
-
-      - name: 웹페이지 파일 업로드
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v5
+        if: steps.guard.outputs.should_run == 'true'
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.guard.outputs.should_run == 'true'
         with:
           path: outputs
-
-      - name: 웹사이트 게시
+      - name: Deploy dashboard
+        if: steps.guard.outputs.should_run == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: 게시 성공 봉 완료 처리
+        if: steps.guard.outputs.should_run == 'true'
+        run: |
+          python scanner/schedule_guard.py mark --slot "${{ steps.guard.outputs.slot }}"
+          git add history/schedule_state.json
+          git diff --cached --quiet || git commit -m "schedule: ${{ steps.guard.outputs.slot }} 완료"
+          git push
