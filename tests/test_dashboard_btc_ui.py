@@ -24,9 +24,19 @@ def test_dashboard_has_one_top_bitcoin_tradingview_chart():
     html = dashboard_page({"candidates": []}, {}, btc, {}, regime)
     body = html[html.index("<body>"):]
 
-    assert body.count("UPBIT:BTCKRW") == 1
+    assert body.count("BINANCE:BTCUSDT") == 1
+    assert "UPBIT:BTCKRW" not in body
     assert body.index("btc-live-card") < body.index("market-hero")
     assert "차트 왼쪽 위 시간봉 메뉴" in body
     assert "기존 30일 박스 상단 돌파 후 위에서 거래 중" in body
     assert "박스 위치 · 226.7%" not in body
     assert "dual-chart" not in body
+    assert "오늘 먼저 볼 후보 5" not in body
+    assert "M은 Market(시장)의 약자" in body
+    assert "M0 · 위험장" in body
+    assert "M1 · BTC 주도" in body
+    assert "M2 · 알트 준비" in body
+    assert "M3 · 알트 순환 시작" in body
+    assert "M4 · 알트 확산" in body
+    assert "M5 · 과열·수익보호" in body
+    assert 'market-stage-card current' in body
