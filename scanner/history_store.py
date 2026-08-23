@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""최신 A/B/C/D 결과를 단일 JSON 파일에 계속 누적한다."""
+"""최신 A/B/C/D/E 결과를 단일 JSON 파일에 계속 누적한다."""
 from __future__ import annotations
 
 import argparse
@@ -68,6 +68,20 @@ def normalize_d(row: dict) -> dict:
     }
 
 
+def normalize_e(row: dict) -> dict:
+    """E형의 단일 0.382 전량청산 계획을 공통 후보 형식으로 옮긴다."""
+    return {
+        "market": row.get("market"), "name": row.get("name"), "type": "E",
+        "score": row.get("score", 0), "status": row.get("status"),
+        "price": row.get("price"), "entry": row.get("entry") or [],
+        "stop": row.get("stop"), "targets": row.get("targets") or [],
+        "flow": row.get("flow"), "action": row.get("action", "확인 대기"),
+        "reason": row.get("reason"), "missing": row.get("missing") or [],
+        "rr": row.get("rr"), "fib": row.get("fib") or {},
+        "exit_rule": row.get("exit_rule"), "invalidation": row.get("invalidation"),
+    }
+
+
 def completed_4h_at(now: datetime) -> datetime:
     """KST 01/05/09/13/17/21시 중 가장 최근 마감 시각을 반환한다."""
     now = now.astimezone(KST)
@@ -80,15 +94,17 @@ def append_snapshot(at: datetime | None = None) -> dict:
     at = completed_4h_at(at or datetime.now(KST))
     abc_rows = read_json(OUTPUTS / "latest_scan.json", [])
     d_rows = read_json(OUTPUTS / "pre_breakout_reclaim.json", [])
+    e_rows = read_json(OUTPUTS / "technical_rebound.json", [])
     candidates = [normalize_abc(r) for r in abc_rows if abc_type(r) in "ABC"]
     candidates += [normalize_d(r) for r in d_rows if r.get("status") not in {"제외", "자료부족", "오류"}]
+    candidates += [normalize_e(r) for r in e_rows if r.get("status") != "E실패"]
     chart_cache = read_json(OUTPUTS / "chart_cache.json", {})
     for row in candidates:
         if row.get("market") in chart_cache:
             row["charts"] = chart_cache[row["market"]]
     payload = {
         "snapshot_at": at.isoformat(), "date": at.strftime("%Y-%m-%d"), "time": at.strftime("%H:%M"),
-        "counts": {k: sum(r["type"] == k for r in candidates) for k in "ABCD"},
+        "counts": {k: sum(r["type"] == k for r in candidates) for k in "ABCDE"},
         "candidates": candidates,
     }
     btc = read_json(OUTPUTS / "bitcoin_regime.json", {})

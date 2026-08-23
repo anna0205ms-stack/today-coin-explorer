@@ -52,7 +52,7 @@ def fetch(market: str, unit: str, count: int) -> list[list]:
 
 
 def selected_markets(limit: int | None = None) -> list[str]:
-    groups = {kind: [] for kind in "ABCD"}
+    groups = {kind: [] for kind in "ABCDE"}
     for row in read(OUT / "latest_scan.json", []):
         kind = abc_type(row)
         if kind in groups:
@@ -62,8 +62,12 @@ def selected_markets(limit: int | None = None) -> list[str]:
     for row in read(OUT / "pre_breakout_reclaim.json", []):
         if row.get("status") not in {"제외", "자료부족", "오류"}:
             groups["D"].append((status_rank.get(row.get("status"), 9), -float(row.get("score") or 0), row.get("market")))
+    action_rank = {"진입 검토": 0, "확인 대기": 1, "진입가 대기": 2, "추격 금지": 3}
+    for row in read(OUT / "technical_rebound.json", []):
+        if row.get("status") != "E실패":
+            groups["E"].append((action_rank.get(row.get("action"), 9), -float(row.get("score") or 0), row.get("market")))
     markets = []
-    for kind in "ABCD":
+    for kind in "ABCDE":
         ranked=sorted(groups[kind])
         markets.extend(market for _, _, market in (ranked[:limit] if limit else ranked) if market)
     return list(dict.fromkeys(markets))

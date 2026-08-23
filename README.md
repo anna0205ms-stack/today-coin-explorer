@@ -1,16 +1,16 @@
-# UPBIT A/B/C/D 스캐너 — MVP Lite v3
+# UPBIT A/B/C/D/E 스캐너 — MVP Lite v4
 
-비트코인 큰 추세를 먼저 보고, 업비트 KRW 코인을 A/B/C/D 차트 유형으로 나눠 매매 후보를 찾는 가벼운 스캐너야. 공개 시세만 읽고 주문은 실행하지 않아.
+비트코인 큰 추세를 먼저 보고, 업비트 KRW 코인을 A/B/C/D/E 차트 유형으로 나눠 매매 후보를 찾는 가벼운 스캐너야. 공개 시세만 읽고 주문은 실행하지 않아.
 
 ## 화면 사용 순서
 
 1. `outputs/index.html`에서 BTC 일봉·4시간봉과 오늘의 알트 진입 강도를 확인해.
 2. `outputs/scan.html`에서 전체 후보의 단계·진입거리·손절·목표·손익비를 비교해.
-3. A/B/C/D 유형 화면에서 필요한 후보를 여러 개 펼쳐 차트를 비교해.
+3. A/B/C/D/E 유형 화면에서 필요한 후보를 여러 개 펼쳐 차트를 비교해.
 4. 계속 볼 종목은 별표를 눌러 고정하고 `outputs/watchlist.html`에서 추적해.
 5. `outputs/history.html`에서 과거 후보의 24시간·72시간 결과를 복기해.
 
-## A/B/C/D 유형
+## A/B/C/D/E 유형
 
 - A형: 강한 상승 뒤 첫 눌림에서 지지를 확인하는 유형
 - B형: 긴 하락 뒤 바닥·박스 하단에서 반등을 찾는 유형
@@ -20,6 +20,10 @@
   - D3 상단 돌파·확장 → D4 확장 후 상단 리테스트 재진입
   - D-W: 상단 돌파 반납 또는 하단선 첫 이탈 경고
   - D-F: 재탈환 뒤 하단선 아래 완성 4시간봉 2개 연속 마감
+- E형: 급락·투매 뒤 핵심 하단에서 확인되는 1회성 기술적 반등을 피보나치 0.382까지만 노리는 유형
+
+E형은 상승 전환을 기대하는 전략이 아니다. 투매저점 방어와 4시간봉 반등을 확인한 뒤 진입하며,
+급락 파동의 피보나치 0.382에서 전량청산한다. 투매저점 3% 하단 이탈 시 종료하고 물타기는 금지한다.
 
 ## BTC와 알트 진입 강도
 
@@ -49,6 +53,7 @@ Windows에서는 `실행하기.bat`을 실행해. 직접 실행하려면:
 pip install -r scanner/requirements.txt
 python scanner/box_screener.py
 python scanner/pre_breakout_reclaim.py --all --workers 8 --min-trade-amount 3000000000 --output-json outputs/pre_breakout_reclaim.json --output-csv outputs/pre_breakout_reclaim.csv
+python scanner/technical_rebound.py
 python scanner/bitcoin_regime.py
 python scanner/chart_cache.py
 python scanner/history_store.py
