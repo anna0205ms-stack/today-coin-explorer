@@ -99,7 +99,8 @@ def analyze(daily: list[dict], four: list[dict]) -> dict:
     elif breakout_confirmed:
         four_state = "상단 돌파·거래량 확인"
     elif upper_tests >= 3 and position >= .70:
-        four_state = f"상단 {upper_tests}회 접촉·과열주의"
+        # 접촉 횟수는 내부 강도 계산에만 쓰고 화면에는 사람이 이해할 의미를 보여준다.
+        four_state = "기존 박스 상단을 반복 시험 중·단기 과열주의"
     elif slope > .015:
         four_state = "단기 상승"
     elif slope < -.015:

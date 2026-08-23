@@ -53,7 +53,7 @@ def test_alt_breadth_prevents_false_m0_and_detects_rotation():
     global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}
 
     stage, _, reasons = classify_market(
-        {"daily_state": "상단 돌파 시도", "four_hour_state": "상단 20회 접촉·과열주의"},
+        {"daily_state": "상단 돌파 시도", "four_hour_state": "기존 박스 상단을 반복 시험 중·단기 과열주의"},
         global_data,
     )
 
@@ -66,7 +66,7 @@ def test_btc_overheat_caps_m3_entry_limit_without_forcing_m0():
     global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}
 
     regime = build_regime(
-        {"daily_state": "상단 돌파 시도", "four_hour_state": "상단 20회 접촉·과열주의"},
+        {"daily_state": "상단 돌파 시도", "four_hour_state": "기존 박스 상단을 반복 시험 중·단기 과열주의"},
         global_data,
     )
 
