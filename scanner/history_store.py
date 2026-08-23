@@ -7,10 +7,13 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from market_regime import apply_market_gate
+
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 STORE = ROOT / "history" / "snapshots.json"
+MARKET_REGIME = OUTPUTS / "market_regime.json"
 
 
 def read_json(path: Path, default):
@@ -98,6 +101,9 @@ def append_snapshot(at: datetime | None = None) -> dict:
     candidates = [normalize_abc(r) for r in abc_rows if abc_type(r) in "ABC"]
     candidates += [normalize_d(r) for r in d_rows if r.get("status") not in {"제외", "자료부족", "오류"}]
     candidates += [normalize_e(r) for r in e_rows if r.get("status") != "E실패"]
+    market_regime = read_json(MARKET_REGIME, {})
+    if market_regime.get("stage"):
+        candidates = [apply_market_gate(row, market_regime) for row in candidates]
     chart_cache = read_json(OUTPUTS / "chart_cache.json", {})
     for row in candidates:
         if row.get("market") in chart_cache:
@@ -107,6 +113,8 @@ def append_snapshot(at: datetime | None = None) -> dict:
         "counts": {k: sum(r["type"] == k for r in candidates) for k in "ABCDE"},
         "candidates": candidates,
     }
+    if market_regime:
+        payload["market_regime"] = market_regime
     btc = read_json(OUTPUTS / "bitcoin_regime.json", {})
     if btc:
         payload["btc"] = {k: btc.get(k) for k in ("price", "daily_state", "four_hour_state", "box", "basis")}

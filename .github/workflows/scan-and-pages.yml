@@ -8,6 +8,9 @@ on:
       - ".github/workflows/scan-and-pages.yml"
       - "scanner/schedule_guard.py"
       - "scanner/bitcoin_regime.py"
+      - "scanner/global_market_data.py"
+      - "scanner/market_regime.py"
+      - "scanner/history_store.py"
       - "scanner/unified_dashboard.py"
       - "scanner/technical_rebound.py"
   schedule:
@@ -66,8 +69,13 @@ jobs:
         run: python scanner/technical_rebound.py
       - name: Append record and render pages
         if: steps.guard.outputs.should_run == 'true'
+        env:
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+          COINGECKO_API_PLAN: ${{ vars.COINGECKO_API_PLAN }}
         run: |
           python scanner/bitcoin_regime.py
+          python scanner/global_market_data.py
+          python scanner/market_regime.py
           python scanner/chart_cache.py
           python scanner/history_store.py
           python scanner/watchlist_store.py
@@ -94,7 +102,7 @@ jobs:
         run: |
           git config user.name "UPBIT Scanner"
           git config user.email "scanner@users.noreply.github.com"
-          git add history/snapshots.json history/watchlist.json outputs/
+          git add history/snapshots.json history/global_market_snapshots.json history/watchlist.json outputs/
           if [ -f history/notification_state.json ]; then
             git add history/notification_state.json
           fi

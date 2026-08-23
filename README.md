@@ -4,7 +4,7 @@
 
 ## 화면 사용 순서
 
-1. `outputs/index.html`에서 BTC 일봉·4시간봉과 오늘의 알트 진입 강도를 확인해.
+1. `outputs/index.html`에서 M0~M5 시장 단계, BTC.D·TOTAL2·OTHERS, 오늘의 알트 진입 한도를 확인해.
 2. `outputs/scan.html`에서 전체 후보의 단계·진입거리·손절·목표·손익비를 비교해.
 3. A/B/C/D/E 유형 화면에서 필요한 후보를 여러 개 펼쳐 차트를 비교해.
 4. 계속 볼 종목은 별표를 눌러 고정하고 `outputs/watchlist.html`에서 추적해.
@@ -25,13 +25,14 @@
 E형은 상승 전환을 기대하는 전략이 아니다. 투매저점 방어와 4시간봉 반등을 확인한 뒤 진입하며,
 급락 파동의 피보나치 0.382에서 전량청산한다. 투매저점 3% 하단 이탈 시 종료하고 물타기는 금지한다.
 
-## BTC와 알트 진입 강도
+## M0~M5 시장 단계와 알트 진입 허용
 
-- BTC 일봉 오전 9시 마감으로 큰 추세와 박스를 잡아.
-- 완성 4시간봉으로 횡보·재지지·돌파 실패를 확인해.
-- 박스 하단은 매수존, 상단은 매도존으로 봐.
-- BTC가 매도존에 가까우면 알트 신규진입을 줄이고, 상단 돌파 실패나 구조 이탈이면 0%로 막아.
-- 0%여도 후보는 사라지지 않고 `거래금지·관찰만`으로 계속 보여.
+- BTC 일봉·완성 4시간봉 구조와 BTC.D·TOTAL2·OTHERS 자금 흐름을 합쳐 M0~M5를 판정해.
+- M0 위험장 → M1 BTC만 강함 → M2 알트 준비 → M3 알트 시작 → M4 알트 확산 → M5 과열 경계 순서야.
+- 각 M단계에는 A/B/C/D/E별 `진입 허용·조건부·관찰만·신규 금지·익절 우선` 게이트가 있어.
+- 후보의 개별 차트 판정은 `pattern_action`에 보존하고, 시장 게이트를 반영한 최종 행동은 `action`에 저장해.
+- TradingView 차트는 화면 확인용 원본 지수이고, 자동판정은 CoinGecko 공개 시총으로 만든 프록시를 사용해.
+- 글로벌 데이터가 없거나 오래되면 안전하게 M0로 차단하되 후보 자체는 지우지 않아.
 
 ## 기록과 관심종목
 
@@ -55,6 +56,8 @@ python scanner/box_screener.py
 python scanner/pre_breakout_reclaim.py --all --workers 8 --min-trade-amount 3000000000 --output-json outputs/pre_breakout_reclaim.json --output-csv outputs/pre_breakout_reclaim.csv
 python scanner/technical_rebound.py
 python scanner/bitcoin_regime.py
+python scanner/global_market_data.py
+python scanner/market_regime.py
 python scanner/chart_cache.py
 python scanner/history_store.py
 python scanner/watchlist_store.py

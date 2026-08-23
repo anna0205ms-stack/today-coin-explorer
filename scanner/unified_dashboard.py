@@ -13,6 +13,8 @@ OUT = ROOT / "outputs"
 STORE = ROOT / "history" / "snapshots.json"
 WATCH = ROOT / "history" / "watchlist.json"
 BTC = OUT / "bitcoin_regime.json"
+MARKET = OUT / "market_regime.json"
+GLOBAL = OUT / "global_market_data.json"
 INFO = {
     "A": ("A형", "#ff8297", "급등 후 첫 눌림", "강한 상승 → 거래량 감소 눌림 → 지지 확인 → 전고점 재도전", "매수존에서 하락 중단·저점 상승 확인", "첫 눌림 저점 또는 박스 하단 몸통 이탈", "직전 반등고점 → 급등고점 → 확장"),
     "B": ("B형", "#70c2ff", "바닥·박스 하단 반등", "장기 하락 → 바닥 박스 → 하단 재탈환 → 중심 반등", "박스 하단 재진입과 저점 상승 확인", "박스 최저점 또는 매수존 하단 몸통 이탈", "중심선 → 매도존 하단 → 박스 상단"),
@@ -20,7 +22,7 @@ INFO = {
     "D": ("D형", "#5ce2b3", "급등 전 재탈환·압축", "장기 하락 → 바닥 압축 → 매물대 하단 재탈환 → 4H 리테스트 → 상단 시도", "하단선 방어 또는 상단 돌파·재지지", "재탈환선 4H 몸통 이탈·하드스톱", "상단선 → 단기 확장 → 상위 매물대"),
     "E": ("E형", "#ffb454", "급락 후 0.382 기술적 반등", "급락·투매 → 핵심 하단 도달 → 4H 저점 방어 → 피보나치 0.382 반등", "투매저점 방어 + 4H 양봉·아래꼬리·저점 2% 회복", "투매저점 3% 하단 이탈 · 물타기 금지", "피보나치 0.382에서 전량청산 · 상승 전환 기대 금지"),
 }
-ACTION_RANK={"진입 검토":0,"확인 대기":1,"진입가 대기":2,"추격 금지":3}
+ACTION_RANK={"진입 검토":0,"조건부 진입":1,"확인 대기":2,"시장 대기":3,"진입가 대기":4,"익절 우선":5,"추격 금지":6}
 D_STAGE_ORDER={"D4":0,"D3":1,"D2":2,"D1":3,"D0":4,"D-W":5,"D-F":6}
 KST = timezone(timedelta(hours=9))
 TRAINING_A_REV = "20260824-1"
@@ -57,11 +59,16 @@ def distance_to_entry(row):
     return round((price/edge-1)*100,1)
 
 def action_badge(row):
-    action=row.get("action","진입가 대기");return f'<span class="badge act{ACTION_RANK.get(action,2)}">{fmt(action)}</span>'
+    action=row.get("action","진입가 대기")
+    style={"진입 검토":"act0","조건부 진입":"act1","확인 대기":"act1","시장 대기":"act2","진입가 대기":"act2","익절 우선":"act4","추격 금지":"act3"}.get(action,"act2")
+    return f'<span class="badge {style}">{fmt(action)}</span>'
 
 def remaining_condition(row):
     """현재판단 옆에 보여줄 실제 남은 확인 조건."""
     action = row.get("action", "진입가 대기")
+    gate = row.get("market_gate") or {}
+    if action in {"시장 대기", "조건부 진입", "익절 우선"} and gate.get("reason"):
+        return f'{fmt(gate.get("stage"))} 시장판정 · {fmt(gate.get("reason"))}'
     missing = [fmt(value) for value in (row.get("missing") or []) if value not in (None, "", "없음")]
     if action == "진입 검토":
         return "업비트에서 완성봉·손익비 최종 확인"
@@ -74,14 +81,19 @@ def remaining_condition(row):
     return "계획한 진입구간 도착"
 
 def action_cell(row):
-    return f'{action_badge(row)}<div class="condition-note">남은 조건 · {remaining_condition(row)}</div>'
+    pattern = row.get("pattern_action")
+    original = f'<div class="pattern-note">개별 차트 · {fmt(pattern)}</div>' if pattern and pattern != row.get("action") else ""
+    return f'{action_badge(row)}{original}<div class="condition-note">남은 조건 · {remaining_condition(row)}</div>'
 
 def action_guide():
     return '''<details class="action-guide" open><summary>🐱 현재판단 보는 법</summary><div class="action-guide-grid">
 <div><span class="badge act0">진입 검토</span><p>조건을 충족했어. 업비트에서 완성봉과 손익비를 최종 확인해.</p></div>
+<div><span class="badge act1">조건부 진입</span><p>개별 차트는 준비됐지만 시장이 완전히 열리지 않았어. 작은 비중으로 추가 조건까지 확인해.</p></div>
 <div><span class="badge act1">확인 대기</span><p>후보는 맞지만 지지·리테스트 같은 마지막 조건을 더 확인해.</p></div>
 <div><span class="badge act2">진입가 대기</span><p>구조는 관찰 중이야. 계획한 진입구간에 올 때까지 기다려.</p></div>
 <div><span class="badge act3">추격 금지</span><p>진입 시점이 늦었어. 새 눌림이나 새 구조가 생기기 전에는 신규 매수하지 않아.</p></div>
+<div><span class="badge act2">시장 대기</span><p>개별 차트는 좋아도 현재 시장 단계가 이 유형의 신규진입을 막고 있어.</p></div>
+<div><span class="badge act4">익절 우선</span><p>과열 단계라 신규매수보다 기존 보유 물량의 수익 보호가 먼저야.</p></div>
 </div><p class="guide-foot">오코탐은 후보를 빠르게 선별하는 도구야. 실제 진입은 업비트 차트에서 다시 확인해.</p></details>'''
 
 def chart_svg(rows,width=600,height=160,levels=None):
@@ -126,6 +138,7 @@ nav{display:flex;gap:24px;margin:0 0 20px;align-items:center;flex-wrap:wrap}.app
 .daily-context-layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;align-items:start}.context-copy{display:grid;gap:10px}.context-point{padding:10px 0;border-bottom:1px solid #26372f}.context-point:last-child{border:0}.context-point b{display:block;color:#dfffee}.context-point span{color:var(--sub)}.timeframe-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px}.timeframe-flow div{padding:10px;border:1px solid #294438;border-radius:11px;background:#07100c;text-align:center}.timeframe-flow b{display:block;color:var(--green)}.mtf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.mtf-card{padding:13px;border:1px solid #294438;border-radius:14px;background:#07100c}.mtf-card h3{margin:0}.mtf-card p{min-height:42px;margin:4px 0 9px;color:var(--sub)}.mtf-card svg{display:block;width:100%;height:auto}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px;color:var(--sub)}.chart-legend span:before{content:"";display:inline-block;width:18px;height:7px;margin-right:6px;border-radius:4px;background:var(--legend)}.stage-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stage-detail{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:12px;border:1px solid #294438;border-radius:12px;background:#07100c}.stage-detail strong{color:var(--green);font-size:16px}.stage-detail p{margin:2px 0;color:var(--sub)}.stage-detail b{color:var(--text)}.exit-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr);gap:16px}.exit-rules{display:grid}.exit-rule{padding:10px 0;border-bottom:1px solid #26372f}.exit-rule:last-child{border:0}.exit-rule b{display:block}.exit-rule span{color:var(--sub)}@media(max-width:900px){.daily-context-layout,.exit-grid{grid-template-columns:1fr}.mtf-grid{grid-template-columns:1fr}.timeframe-flow{grid-template-columns:1fr 1fr}.stage-detail-grid{grid-template-columns:1fr}}@media(max-width:600px){.timeframe-flow{grid-template-columns:1fr}.stage-detail{grid-template-columns:75px 1fr}}
 .grid4,.type-tabs{grid-template-columns:repeat(5,1fr)}@media(max-width:900px){.grid4,.type-tabs{grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid4,.type-tabs{grid-template-columns:1fr}}
 .strategy-model{margin:0 0 18px;padding:18px;border:1px solid var(--accent);border-radius:18px;background:#050807}.strategy-model h2{margin:0 0 5px;color:var(--accent)}.strategy-model img{display:block;width:100%;height:auto;margin-top:14px;border:1px solid #294438;border-radius:14px}.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.stage-card{padding:13px;border:1px solid #31473c;border-radius:12px;background:#0a1310}.stage-card b{display:block;margin-bottom:5px;color:var(--accent)}.stage-card.danger{border-color:#87404a}.stage-card.danger b{color:#ff8297}@media(max-width:900px){.stage-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.stage-grid{grid-template-columns:1fr}}
+.act4{color:#9fc4ff;background:#17345b;border:1px solid #568bd5}.pattern-note{margin-top:5px;color:#d5e7dc;font-size:11px}.market-hero{display:grid;grid-template-columns:170px minmax(0,1fr) 260px;gap:20px;align-items:center;border-color:var(--market-color)}.market-stage{display:grid;place-items:center;width:120px;height:120px;border:1px solid var(--market-color);border-radius:50%;background:#07100c;font-size:30px;font-weight:900}.market-stage small{display:block;font-size:12px;color:var(--sub);text-align:center}.market-title{font-size:32px;font-weight:900;color:var(--market-color)}.market-reasons{margin:8px 0 0;padding-left:18px;color:var(--sub)}.market-limit{text-align:center}.market-limit strong{display:block;font-size:38px;color:var(--market-color)}.gate-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border:1px solid var(--line);background:var(--line)}.gate-item{padding:13px;background:#07100c}.gate-item b{display:block;margin-bottom:5px}.gate-item span{display:inline-block;margin-bottom:5px;font-weight:800}.gate-ALLOW span{color:#00e783}.gate-CONDITIONAL span,.gate-WATCH span{color:#ffd166}.gate-BLOCK span{color:#ff667e}.gate-PROTECT span{color:#70a7ff}.market-chart-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.tv-card{min-height:330px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#07100c}.tv-card h3{margin:0 0 7px}.tradingview-widget-container{height:285px}.tradingview-widget-container__widget{height:100%}.proxy-note{margin-top:8px;color:var(--sub);font-size:11px}.gate-chip{display:block;margin-top:4px;color:var(--sub);font-size:11px}@media(max-width:900px){.market-hero{grid-template-columns:120px 1fr}.market-limit{grid-column:1/-1;text-align:left}.gate-grid,.market-chart-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.market-hero,.gate-grid,.market-chart-grid{grid-template-columns:1fr}.market-stage{width:88px;height:88px}.market-title{font-size:24px}}
 """
 
 
@@ -135,6 +148,30 @@ def tip(label, text):
 
 def page_intro(title, purpose, how):
     return f'<section class="page-intro"><h1>{title}</h1><div class="sub">{purpose}</div><div class="how">{how}</div></section>'
+
+
+def market_gate_panel(regime):
+    gates = regime.get("gates") or {}
+    icons = {"ALLOW": "✓", "CONDITIONAL": "△", "WATCH": "○", "BLOCK": "×", "PROTECT": "↘"}
+    labels = {
+        "A": "강한 상승 후 눌림", "B": "바닥 추세반전", "C": "돌파 후 재지지",
+        "D": "급등 전 재탈환", "E": "급락 후 기술적 반등",
+    }
+    cells = []
+    for key in "ABCDE":
+        gate = gates.get(key) or {"code": "BLOCK", "label": "판정 없음", "reason": "시장 데이터 확인 대기"}
+        code = gate.get("code", "BLOCK")
+        cells.append(f'<div class="gate-item gate-{fmt(code)}"><b>{key}형 · {labels[key]}</b><span>{icons.get(code,"·")} {fmt(gate.get("label"))}</span><div class="sub">{fmt(gate.get("reason"))}</div></div>')
+    return f'<section class="panel"><h2>현재 시장에서 A~E형을 어떻게 볼까?</h2><div class="sub">개별 차트 조건을 충족해도 이 허용표가 최종 행동을 결정해.</div><div class="gate-grid" style="margin-top:12px">{"".join(cells)}</div></section>'
+
+
+def tradingview_widget(symbol, title, note):
+    config = json.dumps({
+        "autosize": True, "symbol": symbol, "interval": "240", "timezone": "Asia/Seoul",
+        "theme": "dark", "style": "1", "locale": "kr", "allow_symbol_change": False,
+        "calendar": False, "support_host": "https://www.tradingview.com",
+    }, ensure_ascii=False).replace("</", "<\\/")
+    return f'''<div class="tv-card"><h3>{title}</h3><div class="sub">{note}</div><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>{config}</script></div></div>'''
 
 
 def system_status(basis):
@@ -169,6 +206,7 @@ def dist_text(row):
 
 def main_page(snapshot, btc):
     groups=grouped(snapshot)
+    regime=snapshot.get("market_regime") or read(MARKET,{})
     updated=str(snapshot.get("snapshot_at") or "-").replace("T"," ")[:16]
     cards="".join(f'<a class="type-tab" href="type_{k.lower()}.html" style="--c:{INFO[k][1]}"><strong>{k}형 · {len(groups[k])}</strong><div>{INFO[k][2]}</div><div class="update-stamp">최근 갱신 · {updated} KST</div></a>' for k in "ABCDE")
     rows=sum(groups.values(),[]);rows.sort(key=lambda r:(ACTION_RANK.get(r.get("action"),9),-float(r.get("score") or 0),-float(r.get("rr") or 0)))
@@ -176,43 +214,36 @@ def main_page(snapshot, btc):
     for r in rows:
         targets=r.get("targets") or []
         trs.append(f'<tr data-type="{r.get("type")}" data-action="{fmt(r.get("action"))}"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{fmt(r.get("type"))}형</td><td>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}</td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(r.get("rr"))}R</td></tr>')
-    blocked=int(btc.get("alt_policy",{}).get("size_pct") or 0)==0
+    blocked=int(regime.get("alt_entry_limit_pct") or 0)==0
     filters=''.join(f'<button class="filter" data-kind="{k}" onclick="setType(\'{k}\',this)">{k if k=="ALL" else k+"형"}</button>' for k in ["ALL","A","B","C","D","E"])
     body=page_intro("오늘의 전체 스캔","업비트 KRW 전체에서 A/B/C/D/E 조건에 맞는 후보를 한 번에 비교하는 곳","① 유형 선택 → ② 단계·점수 비교 → ③ 진입거리·손절·손익비 확인 → ④ 관심종목은 별표")
-    body+=f'<div class="type-tabs">{cards}</div><section class="panel"><div class="toolbar"><div class="filters" id="typeFilters">{filters}</div><div>{"<span class=trade-lock>BTC 거래금지 · 관찰만</span>" if blocked else ""}</div></div>{action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>유형</th><th>현재판단·남은 조건</th><th>점수</th><th>{tip("현재가·진입거리","현재가가 진입구간에서 얼마나 떨어져 있는지 보여줘")}</th><th>진입구간</th><th>{tip("손절가","차트 구조가 무효가 되는 가격")}</th><th>{tip("1차 목표가","처음으로 일부 이익을 정리할 가격")}</th><th>{tip("손익비","감수할 손실 대비 기대수익 비율")}</th></tr></thead><tbody id="scanRows">{"".join(trs)}</tbody></table></div></section><script>let selectedType="ALL";function setType(k,b){{selectedType=k;document.querySelectorAll("#typeFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("#scanRows tr").forEach(r=>r.style.display=k==="ALL"||r.dataset.type===k?"":"none")}}document.addEventListener("DOMContentLoaded",()=>document.querySelector("#typeFilters .filter").click())</script>'
+    body+=market_gate_panel(regime)
+    body+=f'<div class="type-tabs">{cards}</div><section class="panel"><div class="toolbar"><div class="filters" id="typeFilters">{filters}</div><div>{"<span class=trade-lock>시장 M0 · 신규진입 금지</span>" if blocked else ""}</div></div>{action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>유형</th><th>최종판단·남은 조건</th><th>점수</th><th>{tip("현재가·진입거리","현재가가 진입구간에서 얼마나 떨어져 있는지 보여줘")}</th><th>진입구간</th><th>{tip("손절가","차트 구조가 무효가 되는 가격")}</th><th>{tip("1차 목표가","처음으로 일부 이익을 정리할 가격")}</th><th>{tip("손익비","감수할 손실 대비 기대수익 비율")}</th></tr></thead><tbody id="scanRows">{"".join(trs)}</tbody></table></div></section><script>let selectedType="ALL";function setType(k,b){{selectedType=k;document.querySelectorAll("#typeFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("#scanRows tr").forEach(r=>r.style.display=k==="ALL"||r.dataset.type===k?"":"none")}}document.addEventListener("DOMContentLoaded",()=>document.querySelector("#typeFilters .filter").click())</script>'
     return shell("오늘의 전체 스캔",body,snapshot,"today")
 
 
-def dashboard_page(snapshot, watch, btc):
+def dashboard_page(snapshot, watch, btc, market_data, regime):
     policy=btc.get("alt_policy",{});box=btc.get("box",{});charts=btc.get("charts",{})
     groups=grouped(snapshot); all_rows=sum(groups.values(),[])
-    actionable=[x for x in all_rows if x.get("action") in {"진입 검토","확인 대기"}]
-    actionable.sort(key=lambda x:(ACTION_RANK.get(x.get("action"),9),-float(x.get("rr") or 0),-float(x.get("score") or 0)))
+    all_rows.sort(key=lambda x:(ACTION_RANK.get(x.get("action"),9),-float(x.get("rr") or 0),-float(x.get("score") or 0)))
     levels=[(box.get("buy_zone",[None,None])[1],"#00e783","매수존"),(box.get("center"),"#d9e0dc","중심"),(box.get("sell_zone",[None])[0],"#ff5d3a","매도존")]
-    day_chart=chart_svg(charts.get("day",[]),520,240,levels)
-    four_chart=chart_svg(charts.get("4h",[]),520,240,levels)
-    blocked=policy.get("size_pct")==0
+    day_chart=chart_svg(charts.get("day",[]),520,240,levels);four_chart=chart_svg(charts.get("4h",[]),520,240,levels)
+    size=int(regime.get("alt_entry_limit_pct") or 0);blocked=size==0
+    state="entry" if size>=65 else "caution" if size>0 else "stop";state_class=f"state-{state}";cat=asset_uri(f"cat_{state}.webp")
+    colors={"M0":"#ff5d3a","M1":"#ffc247","M2":"#ffd166","M3":"#70c2ff","M4":"#00e783","M5":"#ff8297"};market_color=colors.get(regime.get("stage"),"#91a79b")
+    reasons="".join(f'<li>{fmt(reason)}</li>' for reason in regime.get("reasons",[]))
     top_rows=[]
-    for row in actionable[:5]:
-        targets=row.get("targets") or []
-        top_rows.append(f'<tr class="candidate-row {"blocked-row" if blocked else ""}"><td><b>{fmt(row.get("market"))}</b></td><td>{fmt(row.get("type"))}형</td><td>{fmt(row.get("action"))}</td><td>{fmt(row.get("entry"))}</td><td>{fmt(row.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(row.get("score"))}점</td><td>{fmt(row.get("rr"))}R</td></tr>')
-    top="".join(top_rows) or '<tr><td colspan="8" class="empty">확인 대기 이상 후보 없음</td></tr>'
-    size=int(policy.get("size_pct") or 0)
-    state="entry" if size>=70 else "caution" if size>0 else "stop"
-    state_class=f"state-{state}"; cat=asset_uri(f"cat_{state}.webp")
-    position=float(box.get("position_pct") or 0)
-    if size == 0 and position >= 70:
-        action_title="BTC 박스권 상단 · 매도구간 진입"
-    elif size == 0:
-        action_title="BTC 구조 이탈 · 신규진입 중단"
-    elif size < 70:
-        action_title="BTC 중심~상단 · 알트 비중 축소"
-    else:
-        action_title="BTC 지지 확인 · 선별 진입"
-    intro=page_intro("메인 대시보드","비트코인의 큰 추세를 먼저 보고, 오늘 알트코인을 매매해도 되는지 판단하는 곳","① BTC 일봉·4시간봉 확인 → ② 오늘의 행동 확인 → ③ 먼저 볼 후보 확인")
-    body=intro+f'''<section class="dashboard-panel btc-card {state_class}"><div><div style="color:var(--state);font-weight:800">BTC 시장상태</div><div class="btc-price">₩{fmt(btc.get("price"))}</div><span class="status-chip">일봉 · {fmt(btc.get("daily_state"))}</span><span class="status-chip">4시간봉 · {fmt(btc.get("four_hour_state"))}</span><span class="status-chip">박스 위치 · {fmt(box.get("position_pct"))}%</span><div class="sub">{str(btc.get('basis',{}).get('four_hour_end','-')).replace('T',' ')} 마감</div></div><div><div class="dual-chart"><div><div class="chart-title">일봉 <small>큰 추세·박스</small></div><div class="chart">{day_chart}</div></div><div><div class="chart-title">4시간봉 <small>횡보·재지지 확인</small></div><div class="chart">{four_chart}</div></div></div><div class="sub">매수존 {fmt(box.get("buy_zone"))} · 중심 {fmt(box.get("center"))} · 매도존 {fmt(box.get("sell_zone"))}</div></div><img class="cat-main" src="{cat}" alt="BTC {fmt(policy.get('mode'))} 상태 고양이"></section>
-<section class="dashboard-panel action-card {state_class}"><div class="warning-mark">⚠</div><div><div style="color:var(--state);font-size:18px">오늘의 행동</div><div class="action-big">{action_title}</div><div style="margin-top:8px">알트 신규진입 한도 · <b>{size}%</b></div></div><div class="action-lines"><div>신규진입 · <b>{fmt(policy.get("new_entry"))}</b></div><div>보유종목 · <b>{fmt(policy.get("existing"))}</b></div><div>확인조건 · <b>4시간봉 상단 재지지</b></div></div></section>
-<section class="dashboard-panel"><h2>오늘 먼저 볼 후보 5</h2>{'<span class="trade-lock">BTC 거래금지 · 관찰만</span>' if blocked else ''}<div class="table-wrap"><table class="top-table"><thead><tr><th>종목</th><th>유형</th><th>단계</th><th>진입구간</th><th>손절가</th><th>1차 목표가</th><th>점수</th><th>손익비</th></tr></thead><tbody>{top}</tbody></table></div><p><a class="green" href="scan.html">오늘의 전체 스캔 보기 →</a></p></section>'''
+    for row in all_rows[:5]:
+        targets=row.get("targets") or [];gate=row.get("market_gate") or {}
+        top_rows.append(f'<tr class="candidate-row {"blocked-row" if blocked else ""}"><td><b>{fmt(row.get("market"))}</b></td><td>{fmt(row.get("type"))}형</td><td>{action_badge(row)}<span class="gate-chip">개별 {fmt(row.get("pattern_action") or row.get("action"))} · {fmt(gate.get("label"))}</span></td><td>{fmt(row.get("entry"))}</td><td>{fmt(row.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(row.get("score"))}점</td><td>{fmt(row.get("rr"))}R</td></tr>')
+    top="".join(top_rows) or '<tr><td colspan="8" class="empty">이번 기준봉 후보 없음</td></tr>'
+    intro=page_intro("메인 대시보드","BTC와 시장 자금 흐름을 먼저 보고 오늘 알트코인을 매매해도 되는지 판단하는 곳","① 시장 M단계 → ② BTC.D·TOTAL2·OTHERS → ③ A~E 허용표 → ④ 최종 후보")
+    stage=fmt(regime.get("stage") or "M?");name=fmt(regime.get("name") or "시장 데이터 확인")
+    body=intro+f'''<section class="panel market-hero" style="--market-color:{market_color}"><div class="market-stage"><div>{stage}<small>시장 {str(regime.get('stage') or 'M?').replace('M','')}단계</small></div></div><div><div class="sub">쉽게 말하면 · {fmt(regime.get("plain"))}</div><div class="market-title">{name}</div><ul class="market-reasons">{reasons}</ul><div class="proxy-note">자동판정 · {fmt(regime.get("source"))} · 신뢰도 {fmt(regime.get("confidence"))}%</div></div><div class="market-limit"><span>오늘 알트 신규진입 한도</span><strong>{size}%</strong><div>{"새 매수 금지" if blocked else "개별 조건 확인 후 분할진입"}</div></div></section>
+{market_gate_panel(regime)}
+<section class="panel"><h2>알트 자금 흐름 차트</h2><div class="sub">같은 4시간봉에서 BTC.D 하락과 TOTAL2·OTHERS 상승이 함께 나오는지 확인해.</div><div class="market-chart-grid" style="margin-top:12px">{tradingview_widget("CRYPTOCAP:BTC.D","BTC.D","비트코인 독점 강도")}{tradingview_widget("CRYPTOCAP:TOTAL2","TOTAL2","BTC 제외 알트 시총")}{tradingview_widget("CRYPTOCAP:OTHERS","OTHERS","상위 10개 제외 중소형 시총")}</div><div class="proxy-note">차트는 TradingView 원본, 자동 M단계 계산은 CoinGecko 프록시를 사용해.</div></section>
+<section class="dashboard-panel btc-card {state_class}"><div><div style="color:var(--state);font-weight:800">BTC 시장상태</div><div class="btc-price">₩{fmt(btc.get("price"))}</div><span class="status-chip">일봉 · {fmt(btc.get("daily_state"))}</span><span class="status-chip">4시간봉 · {fmt(btc.get("four_hour_state"))}</span><span class="status-chip">박스 위치 · {fmt(box.get("position_pct"))}%</span><div class="sub">{str(btc.get('basis',{}).get('four_hour_end','-')).replace('T',' ')} 마감</div></div><div><div class="dual-chart"><div><div class="chart-title">일봉 <small>큰 추세·박스</small></div><div class="chart">{day_chart}</div></div><div><div class="chart-title">4시간봉 <small>횡보·재지지 확인</small></div><div class="chart">{four_chart}</div></div></div><div class="sub">매수존 {fmt(box.get("buy_zone"))} · 중심 {fmt(box.get("center"))} · 매도존 {fmt(box.get("sell_zone"))}</div></div><img class="cat-main" src="{cat}" alt="시장 {stage} 상태 고양이"></section>
+<section class="dashboard-panel"><h2>오늘 먼저 볼 후보 5</h2>{'<span class="trade-lock">시장 M0 · 신규진입 금지</span>' if blocked else ''}<div class="table-wrap"><table class="top-table"><thead><tr><th>종목</th><th>유형</th><th>최종 행동</th><th>진입구간</th><th>손절가</th><th>1차 목표가</th><th>점수</th><th>손익비</th></tr></thead><tbody>{top}</tbody></table></div><p><a class="green" href="scan.html">오늘의 전체 스캔 보기 →</a></p></section>'''
     return shell("메인 대시보드",body,snapshot,"dashboard")
 
 
@@ -221,6 +252,9 @@ def type_page(key, snapshot):
     rows = grouped(snapshot)[key]
     purpose={"A":"강한 상승 뒤 첫 눌림에서 지지를 확인하고 반등 후보를 찾는 곳","B":"긴 하락 뒤 바닥·박스 하단에서 상승 전환 후보를 찾는 곳","C":"박스 상단 돌파 뒤 재지지하는 추가 상승 후보를 찾는 곳","D":"바닥 압축과 매물대 재탈환으로 급등 전 후보를 찾는 곳","E":"급락한 코인이 핵심 하단에서 멈춘 뒤 나오는 1회성 기술적 반등만 0.382까지 노리는 곳"}[key]
     intro=page_intro(f"{name} 후보",purpose,"① 원칙 확인 → ② 단계별 후보 비교 → ③ 필요한 종목만 펼쳐보기 → ④ 자세한 건 업비트에서 확인")
+    regime=snapshot.get("market_regime") or read(MARKET,{})
+    gate=(regime.get("gates") or {}).get(key) or {"code":"BLOCK","label":"판정 없음","reason":"시장 데이터 확인 대기"}
+    gate_banner=f'<section class="panel gate-item gate-{fmt(gate.get("code"))}" style="--accent:{color}"><h2>{fmt(regime.get("stage") or "M?")} 시장 · {key}형 <span>{fmt(gate.get("label"))}</span></h2><div class="sub">{fmt(gate.get("reason"))} · 아래 표의 행동은 이 시장 허용 기준까지 반영한 최종판정이야.</div></section>'
     cat=asset_uri("cat_entry.webp")
     model = ""
     if key == "E":
@@ -229,16 +263,16 @@ def type_page(key, snapshot):
     trs=[]
     for i,r in enumerate(rows):
         targets=r.get("targets") or []; charts=r.get("charts") or {}; levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
-        missing=" · ".join(fmt(x) for x in r.get("missing",[])) or "없음"
+        missing=remaining_condition(r)
         stage_line = f'<br><b>D형 생애주기</b> · {fmt(r.get("d_stage"))} {fmt(r.get("d_stage_label"))}<br><b>단계 근거</b> · {fmt(r.get("d_stage_reason"))}' if key == "D" else ""
-        detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>현재 판단</b> · {fmt(r.get("action"))}{stage_line}<br><b>남은 조건</b> · {missing}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">목표 {fmt(targets[:3])}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
+        detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>개별 차트</b> · {fmt(r.get("pattern_action") or r.get("action"))}<br><b>시장 반영 최종판단</b> · {fmt(r.get("action"))}{stage_line}<br><b>남은 조건</b> · {missing}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">목표 {fmt(targets[:3])}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
         stage_badge = f'<span class="badge">{fmt(r.get("d_stage"))} · {fmt(r.get("d_stage_label"))}</span><br>' if key == "D" else ""
         trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}</td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
-    filter_values = ["전체","D0","D1","D2","D3","D4","D-W","D-F"] if key == "D" else ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"]
+    filter_values = ["전체","D0","D1","D2","D3","D4","D-W","D-F"] if key == "D" else ["전체","진입 검토","조건부 진입","확인 대기","시장 대기","진입가 대기","익절 우선","추격 금지"]
     buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in filter_values)
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div>{action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'
     script='''<script>function toggleRow(i){document.getElementById("detail"+i).classList.toggle("open")}function expandAll(open){document.querySelectorAll(".expand").forEach(x=>x.classList.toggle("open",open))}function filterAction(a,b){document.querySelectorAll("#actionFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("tr.row-click").forEach(r=>{const stageMatch=r.dataset.stage===a;const show=a==="전체"||stageMatch||r.textContent.includes(a);r.style.display=show?"":"none";const d=r.nextElementSibling;if(!show)d.classList.remove("open")})}</script>'''
-    return shell(name,intro+model+guide+table+script,snapshot,f"type_{key.lower()}")
+    return shell(name,intro+gate_banner+model+guide+table+script,snapshot,f"type_{key.lower()}")
 
 
 def training_scenario_svg(kind):
@@ -373,8 +407,10 @@ def generate():
     watch = read(WATCH, {"items":{}})
     latest = records[-1] if records else {"date": "기록 전", "time": "-", "candidates": []}
     btc = read(BTC, {})
+    market_data = read(GLOBAL, {})
+    regime = latest.get("market_regime") or read(MARKET, {})
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "index.html").write_text(dashboard_page(latest,watch,btc), encoding="utf-8")
+    (OUT / "index.html").write_text(dashboard_page(latest,watch,btc,market_data,regime), encoding="utf-8")
     (OUT / "scan.html").write_text(main_page(latest,btc), encoding="utf-8")
     for key in "ABCDE":
         (OUT / f"type_{key.lower()}.html").write_text(type_page(key, latest), encoding="utf-8")
