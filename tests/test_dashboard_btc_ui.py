@@ -12,7 +12,11 @@ def test_dashboard_has_one_top_bitcoin_tradingview_chart():
         "price": 105_580_000,
         "daily_state": "상단 돌파 시도",
         "four_hour_state": "기존 박스 상단을 반복 시험 중·단기 과열주의",
-        "box": {"position_pct": 226.7},
+        "box": {
+            "position_pct": 226.7, "low": 88_990_100, "high": 96_322_220,
+            "center": 92_656_160, "buy_zone": [88_990_100, 90_089_950],
+            "sell_zone": [94_122_736, 96_322_220],
+        },
         "basis": {"four_hour_end": "2026-08-24T01:00:00"},
     }
     regime = {
@@ -40,3 +44,10 @@ def test_dashboard_has_one_top_bitcoin_tradingview_chart():
     assert "M4 · 알트 확산" in body
     assert "M5 · 과열·수익보호" in body
     assert 'market-stage-card current' in body
+    assert "시장 단계가 바뀌면 숙도지의 표정과 행동 안내도 함께 바뀌어." in body
+    assert "시장 단계가 바뀌면 고양이의 표정" not in body
+    assert body.index("BTC 조정이 시작된다면") < body.index("market-hero")
+    assert "4시간봉 마감 기준" in body
+    assert "기존 박스 상단 ₩96,322,220 이탈 마감" in body
+    assert "박스 중심 ₩92,656,160" in body
+    assert "₩88,990,100 ~ ₩90,089,950" in body
