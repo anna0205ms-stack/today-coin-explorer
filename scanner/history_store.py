@@ -56,6 +56,9 @@ def normalize_d(row: dict) -> dict:
     return {
         "market": row.get("market"), "name": str(row.get("market", "")).replace("KRW-", ""), "type": "D",
         "score": row.get("score", 0), "status": status,
+        "d_stage": row.get("d_stage", "D0"),
+        "d_stage_label": row.get("d_stage_label", "단계 미분류"),
+        "d_stage_reason": row.get("d_stage_reason", ""),
         "price": row.get("last_completed_4h_close"),
         "entry": row.get("aggressive_entry_zone") or row.get("confirmation_entry_zone") or [],
         "stop": row.get("hard_stop"), "targets": row.get("targets") or [],
