@@ -46,3 +46,30 @@ def test_safety_action_is_never_weakened_by_market_gate():
 
     assert gated["action"] == "추격 금지"
     assert gated["market_gate"]["entry_allowed"] is False
+
+
+def test_alt_breadth_prevents_false_m0_and_detects_rotation():
+    global_data = flow(btcd=-.16, total2=.63, others=.83, btc=0)
+    global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}
+
+    stage, _, reasons = classify_market(
+        {"daily_state": "상단 돌파 시도", "four_hour_state": "상단 20회 접촉·과열주의"},
+        global_data,
+    )
+
+    assert stage == "M3"
+    assert any("상승 비율 60%" in reason for reason in reasons)
+
+
+def test_btc_overheat_caps_m3_entry_limit_without_forcing_m0():
+    global_data = flow(btcd=-.16, total2=.63, others=.83, btc=0)
+    global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}
+
+    regime = build_regime(
+        {"daily_state": "상단 돌파 시도", "four_hour_state": "상단 20회 접촉·과열주의"},
+        global_data,
+    )
+
+    assert regime["stage"] == "M3"
+    assert regime["alt_entry_limit_pct"] == 45
+    assert any("알트 펌핑은 인정" in reason for reason in regime["reasons"])

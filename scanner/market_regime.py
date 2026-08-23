@@ -47,6 +47,13 @@ def _num(value, default=0.0) -> float:
         return default
 
 
+def _maybe_num(value) -> float | None:
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
 def _previous_stage() -> str | None:
     records = read(SNAPSHOTS, [])
     if not records:
@@ -62,23 +69,35 @@ def classify_market(btc: dict, global_data: dict, previous_stage: str | None = N
     daily = str(btc.get("daily_state") or "")
     four = str(btc.get("four_hour_state") or "")
     btcd24 = _num((global_data.get("btc_d") or {}).get("change_24h_pct_point"))
-    btcd4 = (global_data.get("btc_d") or {}).get("change_4h_pct_point")
+    btcd4 = _maybe_num((global_data.get("btc_d") or {}).get("change_4h_pct_point"))
     total2 = _num((global_data.get("total2") or {}).get("change_24h_pct"))
     others = _num((global_data.get("others") or {}).get("change_24h_pct"))
+    total2_4 = _maybe_num((global_data.get("total2") or {}).get("change_4h_pct"))
+    others_4 = _maybe_num((global_data.get("others") or {}).get("change_4h_pct"))
     btc24 = _num((global_data.get("btc") or {}).get("price_change_24h_pct"))
+    breadth = _maybe_num((global_data.get("breadth") or {}).get("positive_ratio_24h_pct"))
+    median_alt = _maybe_num((global_data.get("breadth") or {}).get("median_change_24h_pct"))
     structural_risk = "이탈" in daily or "돌파 실패" in four
+    breadth_weak = breadth is None or breadth <= 40
+    breadth_alive = breadth is None or breadth >= 50
+    breadth_broad = breadth is None or breadth >= 60
+    flow_crash_24h = total2 <= -2 and others <= -2.5 and breadth_weak
+    flow_crash_4h = total2_4 is not None and others_4 is not None and total2_4 <= -1.2 and others_4 <= -1.8
+    breadth_text = f"상위 10개 밖 알트 상승 비율 {breadth:.0f}% · 중앙값 {median_alt:+.1f}%" if breadth is not None and median_alt is not None else "알트 상승 종목 비율 확인 전"
 
-    if structural_risk or (total2 <= -2 and others <= -2.5) or (btc24 < -2 and btcd24 > 0.15):
-        return "M0", 90, [f"BTC 구조 {daily} · {four}", f"TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%"]
-    if previous_stage == "M4" and ((btcd4 is not None and _num(btcd4) >= 0.15) or others <= -1.5):
-        return "M5", 78, ["직전 M4 이후 과열 종료 신호", f"BTC.D 4H {_num(btcd4):+.2f}%p · OTHERS {others:+.1f}%"]
-    if btcd24 <= -0.20 and total2 >= 1.5 and others >= 2.0 and others >= total2 + 0.3:
-        return "M4", 86, ["BTC.D 하락으로 BTC 독점 약화", f"TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%로 중소형까지 확산"]
-    if btcd24 <= -0.10 and total2 >= 0.5 and others >= -0.2:
-        return "M3", 81, ["BTC.D 하락 전환", f"TOTAL2 {total2:+.1f}%로 알트 자금 순환 시작"]
-    if btc24 > 0.5 and btcd24 >= 0.10 and (total2 < btc24 or others < total2):
-        return "M1", 78, ["BTC와 BTC.D가 함께 상승", "알트 시총이 BTC 상승을 따라가지 못함"]
-    return "M2", 70, ["BTC 구조는 유지", "알트 방어는 보이지만 자금 순환 확정 전"]
+    if structural_risk:
+        return "M0", 92, [f"BTC 구조 훼손: 일봉 {daily} · 4시간봉 {four}", "BTC 구조가 먼저 무너져 신규 알트 진입을 차단"]
+    if flow_crash_24h or flow_crash_4h or (btc24 < -2 and btcd24 > 0.15 and breadth_weak):
+        return "M0", 88, [f"알트 자금 동반 이탈: TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%", breadth_text]
+    if previous_stage == "M4" and ((btcd4 is not None and btcd4 >= 0.15) or (others_4 is not None and others_4 <= -1.5)):
+        return "M5", 78, ["직전 M4 이후 4시간 과열 종료 신호", f"BTC.D 4H {(btcd4 or 0):+.2f}%p · OTHERS 4H {(others_4 or 0):+.1f}%"]
+    if btcd24 <= -0.20 and total2 >= 1.5 and others >= 2.0 and others >= total2 + 0.3 and breadth_broad:
+        return "M4", 86, [f"BTC.D {btcd24:+.2f}%p · TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%", breadth_text]
+    if btcd24 <= -0.10 and total2 >= 0.5 and others >= -0.2 and breadth_alive:
+        return "M3", 82, [f"BTC.D {btcd24:+.2f}%p · TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%", breadth_text]
+    if btc24 > 0.5 and btcd24 >= 0.10 and (total2 < btc24 or others < total2) and (breadth is None or breadth <= 50):
+        return "M1", 78, [f"BTC {btc24:+.1f}%와 BTC.D {btcd24:+.2f}%p가 함께 상승", f"알트 확산 부족 · {breadth_text}"]
+    return "M2", 70, [f"BTC.D {btcd24:+.2f}%p · TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%", f"알트 순환 확정 전 · {breadth_text}"]
 
 
 def apply_market_gate(candidate: dict, regime: dict) -> dict:
@@ -115,6 +134,11 @@ def apply_market_gate(candidate: dict, regime: dict) -> dict:
 def build_regime(btc: dict, global_data: dict, previous_stage: str | None = None) -> dict:
     stage, confidence, reasons = classify_market(btc, global_data, previous_stage)
     name, plain, limit = STAGES[stage]
+    four = str(btc.get("four_hour_state") or "")
+    if "과열주의" in four and stage in {"M2", "M3", "M4"}:
+        limit = min(limit, 45)
+        confidence = min(confidence, 78)
+        reasons.append("BTC는 상단 과열 구간 · 알트 펌핑은 인정하되 추격 대신 눌림만 선별")
     gates = {key: {"code": code, "label": GATE_LABELS[code], "reason": reason} for key, (code, reason) in GATE_RULES[stage].items()}
     return {
         "generated_at": datetime.now(KST).isoformat(timespec="seconds"),
