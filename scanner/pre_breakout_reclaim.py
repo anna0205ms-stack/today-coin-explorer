@@ -105,6 +105,66 @@ def derive_levels(days: list[dict], base_high: float, signal_close: float) -> tu
     return lower, upper, "auto"
 
 
+def classify_d_stage(
+    hours4: list[dict],
+    lower: float,
+    upper: float,
+    base_high: float,
+    base_compressed: bool,
+) -> tuple[str, str, str]:
+    """D형의 준비→재탈환→리테스트→확장과 경고·실패를 분리한다.
+
+    단계 판정은 완성 4시간봉만 사용한다. 윗꼬리만 상단선을 넘은 경우는
+    돌파로 인정하지 않으며, 재탈환 이력이 있어야 경고·실패로 강등한다.
+    """
+    recent = hours4[-12:]
+    if not recent:
+        return "D0", "바닥 압축 후보", "완성 4시간봉 자료가 부족함"
+    closes = [row["close"] for row in recent]
+    highs = [row["high"] for row in recent]
+    lows = [row["low"] for row in recent]
+    current = closes[-1]
+    reclaimed_indices = [index for index, close in enumerate(closes) if close >= lower]
+    upper_indices = [index for index, close in enumerate(closes) if close >= upper]
+    had_lower_reclaim = bool(reclaimed_indices)
+    had_upper_break = bool(upper_indices)
+    expanded = max(highs) >= upper * 1.08
+    trailing_lower_losses = 0
+    for close in reversed(closes):
+        if close < lower:
+            trailing_lower_losses += 1
+        else:
+            break
+
+    # 재탈환 뒤 2개 연속 완성봉이 하단선 밑에서 끝나면 구조 실패다.
+    if had_lower_reclaim and reclaimed_indices[0] < len(closes) - 2 and trailing_lower_losses >= 2:
+        return "D-F", "구조 실패", "하단 재탈환선 아래 4시간봉 2개 연속 마감"
+
+    # 상단 돌파를 반납했거나 하단선을 한 봉 이탈한 상태는 즉시 실패가 아니라 경고다.
+    if had_upper_break and current < upper:
+        return "D-W", "상단 재지지 경고", "상단 돌파 후 완성봉이 다시 상단선 아래 마감"
+    if had_lower_reclaim and current < lower:
+        return "D-W", "하단 재탈환 경고", "하단 재탈환선 아래 첫 4시간봉 마감"
+
+    if had_upper_break and current >= upper:
+        after_break = recent[upper_indices[0]:]
+        retested_upper = any(row["low"] <= upper * 1.03 for row in after_break[1:])
+        if expanded and retested_upper:
+            return "D4", "확장 후 재진입", "상단선 8% 이상 확장 후 상단선 리테스트 방어"
+        return "D3", "상단 돌파·확장", "상단선 위 4시간봉 종가 안착"
+
+    if had_lower_reclaim and current >= lower:
+        after_reclaim = recent[reclaimed_indices[0]:]
+        retested_lower = any(row["low"] <= lower * 1.03 for row in after_reclaim[1:])
+        if retested_lower:
+            return "D2", "하단 리테스트 확인", "하단 재탈환선 리테스트 후 4시간봉 종가 방어"
+        return "D1", "하단선 재탈환", "하단 재탈환선 위 첫 4시간봉 안착"
+
+    if base_compressed and current >= base_high * 0.97:
+        return "D0", "바닥 압축 후보", "바닥 압축 뒤 하단 재탈환선 접근 중"
+    return "D0", "바닥 압축 관찰", "재탈환 전 단계"
+
+
 def analyze(
     market: str,
     days: list[dict],
@@ -167,6 +227,9 @@ def analyze(
     planned_entry = (entry_low + entry_high) / 2.0
     risk = planned_entry - hard_stop
     first_rr = (target1 - planned_entry) / risk if risk > 0 else 0.0
+    d_stage, d_stage_label, d_stage_reason = classify_d_stage(
+        hours4, lower, upper, base_high, checks["베이스압축"]
+    )
 
     if distance_above_upper >= 8.0:
         status = "늦음·추격금지"
@@ -182,6 +245,9 @@ def analyze(
     return {
         "market": market,
         "status": status,
+        "d_stage": d_stage,
+        "d_stage_label": d_stage_label,
+        "d_stage_reason": d_stage_reason,
         "score": score,
         "checks": checks,
         "level_source": level_source,
@@ -275,8 +341,9 @@ def main() -> int:
             results.append(result)
             if args.all:
                 print(f"{index}/{len(markets)} {market} {result['status']} {result['score']}")
+    stage_order = {"D4": 0, "D3": 1, "D2": 2, "D1": 3, "D0": 4, "D-W": 5, "D-F": 6}
     order = {"진입확인": 0, "선매수감시": 1, "준비": 2, "늦음·추격금지": 3, "제외": 4, "자료부족": 5, "오류": 6}
-    results.sort(key=lambda row: (order.get(row["status"], 9), -row.get("score", 0)))
+    results.sort(key=lambda row: (stage_order.get(row.get("d_stage"), 9), order.get(row["status"], 9), -row.get("score", 0)))
     save_results(results, args.output_json, args.output_csv)
     print(json.dumps(results if args.all else results[0], ensure_ascii=False, indent=2))
     return 0
