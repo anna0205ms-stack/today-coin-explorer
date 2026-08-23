@@ -256,9 +256,6 @@ def type_page(key, snapshot):
     gate=(regime.get("gates") or {}).get(key) or {"code":"BLOCK","label":"판정 없음","reason":"시장 데이터 확인 대기"}
     gate_banner=f'<section class="panel gate-item gate-{fmt(gate.get("code"))}" style="--accent:{color}"><h2>{fmt(regime.get("stage") or "M?")} 시장 · {key}형 <span>{fmt(gate.get("label"))}</span></h2><div class="sub">{fmt(gate.get("reason"))} · 아래 표의 행동은 이 시장 허용 기준까지 반영한 최종판정이야.</div></section>'
     cat=asset_uri("cat_entry.webp")
-    model = ""
-    if key == "E":
-        model = '''<section class="strategy-model" style="--accent:#ffb454"><h2>이 페이지는 이런 E형 차트를 모아둔 곳이야</h2><div class="sub">완전한 상승 전환을 기대하지 않고, 급락 뒤 하단에서 나오는 첫 기술적 반등만 피보나치 0.382까지 먹고 끝내는 종목을 보여줘.</div><img src="assets/e_type_technical_rebound_guide.png" alt="E형 급락 후 0.382 기술적 반등 모형 차트"><div class="stage-grid"><div class="stage-card"><b>E1 · 하단 도달</b>급락이 매물대 하단에 닿았지만 아직 떨어지는 중이야. 매수하지 않고 4시간봉 반응을 기다려.</div><div class="stage-card"><b>E2 · 반등 확인</b>투매저점을 지키고 4시간봉 양봉·아래꼬리·저점 2% 회복이 나왔어. 저점 +1~8%이면서 0.236 이하일 때만 진입 검토해.</div><div class="stage-card danger"><b>E3 · 반등 진행</b>진입구간을 이미 지나 반등 중이야. 신규 매수는 추격 금지하고, 보유자만 0.382 청산을 기다려.</div><div class="stage-card danger"><b>E4 · 0.382 도달</b>기술적 반등 목표가 끝났어. 전량청산하고 더 오를 것이라는 기대나 재진입을 하지 않아.</div></div></section>'''
     guide=f'<section class="panel hero-guide" style="--accent:{color}"><div><h2 style="color:{color}">{title}</h2><div class="flow" style="border-color:{color}">{flow}</div><div class="rules" style="margin-top:12px"><div class="rule"><b style="color:{color}">진입</b>{entry}</div><div class="rule"><b style="color:{color}">손절</b>{stop}</div><div class="rule"><b style="color:{color}">분할익절</b>{take}</div></div></div><div class="type-cat-wrap"><img src="{cat}" alt="{name} 안내 고양이"><span class="type-token">{key}</span></div></section>'
     trs=[]
     for i,r in enumerate(rows):
@@ -272,7 +269,7 @@ def type_page(key, snapshot):
     buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in filter_values)
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div>{action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'
     script='''<script>function toggleRow(i){document.getElementById("detail"+i).classList.toggle("open")}function expandAll(open){document.querySelectorAll(".expand").forEach(x=>x.classList.toggle("open",open))}function filterAction(a,b){document.querySelectorAll("#actionFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("tr.row-click").forEach(r=>{const stageMatch=r.dataset.stage===a;const show=a==="전체"||stageMatch||r.textContent.includes(a);r.style.display=show?"":"none";const d=r.nextElementSibling;if(!show)d.classList.remove("open")})}</script>'''
-    return shell(name,intro+gate_banner+model+guide+table+script,snapshot,f"type_{key.lower()}")
+    return shell(name,intro+gate_banner+guide+table+script,snapshot,f"type_{key.lower()}")
 
 
 def training_scenario_svg(kind):
@@ -342,6 +339,14 @@ def training_exit_svg():
 
 def training_page(key, basis):
     color = INFO[key][1]
+    if key == "E":
+        intro = page_intro(
+            "훈련소 · E형",
+            "급락 뒤 핵심 하단에서 나오는 첫 기술적 반등만 피보나치 0.382까지 먹고 끝내는 매매를 복기하는 페이지",
+            "급락 확인 → 하단 도달 → 4시간봉 저점 방어 → E2 진입 → 0.382 전량청산",
+        )
+        model = '''<section class="strategy-model" style="--accent:#ffb454"><h2>이 페이지는 이런 E형 차트를 모아둔 곳이야</h2><div class="sub">완전한 상승 전환을 기대하지 않고, 급락 뒤 하단에서 나오는 첫 기술적 반등만 피보나치 0.382까지 먹고 끝내는 종목을 보여줘.</div><img src="assets/e_type_technical_rebound_guide.png" alt="E형 급락 후 0.382 기술적 반등 모형 차트"><div class="stage-grid"><div class="stage-card"><b>E1 · 하단 도달</b>급락이 매물대 하단에 닿았지만 아직 떨어지는 중이야. 매수하지 않고 4시간봉 반응을 기다려.</div><div class="stage-card"><b>E2 · 반등 확인</b>투매저점을 지키고 4시간봉 양봉·아래꼬리·저점 2% 회복이 나왔어. 저점 +1~8%이면서 0.236 이하일 때만 진입 검토해.</div><div class="stage-card danger"><b>E3 · 반등 진행</b>진입구간을 이미 지나 반등 중이야. 신규 매수는 추격 금지하고, 보유자만 0.382 청산을 기다려.</div><div class="stage-card danger"><b>E4 · 0.382 도달</b>기술적 반등 목표가 끝났어. 전량청산하고 더 오를 것이라는 기대나 재진입을 하지 않아.</div></div></section>'''
+        return shell("훈련소 E형", intro + model, basis, "training_e")
     if key != "A":
         body = page_intro(f"훈련소 · {key}형", f"{INFO[key][2]} 사례를 멀티타임프레임으로 복기하는 페이지", "차트 교과서 준비 중")
         body += f'''<section class="panel" style="--accent:{color};border-color:{color}"><h2 style="color:{color}">{key}형 훈련 자료 준비 중</h2><p class="sub">A형과 동일하게 큰 시간봉의 구조선 → 진입 시간봉 → 손절·분할청산 → 성공·경고·실패 복기 순서로 확장됩니다.</p><a class="green" href="training_a.html">A형 교과서 보기 →</a></section>'''
