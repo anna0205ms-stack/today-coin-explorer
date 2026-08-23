@@ -79,7 +79,6 @@ def classify_market(btc: dict, global_data: dict, previous_stage: str | None = N
     median_alt = _maybe_num((global_data.get("breadth") or {}).get("median_change_24h_pct"))
     structural_risk = "이탈" in daily or "돌파 실패" in four
     breadth_weak = breadth is None or breadth <= 40
-    breadth_alive = breadth is None or breadth >= 50
     breadth_broad = breadth is None or breadth >= 60
     flow_crash_24h = total2 <= -2 and others <= -2.5 and breadth_weak
     flow_crash_4h = total2_4 is not None and others_4 is not None and total2_4 <= -1.2 and others_4 <= -1.8
@@ -93,7 +92,10 @@ def classify_market(btc: dict, global_data: dict, previous_stage: str | None = N
         return "M5", 78, ["직전 M4 이후 4시간 과열 종료 신호", f"BTC.D 4H {(btcd4 or 0):+.2f}%p · OTHERS 4H {(others_4 or 0):+.1f}%"]
     if btcd24 <= -0.20 and total2 >= 1.5 and others >= 2.0 and others >= total2 + 0.3 and breadth_broad:
         return "M4", 86, [f"BTC.D {btcd24:+.2f}%p · TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%", breadth_text]
-    if btcd24 <= -0.10 and total2 >= 0.5 and others >= -0.2 and breadth_alive:
+    # M3는 폭등 완료가 아니라 자금 순환의 '시작'이다. BTC.D가 꺾이고
+    # TOTAL2·OTHERS가 함께 플러스이며 상승 종목이 절반을 넘으면 조기에 인정한다.
+    rotation_start = btcd24 <= -0.10 and total2 >= 0.25 and others >= 0.20 and (breadth is None or breadth >= 55)
+    if rotation_start:
         return "M3", 82, [f"BTC.D {btcd24:+.2f}%p · TOTAL2 {total2:+.1f}% · OTHERS {others:+.1f}%", breadth_text]
     if btc24 > 0.5 and btcd24 >= 0.10 and (total2 < btc24 or others < total2) and (breadth is None or breadth <= 50):
         return "M1", 78, [f"BTC {btc24:+.1f}%와 BTC.D {btcd24:+.2f}%p가 함께 상승", f"알트 확산 부족 · {breadth_text}"]

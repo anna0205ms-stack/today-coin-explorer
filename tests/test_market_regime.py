@@ -49,7 +49,7 @@ def test_safety_action_is_never_weakened_by_market_gate():
 
 
 def test_alt_breadth_prevents_false_m0_and_detects_rotation():
-    global_data = flow(btcd=-.16, total2=.63, others=.83, btc=0)
+    global_data = flow(btcd=-.12, total2=.39, others=.33, btc=0)
     global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}
 
     stage, _, reasons = classify_market(
@@ -62,7 +62,7 @@ def test_alt_breadth_prevents_false_m0_and_detects_rotation():
 
 
 def test_btc_overheat_caps_m3_entry_limit_without_forcing_m0():
-    global_data = flow(btcd=-.16, total2=.63, others=.83, btc=0)
+    global_data = flow(btcd=-.12, total2=.39, others=.33, btc=0)
     global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}
 
     regime = build_regime(
