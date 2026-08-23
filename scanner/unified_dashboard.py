@@ -20,6 +20,7 @@ INFO = {
     "D": ("D형", "#5ce2b3", "급등 전 재탈환·압축", "장기 하락 → 바닥 압축 → 매물대 하단 재탈환 → 4H 리테스트 → 상단 시도", "하단선 방어 또는 상단 돌파·재지지", "재탈환선 4H 몸통 이탈·하드스톱", "상단선 → 단기 확장 → 상위 매물대"),
 }
 ACTION_RANK={"진입 검토":0,"확인 대기":1,"진입가 대기":2,"추격 금지":3}
+D_STAGE_ORDER={"D4":0,"D3":1,"D2":2,"D1":3,"D0":4,"D-W":5,"D-F":6}
 KST = timezone(timedelta(hours=9))
 
 
@@ -96,12 +97,16 @@ def chart_svg(rows,width=600,height=160,levels=None):
 
 
 def nav(active="dashboard"):
-    links = [("메인 대시보드", "index.html", "dashboard"), ("오늘의 전체 스캔", "scan.html", "today"),
-             ("A형", "type_a.html", "type_a"), ("B형", "type_b.html", "type_b"),
-             ("C형", "type_c.html", "type_c"), ("D형", "type_d.html", "type_d"),
+    links = [("메인 대시보드", "index.html", "dashboard"),
              ("관심종목 추적", "watchlist.html", "watch"), ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
-    return f'<nav><div class="app-brand"><img class="nav-cat" src="{cat}" alt="회색 고양이"><span class="app-title">오늘의 코인 탐험대</span></div>' + "".join(f'<a class="{"active" if active == key else ""}" href="{url}">{name}</a>' for name, url, key in links) + "</nav>"
+    scan_active = active == "today" or active.startswith("type_")
+    scan_menu = f'''<details class="nav-drop" {"open" if scan_active else ""}><summary class="{"active" if scan_active else ""}">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html">전체 보기</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html">{key}형</a>' for key in "ABCD")}</div></details>'''
+    training_active = active.startswith("training_")
+    training_menu = f'''<details class="nav-drop" {"open" if training_active else ""}><summary class="{"active" if training_active else ""}">훈련소 <span>▾</span></summary><div class="nav-drop-menu">{''.join(f'<a class="{"active" if active == f"training_{key.lower()}" else ""}" href="training_{key.lower()}.html">{key}형</a>' for key in "ABCD")}</div></details>'''
+    first = f'<a class="{"active" if active == "dashboard" else ""}" href="index.html">메인 대시보드</a>'
+    rest = "".join(f'<a class="{"active" if active == key else ""}" href="{url}">{name}</a>' for name, url, key in links[1:])
+    return f'<nav><div class="app-brand"><img class="nav-cat" src="{cat}" alt="회색 고양이"><span class="app-title">오늘의 코인 탐험대</span></div>{first}{scan_menu}{training_menu}{rest}</nav>'
 
 
 def css():
@@ -110,10 +115,12 @@ def css():
 .brand{display:flex;align-items:center;gap:12px}.nav-cat{width:42px;height:42px;border-radius:50%;object-fit:cover;object-position:50% 13%;margin-right:10px}.cat-face{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:50% 13%;border:1px solid var(--green);background:#111}.btc-card{display:grid;grid-template-columns:300px minmax(430px,1fr) 230px;gap:26px;align-items:center;padding:28px 32px;border:1px solid var(--state);border-radius:18px;background:#030605}.btc-price{font-size:28px;font-weight:800;margin:5px 0}.state-entry{--state:#00e783;--state-bg:#082418}.state-caution{--state:#ffc247;--state-bg:#2a210c}.state-stop{--state:#ff5d3a;--state-bg:#2b100a}.status-chip{display:block;margin:8px 0;padding:7px 11px;border:1px solid var(--state);border-radius:999px}.cat-main{width:100%;height:250px;object-fit:contain;filter:drop-shadow(0 12px 20px #000)}.action-card{display:grid;grid-template-columns:150px 1fr 1fr;gap:26px;align-items:center;padding:28px 34px;border:1px solid var(--state);border-radius:18px;background:var(--state-bg)}.warning-mark{font-size:78px;line-height:1;text-align:center;color:var(--state)}.action-big{font-size:42px;font-weight:900;color:var(--state)}.action-lines{border-left:1px solid var(--state);padding-left:34px}.action-lines div{margin:9px 0}.top-table{width:100%;border-collapse:collapse}.top-table th,.top-table td{padding:12px 10px;border-bottom:1px solid #23372d;text-align:left;white-space:nowrap}.top-table th{color:var(--green);font-size:12px}.candidate-row{position:relative}.trade-lock{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:999px;background:#5a1b13;color:#ffb5a6;font-size:11px}.blocked-row{color:#b9aaa6;background:linear-gradient(90deg,rgba(80,18,10,.26),transparent)}.blocked-row td:first-child:before{content:"거래금지";display:inline-block;margin-right:7px;padding:2px 6px;border:1px solid #ff5d3a;border-radius:6px;color:#ff7b61;font-size:10px}.table-wrap{overflow:auto}.dashboard-panel{margin:17px 0;padding:20px;border:1px solid var(--line);border-radius:18px;background:#030605}@media(max-width:900px){.btc-card{grid-template-columns:1fr}.cat-main{height:190px}.action-card{grid-template-columns:1fr}.warning-mark{text-align:left}.action-lines{border-left:0;border-top:1px solid var(--state);padding:15px 0 0}}@media(max-width:600px){.action-big{font-size:30px}.btc-card{padding:16px}}
 .act0{color:#a9ffd0;background:#123c27;border:1px solid #35d47f}.act1{color:#ffe39a;background:#4e3b12;border:1px solid #d9a928}.act2{color:#cae0ff;background:#1c314d;border:1px solid #588bcc}.act3{color:#ffb0be;background:#542326;border:1px solid #d95770}.condition-note{max-width:250px;margin-top:5px;color:#b6c5bc;font-size:11px;line-height:1.35;white-space:normal}.action-guide{margin:10px 0 17px;padding:12px 14px;border:1px solid #29483a;border-radius:14px;background:#07110c}.action-guide summary{cursor:pointer;color:#dcf8e7;font-weight:800}.action-guide-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.action-guide-grid>div{padding:11px;border:1px solid #233d31;border-radius:12px;background:#0b1611}.action-guide-grid p{margin:7px 0 0;color:#b9c8c0;font-size:12px}.guide-foot{margin:10px 0 0;color:#8fa399;font-size:12px}@media(max-width:900px){.action-guide-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.action-guide-grid{grid-template-columns:1fr}.condition-note{max-width:190px}}
 nav{display:flex;gap:24px;margin:0 0 20px;align-items:center;flex-wrap:wrap}.app-brand{display:flex;align-items:center;gap:10px;margin-right:8px}.app-title{font-size:18px;font-weight:900;color:#f4fff8;white-space:nowrap}.app-brand .nav-cat{margin-right:0}nav a{padding:14px 8px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;font-size:16px}nav a.active{border-color:var(--green);color:var(--green)}
+.nav-drop{position:relative}.nav-drop summary{list-style:none;padding:14px 8px;border-bottom:2px solid transparent;font-size:16px;cursor:pointer}.nav-drop summary::-webkit-details-marker{display:none}.nav-drop summary.active{border-color:var(--green);color:var(--green)}.nav-drop-menu{position:absolute;z-index:40;left:0;top:48px;display:grid;min-width:150px;padding:7px;border:1px solid var(--line);border-radius:12px;background:#07100c;box-shadow:0 14px 28px #000}.nav-drop:not([open]) .nav-drop-menu{display:none}.nav-drop-menu a{padding:9px 12px;border:0;border-radius:8px;font-size:14px}.nav-drop-menu a:hover,.nav-drop-menu a.active{background:#0d2118;color:var(--green)}
 .dual-chart{display:grid;grid-template-columns:1fr 1fr;gap:14px}.chart-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-weight:800}.chart-title small{color:var(--sub);font-weight:400}@media(max-width:900px){.dual-chart{grid-template-columns:1fr}}
 .page-intro{margin:4px 0 18px}.page-intro h1{margin:0 0 4px}.how{margin-top:7px;color:#c8ffdf}.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:4px;border:1px solid #60756a;border-radius:50%;color:#a9b9b0;font-size:10px;cursor:help}.tip:hover:after{content:attr(data-tip);position:absolute;z-index:20;left:0;top:22px;width:220px;padding:9px;border:1px solid var(--green);border-radius:9px;background:#07100c;color:#fff;font-weight:400;white-space:normal}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.filter{padding:8px 13px;border:1px solid #31473c;border-radius:999px;background:#08100c;color:#fff;cursor:pointer}.filter.active{border-color:var(--accent,var(--green));color:var(--accent,var(--green))}.data-table{width:100%;border-collapse:collapse}.data-table th,.data-table td{padding:11px 9px;border-bottom:1px solid #26372f;text-align:left;white-space:nowrap}.data-table th{color:#a6b8ad;font-size:12px}.type-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.type-tab{padding:17px;border:1px solid var(--c);border-radius:16px;background:#050807}.type-tab strong{font-size:28px;color:var(--c)}.type-tab.active{box-shadow:0 0 16px color-mix(in srgb,var(--c) 35%,transparent);background:color-mix(in srgb,var(--c) 9%,#050807)}.expand{display:none}.expand.open{display:table-row}.expand td{padding:16px;background:#07100c}.expand-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.target-strip{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.target-chip{padding:8px 12px;border:1px solid var(--accent,var(--green));border-radius:10px}.help-note{padding:10px 12px;border-left:2px solid var(--accent,var(--green));background:#0a1510;color:#cbd8d0}.calendar-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{padding:9px;text-align:center;border-radius:8px}.day.has{color:#bfffd9}.day.selected{outline:1px solid var(--green);background:#0a2a19}.outcome{padding:3px 8px;border-radius:999px}.ok{color:#73eaa8;border:1px solid #23754b}.wait{color:#ffd166;border:1px solid #755b22}.bad{color:#ff8b78;border:1px solid #82372c}.muted{color:#a5b0aa;border:1px solid #45534b}@media(max-width:900px){.type-tabs,.calendar-layout,.expand-grid{grid-template-columns:1fr}.data-table{font-size:12px}}
 .hero-guide{display:grid;grid-template-columns:1fr 190px;gap:20px;align-items:center;border-color:var(--accent)}.type-cat-wrap{position:relative;height:190px}.type-cat-wrap img{width:100%;height:100%;object-fit:contain}.type-token{position:absolute;right:7px;top:16px;width:58px;height:58px;border:3px solid var(--accent);border-radius:50%;background:#050807;color:var(--accent);font-size:28px;font-weight:900;text-align:center;line-height:52px}.row-click{cursor:pointer}.row-click:hover{background:#0d1b14}.section-label{margin:20px 0 8px;color:var(--accent,var(--green))}.status-line{display:flex;gap:12px;flex-wrap:wrap}.mini-stat{padding:10px 14px;border:1px solid #294438;border-radius:12px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.date-buttons{display:flex;gap:7px;flex-wrap:wrap}.date-btn{padding:8px 11px;border:1px solid #31473c;border-radius:10px;background:#08100c;color:#fff}.date-btn.active{border-color:var(--green);color:var(--green)}@media(max-width:900px){.hero-guide{grid-template-columns:1fr}.type-cat-wrap{height:150px}}
 .system-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:11px 14px;border:1px solid #244b38;border-radius:14px;background:#07110c}.system-dot{width:9px;height:9px;border-radius:50%;background:#00e783;box-shadow:0 0 10px #00e783}.system-bar.waiting .system-dot{background:#ffc247;box-shadow:0 0 10px #ffc247}.system-bar.late .system-dot{background:#ff5d3a;box-shadow:0 0 10px #ff5d3a}.system-divider{color:#365443}.update-stamp{margin-top:7px;color:var(--sub);font-size:12px}@media(max-width:600px){.system-bar{align-items:flex-start}.system-divider{display:none}.system-item{width:100%}}
+.training-tabs{display:flex;gap:8px;margin:10px 0 18px}.training-tab{padding:9px 15px;border:1px solid var(--line);border-radius:10px}.training-tab.active{border-color:#ff8297;color:#ff8297;background:#170b0e}.stage-rail{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin:14px 0}.stage-card{padding:11px;border:1px solid #31473c;border-radius:11px;background:#08100c}.stage-card strong{display:block;font-size:16px}.stage-card span{color:var(--sub);font-size:12px}.stage-card.hot{border-color:var(--green);background:#082418}.stage-card.hot strong{color:var(--green)}.stage-matrix{width:100%;border-collapse:collapse}.stage-matrix th,.stage-matrix td{padding:10px;border-bottom:1px solid #26372f;text-align:left;vertical-align:top}.stage-matrix th{color:var(--sub);font-size:12px}.training-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:14px}.training-chart{border:1px solid #173a2b;border-radius:12px;background:#07100c;overflow:hidden}.training-chart svg{display:block;width:100%;height:auto}.training-notes{border:1px solid #26372f;border-radius:12px;overflow:hidden}.training-note{padding:12px;border-bottom:1px solid #26372f}.training-note:last-child{border:0}.training-note b{display:block;color:var(--green);margin-bottom:3px}.precision-table{width:100%;border-collapse:collapse}.precision-table th,.precision-table td{padding:10px;border-bottom:1px solid #26372f;text-align:left;vertical-align:top}.precision-table th{color:var(--sub);font-size:12px}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.scenario{padding:14px;border:1px solid #294438;border-radius:14px;background:#07100c}.scenario.success{border-color:#00e783}.scenario.warning{border-color:#ffd166}.scenario.failure{border-color:#ff667e}.scenario h3{margin:0 0 8px}.scenario svg{width:100%;height:auto;display:block;border-bottom:1px solid #26372f;margin-bottom:9px}.scenario dl{margin:0}.scenario dt{margin-top:8px;font-weight:800}.scenario dd{margin:2px 0;color:var(--sub)}.training-close{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:16px;border:1px solid var(--line);background:var(--line)}.training-close div{padding:13px;background:#07100c}.training-close b{display:block;margin-bottom:4px}.training-close span{color:var(--sub)}@media(max-width:900px){.stage-rail{grid-template-columns:repeat(4,1fr)}.training-grid,.scenario-grid{grid-template-columns:1fr}.training-close{grid-template-columns:1fr 1fr}}@media(max-width:600px){.stage-rail,.training-close{grid-template-columns:1fr 1fr}.nav-drop-menu{position:static;margin-top:4px}}
 """
 
 
@@ -141,8 +148,11 @@ def grouped(snapshot):
     for row in snapshot.get("candidates", []):
         if row.get("type") in groups:
             groups[row["type"]].append(row)
-    for rows in groups.values():
-        rows.sort(key=lambda row: (ACTION_RANK.get(row.get("action"),9),-float(row.get("score") or 0),str(row.get("market") or "")))
+    for key, rows in groups.items():
+        if key == "D":
+            rows.sort(key=lambda row: (D_STAGE_ORDER.get(row.get("d_stage"), 9), ACTION_RANK.get(row.get("action"),9),-float(row.get("score") or 0)))
+        else:
+            rows.sort(key=lambda row: (ACTION_RANK.get(row.get("action"),9),-float(row.get("score") or 0),str(row.get("market") or "")))
     return groups
 
 def dist_text(row):
@@ -212,12 +222,61 @@ def type_page(key, snapshot):
     for i,r in enumerate(rows):
         targets=r.get("targets") or []; charts=r.get("charts") or {}; levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
         missing=" · ".join(fmt(x) for x in r.get("missing",[])) or "없음"
-        detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>현재 판단</b> · {fmt(r.get("action"))}<br><b>남은 조건</b> · {missing}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">목표 {fmt(targets[:3])}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
-        trs.append(f'<tr class="row-click" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}</td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
-    buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"])
+        stage_line = f'<br><b>D형 생애주기</b> · {fmt(r.get("d_stage"))} {fmt(r.get("d_stage_label"))}<br><b>단계 근거</b> · {fmt(r.get("d_stage_reason"))}' if key == "D" else ""
+        detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>현재 판단</b> · {fmt(r.get("action"))}{stage_line}<br><b>남은 조건</b> · {missing}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">목표 {fmt(targets[:3])}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
+        stage_badge = f'<span class="badge">{fmt(r.get("d_stage"))} · {fmt(r.get("d_stage_label"))}</span><br>' if key == "D" else ""
+        trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}</td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
+    filter_values = ["전체","D0","D1","D2","D3","D4","D-W","D-F"] if key == "D" else ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"]
+    buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in filter_values)
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div>{action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'
-    script='''<script>function toggleRow(i){document.getElementById("detail"+i).classList.toggle("open")}function expandAll(open){document.querySelectorAll(".expand").forEach(x=>x.classList.toggle("open",open))}function filterAction(a,b){document.querySelectorAll("#actionFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("tr.row-click").forEach(r=>{const show=a==="전체"||r.textContent.includes(a);r.style.display=show?"":"none";const d=r.nextElementSibling;if(!show)d.classList.remove("open")})}</script>'''
+    script='''<script>function toggleRow(i){document.getElementById("detail"+i).classList.toggle("open")}function expandAll(open){document.querySelectorAll(".expand").forEach(x=>x.classList.toggle("open",open))}function filterAction(a,b){document.querySelectorAll("#actionFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("tr.row-click").forEach(r=>{const stageMatch=r.dataset.stage===a;const show=a==="전체"||stageMatch||r.textContent.includes(a);r.style.display=show?"":"none";const d=r.nextElementSibling;if(!show)d.classList.remove("open")})}</script>'''
     return shell(name,intro+guide+table+script,snapshot,f"type_{key.lower()}")
+
+
+def training_scenario_svg(kind):
+    ys = {
+        "success": [98,91,96,80,84,62,49,31],
+        "warning": [98,91,96,80,88,79,91,96],
+        "failure": [98,91,96,80,94,108,119,132],
+    }[kind]
+    candles=[]
+    for i,y in enumerate(ys):
+        x=24+i*42
+        rising = (i > 0 and y < ys[i-1]) or (i == 0)
+        color = "#00e783" if rising else "#ff667e"
+        height = 18 if i in {3,5} else 13
+        candles.append(f'<line x1="{x}" y1="{y-14}" x2="{x}" y2="{y+18}" stroke="{color}"/><rect x="{x-7}" y="{y-height/2}" width="14" height="{height}" fill="{color}"/>')
+    return f'''<svg viewBox="0 0 344 145" role="img" aria-label="{kind} 캔들 흐름"><rect width="344" height="145" fill="#050a07"/><rect x="0" y="78" width="344" height="28" fill="#3c3011" opacity=".55"/><line x1="0" y1="78" x2="344" y2="78" stroke="#ffd166" stroke-dasharray="5 4"/>{''.join(candles)}<circle cx="150" cy="70" r="5" fill="#00e783"/><text x="126" y="60" fill="#00e783" font-size="10">A3 진입</text><g opacity=".65">{''.join(f'<rect x="{17+i*42}" y="{132-(12+i*2 if kind=="success" else 10)}" width="14" height="{12+i*2 if kind=="success" else 10}" fill="#00e783"/>' for i in range(8))}</g></svg>'''
+
+
+def training_page(key, basis):
+    color = INFO[key][1]
+    if key != "A":
+        body = page_intro(f"훈련소 · {key}형", f"{INFO[key][2]} 사례를 멀티타임프레임으로 복기하는 페이지", "차트 교과서 준비 중")
+        body += f'''<section class="panel" style="--accent:{color};border-color:{color}"><h2 style="color:{color}">{key}형 훈련 자료 준비 중</h2><p class="sub">A형과 동일하게 큰 시간봉의 구조선 → 진입 시간봉 → 손절·분할청산 → 성공·경고·실패 복기 순서로 확장됩니다.</p><a class="green" href="training_a.html">A형 교과서 보기 →</a></section>'''
+        return shell(f"훈련소 {key}형", body, basis, f"training_{key.lower()}")
+
+    stages = [
+        ("A0","수급 포착","거래량 동반 확장. 추격 금지."),
+        ("A1","후보 확정","돌파선 지지·일봉 마감."),
+        ("A2","눌림 도달","가격 조건 충족. 반전 미확인."),
+        ("A3-초기","최적 진입","저점 방어·확장 양봉·재탈환."),
+        ("A3-진행","보유 판단","잔여 상승폭과 손절폭 재계산."),
+        ("A4","청산 구간","신규 추격 금지. 보유분 관리."),
+        ("A-W","경고","핵심 지지 이탈. 재탈환 대기."),
+        ("A-F","가설 폐기","구조 무효화선 종가 이탈."),
+    ]
+    rail = ''.join(f'<div class="stage-card {"hot" if s=="A3-초기" else ""}"><strong>{s}</strong><b>{name}</b><span>{desc}</span></div>' for s,name,desc in stages)
+    matrix = ''.join(f'<tr><td><b>{s}</b></td><td>{name}</td><td>{desc}</td><td>{"진입 검토" if s=="A3-초기" else "분할청산" if s=="A4" else "즉시 종료" if s=="A-F" else "관찰·대응"}</td></tr>' for s,name,desc in stages)
+    success = training_scenario_svg("success")
+    warning = training_scenario_svg("warning")
+    failure = training_scenario_svg("failure")
+    intro = page_intro("훈련소 · A형", "강한 수급 이후 첫 눌림을 일봉 → 시간봉 → 분봉으로 연결해 진입·청산 근거를 복기", "A0 후보 포착 → A2 계획구간 → A3 수급 전환 → A4 분할청산 또는 A-W/A-F 폐기")
+    body = intro + f'''
+<section class="panel" style="--accent:{color}"><h2>A형 단계 체계</h2><div class="stage-rail">{rail}</div><div class="table-wrap"><table class="stage-matrix"><thead><tr><th>단계</th><th>상태</th><th>판단 근거</th><th>대응</th></tr></thead><tbody>{matrix}</tbody></table></div></section>
+<section class="panel" style="--accent:{color}"><h2>A2 → A3-초기 전환</h2><div class="training-grid"><div class="training-chart">{success}</div><div class="training-notes"><div class="training-note"><b>가격</b>계획 매수구간 내부. 구조 무효화선 상단 유지.</div><div class="training-note"><b>캔들</b>음봉 실체 축소 → 저점 방어 → 첫 확장 양봉.</div><div class="training-note"><b>거래량</b>반전 양봉 거래량이 직전 하락봉 평균 대비 증가.</div><div class="training-note"><b>재탈환</b>분봉 단기 매물 또는 직전 하락봉 고가 회복·안착.</div><div class="training-note"><b>실행 손절</b>A3 반전 기준봉 저점 이탈. 일봉 무효화선까지 손절 확대 금지.</div></div></div><p class="help-note">A2는 가격 조건이다. 진입 신호는 A3-초기의 수급 전환과 재탈환이다.</p></section>
+<section class="panel"><h2>청산 시나리오</h2><div class="scenario-grid"><article class="scenario success"><h3>성공</h3>{success}<dl><dt>1차 청산</dt><dd>가장 가까운 분봉·시간봉 공급대 일부 회수</dd><dt>2차 청산</dt><dd>전일 몸통 상단·고점 중첩 구간</dd><dt>잔량</dt><dd>상승 저점·거래량 유지 조건부 보유</dd></dl></article><article class="scenario warning"><h3>경고</h3>{warning}<dl><dt>경고</dt><dd>재돌파 실패·거래량 둔화·매수가 재시험</dd><dt>대응</dt><dd>비중 축소. 반전 기준봉 저점 이탈 시 조기 종료</dd></dl></article><article class="scenario failure"><h3>실패</h3>{failure}<dl><dt>A-W</dt><dd>핵심 지지 이탈. 재탈환 전 재진입 금지</dd><dt>A-F</dt><dd>구조 무효화선 종가 이탈. 가설 폐기·전량 종료</dd></dl></article></div><div class="training-close"><div><b>후보 선정</b><span>거래량 동반 확장·돌파선 지지</span></div><div><b>진입</b><span>A2 내부 A3-초기 확인</span></div><div><b>청산</b><span>공급대별 분할·근거 붕괴 시 조기 종료</span></div><div><b>폐기</b><span>실행 손절과 구조 무효화 분리</span></div></div></section>'''
+    return shell("훈련소 A형", body, basis, "training_a")
 
 def watchlist_page(watch,basis):
     current={}
@@ -260,6 +319,7 @@ def generate():
     (OUT / "scan.html").write_text(main_page(latest,btc), encoding="utf-8")
     for key in "ABCD":
         (OUT / f"type_{key.lower()}.html").write_text(type_page(key, latest), encoding="utf-8")
+        (OUT / f"training_{key.lower()}.html").write_text(training_page(key, latest), encoding="utf-8")
     for old in OUT.glob("coin_*.html"):
         old.unlink()
     for old in OUT.glob("main_dashboard_review_*.html"):
