@@ -121,6 +121,7 @@ nav{display:flex;gap:24px;margin:0 0 20px;align-items:center;flex-wrap:wrap}.app
 .hero-guide{display:grid;grid-template-columns:1fr 190px;gap:20px;align-items:center;border-color:var(--accent)}.type-cat-wrap{position:relative;height:190px}.type-cat-wrap img{width:100%;height:100%;object-fit:contain}.type-token{position:absolute;right:7px;top:16px;width:58px;height:58px;border:3px solid var(--accent);border-radius:50%;background:#050807;color:var(--accent);font-size:28px;font-weight:900;text-align:center;line-height:52px}.row-click{cursor:pointer}.row-click:hover{background:#0d1b14}.section-label{margin:20px 0 8px;color:var(--accent,var(--green))}.status-line{display:flex;gap:12px;flex-wrap:wrap}.mini-stat{padding:10px 14px;border:1px solid #294438;border-radius:12px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.date-buttons{display:flex;gap:7px;flex-wrap:wrap}.date-btn{padding:8px 11px;border:1px solid #31473c;border-radius:10px;background:#08100c;color:#fff}.date-btn.active{border-color:var(--green);color:var(--green)}@media(max-width:900px){.hero-guide{grid-template-columns:1fr}.type-cat-wrap{height:150px}}
 .system-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:11px 14px;border:1px solid #244b38;border-radius:14px;background:#07110c}.system-dot{width:9px;height:9px;border-radius:50%;background:#00e783;box-shadow:0 0 10px #00e783}.system-bar.waiting .system-dot{background:#ffc247;box-shadow:0 0 10px #ffc247}.system-bar.late .system-dot{background:#ff5d3a;box-shadow:0 0 10px #ff5d3a}.system-divider{color:#365443}.update-stamp{margin-top:7px;color:var(--sub);font-size:12px}@media(max-width:600px){.system-bar{align-items:flex-start}.system-divider{display:none}.system-item{width:100%}}
 .training-tabs{display:flex;gap:8px;margin:10px 0 18px}.training-tab{padding:9px 15px;border:1px solid var(--line);border-radius:10px}.training-tab.active{border-color:#ff8297;color:#ff8297;background:#170b0e}.stage-rail{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin:14px 0}.stage-card{padding:11px;border:1px solid #31473c;border-radius:11px;background:#08100c}.stage-card strong{display:block;font-size:16px}.stage-card span{color:var(--sub);font-size:12px}.stage-card.hot{border-color:var(--green);background:#082418}.stage-card.hot strong{color:var(--green)}.stage-matrix{width:100%;border-collapse:collapse}.stage-matrix th,.stage-matrix td{padding:10px;border-bottom:1px solid #26372f;text-align:left;vertical-align:top}.stage-matrix th{color:var(--sub);font-size:12px}.training-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:14px}.training-chart{border:1px solid #173a2b;border-radius:12px;background:#07100c;overflow:hidden}.training-chart svg{display:block;width:100%;height:auto}.training-notes{border:1px solid #26372f;border-radius:12px;overflow:hidden}.training-note{padding:12px;border-bottom:1px solid #26372f}.training-note:last-child{border:0}.training-note b{display:block;color:var(--green);margin-bottom:3px}.precision-table{width:100%;border-collapse:collapse}.precision-table th,.precision-table td{padding:10px;border-bottom:1px solid #26372f;text-align:left;vertical-align:top}.precision-table th{color:var(--sub);font-size:12px}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.scenario{padding:14px;border:1px solid #294438;border-radius:14px;background:#07100c}.scenario.success{border-color:#00e783}.scenario.warning{border-color:#ffd166}.scenario.failure{border-color:#ff667e}.scenario h3{margin:0 0 8px}.scenario svg{width:100%;height:auto;display:block;border-bottom:1px solid #26372f;margin-bottom:9px}.scenario dl{margin:0}.scenario dt{margin-top:8px;font-weight:800}.scenario dd{margin:2px 0;color:var(--sub)}.training-close{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:16px;border:1px solid var(--line);background:var(--line)}.training-close div{padding:13px;background:#07100c}.training-close b{display:block;margin-bottom:4px}.training-close span{color:var(--sub)}@media(max-width:900px){.stage-rail{grid-template-columns:repeat(4,1fr)}.training-grid,.scenario-grid{grid-template-columns:1fr}.training-close{grid-template-columns:1fr 1fr}}@media(max-width:600px){.stage-rail,.training-close{grid-template-columns:1fr 1fr}.nav-drop-menu{position:static;margin-top:4px}}
+.daily-context-layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;align-items:start}.context-copy{display:grid;gap:10px}.context-point{padding:10px 0;border-bottom:1px solid #26372f}.context-point:last-child{border:0}.context-point b{display:block;color:#dfffee}.context-point span{color:var(--sub)}.timeframe-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px}.timeframe-flow div{padding:10px;border:1px solid #294438;border-radius:11px;background:#07100c;text-align:center}.timeframe-flow b{display:block;color:var(--green)}.mtf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.mtf-card{padding:13px;border:1px solid #294438;border-radius:14px;background:#07100c}.mtf-card h3{margin:0}.mtf-card p{min-height:42px;margin:4px 0 9px;color:var(--sub)}.mtf-card svg{display:block;width:100%;height:auto}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px;color:var(--sub)}.chart-legend span:before{content:"";display:inline-block;width:18px;height:7px;margin-right:6px;border-radius:4px;background:var(--legend)}.stage-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stage-detail{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:12px;border:1px solid #294438;border-radius:12px;background:#07100c}.stage-detail strong{color:var(--green);font-size:16px}.stage-detail p{margin:2px 0;color:var(--sub)}.stage-detail b{color:var(--text)}.exit-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr);gap:16px}.exit-rules{display:grid}.exit-rule{padding:10px 0;border-bottom:1px solid #26372f}.exit-rule:last-child{border:0}.exit-rule b{display:block}.exit-rule span{color:var(--sub)}@media(max-width:900px){.daily-context-layout,.exit-grid{grid-template-columns:1fr}.mtf-grid{grid-template-columns:1fr}.timeframe-flow{grid-template-columns:1fr 1fr}.stage-detail-grid{grid-template-columns:1fr}}@media(max-width:600px){.timeframe-flow{grid-template-columns:1fr}.stage-detail{grid-template-columns:75px 1fr}}
 """
 
 
@@ -249,6 +250,55 @@ def training_scenario_svg(kind):
     return f'''<svg viewBox="0 0 344 145" role="img" aria-label="{kind} 캔들 흐름"><rect width="344" height="145" fill="#050a07"/><rect x="0" y="78" width="344" height="28" fill="#3c3011" opacity=".55"/><line x1="0" y1="78" x2="344" y2="78" stroke="#ffd166" stroke-dasharray="5 4"/>{''.join(candles)}<circle cx="150" cy="70" r="5" fill="#00e783"/><text x="126" y="60" fill="#00e783" font-size="10">A3 진입</text><g opacity=".65">{''.join(f'<rect x="{17+i*42}" y="{132-(12+i*2 if kind=="success" else 10)}" width="14" height="{12+i*2 if kind=="success" else 10}" fill="#00e783"/>' for i in range(8))}</g></svg>'''
 
 
+def training_context_svg():
+    """A0 한 봉이 아니라 장기 일봉 문맥을 먼저 읽게 하는 훈련용 도식."""
+    closes = [74,79,76,72,68,65,61,58,55,51,48,44,42,39,37,35,33,32,31,30,31,30,32,31,33,32,34,33,32,34,33,35,34,36,35,37,36,38,37,39,38,41,45,52,61,70,75,72,74,71,73,76,74,77,75,78]
+    volumes = [28,36,32,27,25,24,23,21,20,19,18,17,16,15,14,13,12,11,10,10,9,9,8,8,7,7,8,7,7,8,7,8,8,9,8,10,9,11,10,12,11,14,19,28,46,70,58,34,28,25,23,24,22,25,21,24]
+    width, height, top, bottom = 980, 445, 24, 365
+    low, high = 24, 86
+    y = lambda value: top + (high-value)/(high-low)*(bottom-top)
+    step = width/len(closes); body = max(5, step*.54)
+    parts = [f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="과거 고점, 장기 하락, 하단 횡보, A0 수급봉과 과거 고점 재접근을 보여주는 일봉 차트"><rect width="{width}" height="{height}" fill="#050a07"/>']
+    for value in [30,40,50,60,70,80]:
+        parts.append(f'<line x1="0" y1="{y(value):.1f}" x2="{width}" y2="{y(value):.1f}" stroke="#183427"/>')
+    parts += [
+        f'<rect x="0" y="{y(82):.1f}" width="{width}" height="{y(70)-y(82):.1f}" fill="#143b2b" opacity=".7"/>',
+        f'<rect x="{step*17:.1f}" y="{y(41):.1f}" width="{step*25:.1f}" height="{y(28)-y(41):.1f}" fill="#3c3011" opacity=".55"/>',
+        f'<rect x="{step*44:.1f}" y="{y(58):.1f}" width="{step*12:.1f}" height="{y(51)-y(58):.1f}" fill="#4a3214" opacity=".62"/>',
+    ]
+    previous = closes[0] + 2
+    for i,(close,volume) in enumerate(zip(closes,volumes)):
+        opn = previous + (i%3-1)*.7; hi=max(opn,close)+1.2+(i%2)*.6; lo=min(opn,close)-1-(i%4)*.25
+        x=(i+.5)*step;color="#00e783" if close>=opn else "#ff667e";top_body=min(y(opn),y(close));bottom_body=max(y(opn),y(close))
+        parts.append(f'<line x1="{x:.1f}" y1="{y(hi):.1f}" x2="{x:.1f}" y2="{y(lo):.1f}" stroke="{color}"/><rect x="{x-body/2:.1f}" y="{top_body:.1f}" width="{body:.1f}" height="{max(2,bottom_body-top_body):.1f}" fill="{color}"/><rect x="{x-body/2:.1f}" y="{height-10-volume*.58:.1f}" width="{body:.1f}" height="{volume*.58:.1f}" fill="{color}" opacity=".55"/>')
+        previous=close
+    labels = [(18,18,"① 과거 고점·상단 매물대"),(175,135,"② 장기 하락"),(315,294,"③ 하단 횡보·수급 압축"),(650,255,"④ A0 수급봉"),(785,48,"⑤ 과거 고점 재접근"),(825,124,"⑥ A1 기준선 지지"),(795,225,"A2 예상구간")]
+    for x_pos,y_pos,text in labels:
+        parts.append(f'<text x="{x_pos}" y="{y_pos}" fill="#eafff2" font-size="12" font-weight="700">{text}</text>')
+    parts.append(f'<line x1="{step*17:.1f}" y1="{y(41):.1f}" x2="{step*43:.1f}" y2="{y(41):.1f}" stroke="#ffd166" stroke-width="2" stroke-dasharray="6 5"/><text x="12" y="437" fill="#91a79b" font-size="11">거래량 · A0에서 장기 평균 대비 급증</text></svg>')
+    return ''.join(parts)
+
+
+def training_mtf_svg(kind):
+    data = {
+        "4시간봉": [(72,74,66,68),(68,70,61,63),(63,65,56,58),(58,60,52,54),(54,57,51,55),(55,62,54,61),(61,67,60,65),(65,71,63,69),(69,74,67,72)],
+        "1시간봉": [(59,60,55,56),(56,57,53,54),(54,55,51,52),(52,54,51,53),(53,55,52,54),(54,59,53,58),(58,62,57,61),(61,65,60,64),(64,67,62,66)],
+        "5분봉": [(55,56,53,54),(54,55,52,53),(53,54,51.5,52),(52,53,51.8,52.4),(52.4,54,52,53.5),(53.5,58,53,57.5),(57.5,61,57,60),(60,63,59,62),(62,65,61,64)],
+    }[kind]
+    width,height=320,190;low,high=49,76;y=lambda value:12+(high-value)/(high-low)*150;step=width/len(data);body=step*.42
+    parts=[f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="{kind} A형 확대 차트"><rect width="{width}" height="{height}" fill="#050a07"/><rect x="0" y="{y(58):.1f}" width="{width}" height="{y(51)-y(58):.1f}" fill="#3c3011" opacity=".55"/>']
+    for value in [54,62,70]:parts.append(f'<line x1="0" y1="{y(value):.1f}" x2="{width}" y2="{y(value):.1f}" stroke="#183427"/>')
+    for i,(opn,hi,lo,close) in enumerate(data):
+        x=(i+.5)*step;color="#00e783" if close>=opn else "#ff667e";a=min(y(opn),y(close));b=max(y(opn),y(close))
+        parts.append(f'<line x1="{x:.1f}" y1="{y(hi):.1f}" x2="{x:.1f}" y2="{y(lo):.1f}" stroke="{color}"/><rect x="{x-body/2:.1f}" y="{a:.1f}" width="{body:.1f}" height="{max(2,b-a):.1f}" fill="{color}"/>')
+    if kind=="5분봉":parts.append(f'<text x="196" y="{y(59):.1f}" fill="#00e783" font-size="11" font-weight="700">A3-초기</text><line x1="0" y1="{y(51.3):.1f}" x2="{width}" y2="{y(51.3):.1f}" stroke="#ff667e" stroke-dasharray="5 4"/><text x="6" y="{y(51.3)-4:.1f}" fill="#ff8a9c" font-size="10">실행 손절</text>')
+    parts.append('</svg>');return ''.join(parts)
+
+
+def training_exit_svg():
+    return '''<svg viewBox="0 0 420 280" role="img" aria-label="전일 장대양봉 몸통 기준 분할청산"><rect width="420" height="280" fill="#050a07"/><line x1="190" y1="28" x2="190" y2="250" stroke="#00e783" stroke-width="3"/><rect x="160" y="68" width="60" height="150" fill="#00e783"/><line x1="35" y1="214" x2="390" y2="214" stroke="#ffd166" stroke-width="2"/><text x="38" y="205" fill="#ffd166" font-size="11">1차 · 몸통 하단 / 근접 공급대</text><line x1="35" y1="76" x2="390" y2="76" stroke="#00e783" stroke-width="2"/><text x="230" y="67" fill="#8fffc4" font-size="11">2차 · 몸통 상단</text><line x1="35" y1="34" x2="390" y2="34" stroke="#9cbfff" stroke-width="2" stroke-dasharray="6 5"/><text x="230" y="25" fill="#b8ccff" font-size="11">잔량 · 전일 고점</text><text x="120" y="270" fill="#91a79b" font-size="11">전일 장대양봉 몸통에서 계획대로 분할 회수</text></svg>'''
+
+
 def training_page(key, basis):
     color = INFO[key][1]
     if key != "A":
@@ -257,24 +307,26 @@ def training_page(key, basis):
         return shell(f"훈련소 {key}형", body, basis, f"training_{key.lower()}")
 
     stages = [
-        ("A0","수급 포착","거래량 동반 확장. 추격 금지."),
-        ("A1","후보 확정","돌파선 지지·일봉 마감."),
-        ("A2","눌림 도달","가격 조건 충족. 반전 미확인."),
-        ("A3-초기","최적 진입","저점 방어·확장 양봉·재탈환."),
-        ("A3-진행","보유 판단","잔여 상승폭과 손절폭 재계산."),
-        ("A4","청산 구간","신규 추격 금지. 보유분 관리."),
-        ("A-W","경고","핵심 지지 이탈. 재탈환 대기."),
-        ("A-F","가설 폐기","구조 무효화선 종가 이탈."),
+        ("A0","수급 포착","장기 하단 횡보를 거래량 동반 장대양봉으로 돌파해 과거 고점·상단 매물대까지 재접근.","추격하지 않고 종가 구조 확인"),
+        ("A1","후보 확정","A0 이후 횡보 상단·돌파선 위에서 일봉 마감. 유입 수급이 가격을 유지.","A2·무효화선·목표구간 설정"),
+        ("A2","눌림 도달","계획한 상위 시간봉 매수구간 도착. 가격 조건만 충족하고 반전 수급은 미확인.","선매수 금지·5분봉 반전 대기"),
+        ("A3-초기","최적 진입","저점 방어·음봉 축소·확장 양봉·거래량 증가·직전 하락봉 고가 재탈환.","진입 검토·기준봉 저점 실행 손절"),
+        ("A3-진행","보유 판단","반전 이후 상승 저점 유지. 방향은 확인됐지만 신규 진입 손익비는 감소.","보유 관리·잔여 상승폭 재계산"),
+        ("A4","청산 구간","전일 몸통·시간봉 공급대 도달. 신규 추격에 불리한 가격 위치.","보유분 분할청산"),
+        ("A-W","경고","핵심 지지·계획 매수선 이탈. 지지 가설이 흔들리는 상태.","재탈환 전 대기·진입분 축소"),
+        ("A-F","가설 폐기","일봉·4시간봉 구조 무효화선 종가 이탈.","전량 종료·후보 제외"),
     ]
-    rail = ''.join(f'<div class="stage-card {"hot" if s=="A3-초기" else ""}"><strong>{s}</strong><b>{name}</b><span>{desc}</span></div>' for s,name,desc in stages)
-    matrix = ''.join(f'<tr><td><b>{s}</b></td><td>{name}</td><td>{desc}</td><td>{"진입 검토" if s=="A3-초기" else "분할청산" if s=="A4" else "즉시 종료" if s=="A-F" else "관찰·대응"}</td></tr>' for s,name,desc in stages)
+    stage_details = ''.join(f'<div class="stage-detail"><strong>{s}<br>{name}</strong><div><p><b>의미</b> {meaning}</p><p><b>대응</b> {action}</p></div></div>' for s,name,meaning,action in stages)
     success = training_scenario_svg("success")
     warning = training_scenario_svg("warning")
     failure = training_scenario_svg("failure")
-    intro = page_intro("훈련소 · A형", "강한 수급 이후 첫 눌림을 일봉 → 시간봉 → 분봉으로 연결해 진입·청산 근거를 복기", "A0 후보 포착 → A2 계획구간 → A3 수급 전환 → A4 분할청산 또는 A-W/A-F 폐기")
+    daily = training_context_svg(); h4=training_mtf_svg("4시간봉"); h1=training_mtf_svg("1시간봉"); m5=training_mtf_svg("5분봉"); exit_chart=training_exit_svg()
+    intro = page_intro("훈련소 · A형", "장기 일봉 구조에서 의미 있는 수급을 찾고 4시간봉 → 1시간봉 → 5분봉으로 타점을 좁히는 실전 복기", "일봉에서 위치 선정 → 4시간봉에서 A2 압축 → 1시간봉에서 대기 → 5분봉에서 A3 진입")
     body = intro + f'''
-<section class="panel" style="--accent:{color}"><h2>A형 단계 체계</h2><div class="stage-rail">{rail}</div><div class="table-wrap"><table class="stage-matrix"><thead><tr><th>단계</th><th>상태</th><th>판단 근거</th><th>대응</th></tr></thead><tbody>{matrix}</tbody></table></div></section>
-<section class="panel" style="--accent:{color}"><h2>A2 → A3-초기 전환</h2><div class="training-grid"><div class="training-chart">{success}</div><div class="training-notes"><div class="training-note"><b>가격</b>계획 매수구간 내부. 구조 무효화선 상단 유지.</div><div class="training-note"><b>캔들</b>음봉 실체 축소 → 저점 방어 → 첫 확장 양봉.</div><div class="training-note"><b>거래량</b>반전 양봉 거래량이 직전 하락봉 평균 대비 증가.</div><div class="training-note"><b>재탈환</b>분봉 단기 매물 또는 직전 하락봉 고가 회복·안착.</div><div class="training-note"><b>실행 손절</b>A3 반전 기준봉 저점 이탈. 일봉 무효화선까지 손절 확대 금지.</div></div></div><p class="help-note">A2는 가격 조건이다. 진입 신호는 A3-초기의 수급 전환과 재탈환이다.</p></section>
+<section class="panel" style="--accent:{color}"><h2>1. 일봉 · A0가 의미 있는 이유</h2><div class="chart-legend"><span style="--legend:#174b35">과거 고점·상단 매물대</span><span style="--legend:#ffd166">하단 횡보·수급 압축</span><span style="--legend:#a36b25">A2 예상구간</span></div><div class="daily-context-layout"><div class="context-copy"><div class="context-point"><b>과거 고점</b><span>이전 급락이 시작됐고 물린 물량이 남아 있는 공급대</span></div><div class="context-point"><b>하단 횡보</b><span>장기 하락 후 저점이 낮아지지 않고 거래량이 감소한 수급 압축</span></div><div class="context-point"><b>A0 수급봉</b><span>횡보 상단을 돌파해 멀리 있던 과거 고점까지 가격을 다시 연결</span></div><div class="context-point"><b>A1 후보 확정</b><span>A0 이후 기준선 위에서 가격을 유지해 다음 눌림 후보 확정</span></div></div><div class="training-chart">{daily}</div></div><p class="help-note">A0는 장대양봉이라서 중요한 것이 아니다. 하단에서 압축된 가격이 거래량을 동반해 횡보 상단을 돌파하고 과거 고점까지 재접근했기 때문에 의미가 있다.</p></section>
+<section class="panel" style="--accent:{color}"><h2>2. 상위 구조에서 실제 진입까지</h2><div class="timeframe-flow"><div><b>일봉</b>후보·큰 구조</div><div><b>4시간봉</b>A2 범위 압축</div><div><b>1시간봉</b>대기 가격 확정</div><div><b>5분봉</b>A3 진입 확인</div></div><div class="mtf-grid"><article class="mtf-card"><h3>4시간봉</h3><p>일봉 돌파선·매물대 하단·이전 저항의 지지 전환이 겹치는 범위로 A2 압축</p>{h4}</article><article class="mtf-card"><h3>1시간봉</h3><p>A2 내부에서 음봉 실체와 하락 거래량이 줄고 저점이 방어되는지 확인</p>{h1}</article><article class="mtf-card"><h3>5분봉</h3><p>저점 방어 → 확장 양봉·거래량 증가 → 직전 하락봉 고가 재탈환 시 A3-초기</p>{m5}</article></div><p class="help-note">일봉·4시간봉은 위치를 정하고, 1시간봉은 대기 가격을 좁힌다. 실제 진입은 5분봉 A3-초기에서만 결정한다.</p></section>
+<section class="panel" style="--accent:{color}"><h2>3. A0~A-F 단계 의미</h2><div class="stage-detail-grid">{stage_details}</div></section>
+<section class="panel" style="--accent:{color}"><h2>4. 일봉 기준 분할청산</h2><div class="exit-grid"><div class="training-chart">{exit_chart}</div><div class="exit-rules"><div class="exit-rule"><b>1차 · 전일 몸통 하단 / 가장 가까운 시간봉 공급대</b><span>반등이 처음 부딪히는 공급구간에서 일부 회수.</span></div><div class="exit-rule"><b>2차 · 전일 장대양봉 몸통 상단</b><span>높은 가격대 체결 물량과 저점 매수자의 차익실현이 겹치는 구간.</span></div><div class="exit-rule"><b>잔량 · 전일 고점</b><span>5분봉 상승 저점과 거래량이 유지될 때만 보유.</span></div><div class="exit-rule"><b>조기 종료</b><span>목표 전이라도 A3 반전 기준봉 저점 또는 재상승 구조가 깨지면 청산.</span></div><div class="exit-rule"><b>진입 필터</b><span>계획 진입가에서 1차 청산가까지 최소 1R이 나오지 않으면 진입하지 않음.</span></div></div></div><p class="help-note">실행 손절은 5분봉 반전 저점이다. 단타 진입 후 손절을 일봉 구조 무효화선까지 넓히지 않는다.</p></section>
 <section class="panel"><h2>청산 시나리오</h2><div class="scenario-grid"><article class="scenario success"><h3>성공</h3>{success}<dl><dt>1차 청산</dt><dd>가장 가까운 분봉·시간봉 공급대 일부 회수</dd><dt>2차 청산</dt><dd>전일 몸통 상단·고점 중첩 구간</dd><dt>잔량</dt><dd>상승 저점·거래량 유지 조건부 보유</dd></dl></article><article class="scenario warning"><h3>경고</h3>{warning}<dl><dt>경고</dt><dd>재돌파 실패·거래량 둔화·매수가 재시험</dd><dt>대응</dt><dd>비중 축소. 반전 기준봉 저점 이탈 시 조기 종료</dd></dl></article><article class="scenario failure"><h3>실패</h3>{failure}<dl><dt>A-W</dt><dd>핵심 지지 이탈. 재탈환 전 재진입 금지</dd><dt>A-F</dt><dd>구조 무효화선 종가 이탈. 가설 폐기·전량 종료</dd></dl></article></div><div class="training-close"><div><b>후보 선정</b><span>거래량 동반 확장·돌파선 지지</span></div><div><b>진입</b><span>A2 내부 A3-초기 확인</span></div><div><b>청산</b><span>공급대별 분할·근거 붕괴 시 조기 종료</span></div><div><b>폐기</b><span>실행 손절과 구조 무효화 분리</span></div></div></section>'''
     return shell("훈련소 A형", body, basis, "training_a")
 
