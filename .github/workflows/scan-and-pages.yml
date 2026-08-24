@@ -1,7 +1,6 @@
 name: UPBIT ABCDE MVP Lite
 
 on:
-  # 자동화 코드가 바뀌면 즉시 1회 검증한다. 결과 파일 커밋에는 반응하지 않는다.
   push:
     branches: [main]
     paths:
@@ -15,13 +14,15 @@ on:
       - "scanner/technical_rebound.py"
       - "scanner/upbit_market_breadth.py"
       - "scanner/market_dashboard_v4.py"
+      - "scanner/market_dashboard_v5.py"
+      - "scanner/dashboard_v5.html"
+      - "scanner/dashboard_v5.css"
+      - "scanner/dashboard_v5.js"
       - "scanner/dashboard_asset_inliner.py"
       - "scanner/header_art.py"
       - "scanner/apply_space_header.py"
       - "outputs/assets/sukdol_*"
   schedule:
-    # GitHub 예약 지연·누락에 대비해 각 KST 4시간봉 마감 뒤 4회 재시도한다.
-    # UTC 기준이며 실제 KST 실행 시각은 01/05/09/13/17/21시의 03·13·23·33분이다.
     - cron: "3,13,23,33 0,4,8,12,16,20 * * *"
   workflow_dispatch:
 
@@ -42,7 +43,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
       - name: 이번 4시간봉 실행 여부 확인
         id: guard
         run: |
@@ -51,11 +51,9 @@ jobs:
           else
             python scanner/schedule_guard.py check --force >> "$GITHUB_OUTPUT"
           fi
-
       - name: 이미 완료된 봉 안내
         if: steps.guard.outputs.should_run != 'true'
         run: echo "${{ steps.guard.outputs.slot }} 봉은 이미 갱신되어 건너뜁니다."
-
       - uses: actions/setup-python@v5
         if: steps.guard.outputs.should_run == 'true'
         with:
@@ -90,6 +88,7 @@ jobs:
           python scanner/market_dashboard_v4.py
           python scanner/dashboard_asset_inliner.py
           python scanner/apply_space_header.py
+          python scanner/market_dashboard_v5.py
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
         continue-on-error: true
@@ -99,21 +98,15 @@ jobs:
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_WATCH_MARKETS: ${{ vars.KAKAO_WATCH_MARKETS }}
         run: |
-          if [ -z "$KAKAO_REST_API_KEY" ] || [ -z "$KAKAO_REFRESH_TOKEN" ]; then
-            echo "카카오 키가 아직 없어 알림만 건너뜁니다. 스캔과 웹 게시는 계속합니다."
-            exit 0
-          fi
+          if [ -z "$KAKAO_REST_API_KEY" ] || [ -z "$KAKAO_REFRESH_TOKEN" ]; then exit 0; fi
           python scanner/kakao_notifier.py
-
       - name: Save latest scan and history
         if: steps.guard.outputs.should_run == 'true'
         run: |
           git config user.name "UPBIT Scanner"
           git config user.email "scanner@users.noreply.github.com"
           git add history/snapshots.json history/global_market_snapshots.json history/watchlist.json outputs/
-          if [ -f history/notification_state.json ]; then
-            git add history/notification_state.json
-          fi
+          if [ -f history/notification_state.json ]; then git add history/notification_state.json; fi
           git diff --cached --quiet || git commit -m "scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
           git pull --rebase origin main
           git push
@@ -127,7 +120,6 @@ jobs:
         if: steps.guard.outputs.should_run == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
-
       - name: 게시 성공 봉 완료 처리
         if: steps.guard.outputs.should_run == 'true'
         run: |
