@@ -13,6 +13,10 @@ on:
       - "scanner/history_store.py"
       - "scanner/unified_dashboard.py"
       - "scanner/technical_rebound.py"
+      - "scanner/upbit_market_breadth.py"
+      - "scanner/market_dashboard_v2.py"
+      - "scanner/dashboard_asset_inliner.py"
+      - "outputs/assets/sukdol_*"
   schedule:
     # GitHub 예약 지연·누락에 대비해 각 KST 4시간봉 마감 뒤 4회 재시도한다.
     # UTC 기준이며 실제 KST 실행 시각은 01/05/09/13/17/21시의 03·13·23·33분이다.
@@ -76,11 +80,14 @@ jobs:
           python scanner/bitcoin_regime.py
           python scanner/global_market_data.py
           python scanner/market_regime.py
+          python scanner/upbit_market_breadth.py
           python scanner/chart_cache.py
           python scanner/history_store.py
           python scanner/watchlist_store.py
           python scanner/outcome_tracker.py
           python scanner/unified_dashboard.py
+          python scanner/market_dashboard_v2.py
+          python scanner/dashboard_asset_inliner.py
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
         # 알림 장애가 핵심 스캔·웹 게시를 막지 않게 분리한다.
@@ -107,6 +114,7 @@ jobs:
             git add history/notification_state.json
           fi
           git diff --cached --quiet || git commit -m "scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+          git pull --rebase origin main
           git push
       - uses: actions/configure-pages@v5
         if: steps.guard.outputs.should_run == 'true'
@@ -125,4 +133,5 @@ jobs:
           python scanner/schedule_guard.py mark --slot "${{ steps.guard.outputs.slot }}"
           git add history/schedule_state.json
           git diff --cached --quiet || git commit -m "schedule: ${{ steps.guard.outputs.slot }} 완료"
+          git pull --rebase origin main
           git push
