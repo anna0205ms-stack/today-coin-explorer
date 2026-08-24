@@ -12,7 +12,8 @@ KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "outputs" / "bitcoin_regime.json"
 API = "https://api.upbit.com/v1"
-BINANCE_API = "https://api.binance.com/api/v3"
+# 바이낸스의 공개 시장데이터 전용 호스트. GitHub Actions 미국 리전의 api.binance.com 451 제한을 피한다.
+BINANCE_API = "https://data-api.binance.vision/api/v3"
 
 
 def get(path: str, params: dict) -> list[dict]:
