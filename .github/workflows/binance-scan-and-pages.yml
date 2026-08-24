@@ -7,13 +7,16 @@ on:
       - ".github/workflows/binance-scan-and-pages.yml"
       - "scanner_binance/**"
       - "scanner/market_dashboard_v4.py"
+      - "scanner/market_dashboard_v5.py"
+      - "scanner/dashboard_v5.html"
+      - "scanner/dashboard_v5.css"
+      - "scanner/dashboard_v5.js"
       - "scanner/dashboard_asset_inliner.py"
       - "scanner/header_art.py"
       - "scanner/apply_space_header.py"
       - "outputs/assets/sukdol_*"
       - "README_BINANCE.md"
   schedule:
-    # Binance 4H close: KST 01/05/09/13/17/21. Upbit workflow와 분리해 08/18/28/38분 재시도.
     - cron: "8,18,28,38 0,4,8,12,16,20 * * *"
   workflow_dispatch:
 
@@ -36,7 +39,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: 이번 Binance 4시간봉 실행 여부 확인
         id: guard
         run: |
@@ -45,23 +47,19 @@ jobs:
           else
             python scanner_binance/schedule_guard.py check --force >> "$GITHUB_OUTPUT"
           fi
-
       - name: 이미 완료된 봉 안내
         if: steps.guard.outputs.should_run != 'true'
         run: echo "${{ steps.guard.outputs.slot }} Binance 봉은 이미 갱신되어 건너뜁니다."
-
       - uses: actions/setup-python@v5
         if: steps.guard.outputs.should_run == 'true'
         with:
           python-version: "3.12"
-
       - name: Scan BINANCE Spot USDT A/B/C/D/E
         if: steps.guard.outputs.should_run == 'true'
         env:
           BINANCE_MIN_24H_QUOTE_VOLUME: "2000000"
           BINANCE_MAX_SYMBOLS: "120"
         run: python scanner_binance/binance_spot_scanner.py
-
       - name: Render BINANCE dashboard
         if: steps.guard.outputs.should_run == 'true'
         run: |
@@ -69,17 +67,16 @@ jobs:
           python scanner/market_dashboard_v4.py
           python scanner/dashboard_asset_inliner.py
           python scanner/apply_space_header.py
-
+          python scanner/market_dashboard_v5.py
       - name: Save BINANCE results
         if: steps.guard.outputs.should_run == 'true'
         run: |
           git config user.name "BINANCE Scanner"
           git config user.email "binance-scanner@users.noreply.github.com"
-          git add outputs/binance outputs/index.html history/binance
+          git add outputs/binance outputs/index.html outputs/dashboard_v5.css outputs/dashboard_v5.js outputs/header_astronaut.b64 history/binance
           git diff --cached --quiet || git commit -m "binance scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
           git pull --rebase origin main
           git push
-
       - uses: actions/configure-pages@v5
         if: steps.guard.outputs.should_run == 'true'
       - uses: actions/upload-pages-artifact@v3
@@ -90,7 +87,6 @@ jobs:
         if: steps.guard.outputs.should_run == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
-
       - name: 게시 성공 Binance 봉 완료 처리
         if: steps.guard.outputs.should_run == 'true'
         run: |
