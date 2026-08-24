@@ -16,6 +16,8 @@ on:
       - "scanner/upbit_market_breadth.py"
       - "scanner/market_dashboard_v4.py"
       - "scanner/dashboard_asset_inliner.py"
+      - "scanner/header_art.py"
+      - "scanner/apply_space_header.py"
       - "outputs/assets/sukdol_*"
   schedule:
     # GitHub 예약 지연·누락에 대비해 각 KST 4시간봉 마감 뒤 4회 재시도한다.
@@ -87,6 +89,7 @@ jobs:
           python scanner/unified_dashboard.py
           python scanner/market_dashboard_v4.py
           python scanner/dashboard_asset_inliner.py
+          python scanner/apply_space_header.py
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
         continue-on-error: true
