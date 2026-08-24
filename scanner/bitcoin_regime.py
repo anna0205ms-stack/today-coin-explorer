@@ -12,6 +12,7 @@ KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "outputs" / "bitcoin_regime.json"
 API = "https://api.upbit.com/v1"
+BINANCE_API = "https://api.binance.com/api/v3"
 
 
 def get(path: str, params: dict) -> list[dict]:
@@ -37,6 +38,17 @@ def candles(unit: str, count: int) -> list[dict]:
         boundary += timedelta(hours=4 * int(elapsed // 14400))
         completed = [x for x in raw if datetime.fromisoformat(x["candle_date_time_kst"]) < boundary]
     return list(reversed(completed[:count]))
+
+
+def binance_candles(interval: str, count: int) -> list[list]:
+    """바이낸스 BTCUSDT의 완성봉만 가져온다."""
+    query = urlencode({"symbol": "BTCUSDT", "interval": interval, "limit": count + 2})
+    req = Request(f"{BINANCE_API}/klines?{query}", headers={"Accept": "application/json", "User-Agent": "oko-btc-regime/1.0"})
+    with urlopen(req, timeout=30) as response:  # noqa: S310 - 고정된 공식 API
+        raw = json.loads(response.read().decode("utf-8"))
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    completed = [row for row in raw if int(row[6]) < now_ms]
+    return completed[-count:]
 
 
 def quantile(values: list[float], q: float) -> float:
@@ -123,8 +135,36 @@ def analyze(daily: list[dict], four: list[dict]) -> dict:
     }
 
 
+def analyze_binance_box(daily: list[list], four: list[list]) -> dict:
+    """바이낸스 BTCUSDT 기준 30일 박스와 조정 대응 가격대를 계산한다."""
+    window = daily[-30:]
+    if len(window) < 30 or not four:
+        raise ValueError("바이낸스 BTCUSDT 완성봉이 부족합니다")
+    low = quantile([float(x[3]) for x in window], .10)
+    high = quantile([float(x[2]) for x in window], .90)
+    if high <= low:
+        raise ValueError("바이낸스 BTC 박스 폭이 올바르지 않습니다")
+    volume = sum(float(x[5]) for x in window)
+    center = sum(float(x[4]) * float(x[5]) for x in window) / max(volume, 1e-9)
+    price = float(daily[-1][4]);span = high - low
+    closed_at = datetime.fromtimestamp(int(four[-1][6]) / 1000, timezone.utc).astimezone(KST)
+    return {
+        "market": "BINANCE:BTCUSDT",
+        "basis": {"four_hour_end": closed_at.isoformat(timespec="seconds")},
+        "price": round(price, 2),
+        "box": {
+            "lookback_days": 30,
+            "low": round(low, 2), "high": round(high, 2), "center": round(center, 2),
+            "position_pct": round((price - low) / span * 100, 1),
+            "buy_zone": [round(low, 2), round(low + span * .15, 2)],
+            "sell_zone": [round(low + span * .70, 2), round(high, 2)],
+        },
+    }
+
+
 def main() -> None:
     result = analyze(candles("day", 80), candles("4h", 80))
+    result["binance"] = analyze_binance_box(binance_candles("1d", 80), binance_candles("4h", 80))
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{result['daily_state']} / 알트 {result['alt_policy']['mode']} {result['alt_policy']['size_pct']}%")

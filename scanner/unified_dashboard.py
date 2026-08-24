@@ -224,9 +224,9 @@ def box_location_text(box):
     return "기존 30일 박스 상단 돌파 후 위에서 거래 중"
 
 
-def won(value):
-    """BTC 가격대를 화면용 원화로 표시한다."""
-    return f'₩{float(value):,.0f}' if isinstance(value, (int, float)) else "가격 확인 전"
+def usdt(value):
+    """바이낸스 BTC 가격대를 화면용 USDT로 표시한다."""
+    return f'${float(value):,.2f}' if isinstance(value, (int, float)) else "가격 확인 전"
 
 
 def btc_correction_panel(box):
@@ -237,7 +237,7 @@ def btc_correction_panel(box):
     upper_low=sell[0] if len(sell)>=2 else high
     buy_low=buy[0] if len(buy)>=2 else box.get("low")
     buy_high=buy[1] if len(buy)>=2 else box.get("low")
-    return f'''<section class="panel btc-correction"><div class="btc-correction-head"><div><h2>BTC 조정이 시작된다면</h2><div class="sub">비트가 고점권에서 밀릴 때 알트 수익을 지키기 위한 사전 대응 시나리오야.</div></div><span class="correction-alert">4시간봉 마감 기준</span></div><div class="correction-grid"><div class="correction-step"><strong>① 조정 시작 경보</strong><b>기존 박스 상단 {won(high)} 이탈 마감</b><span>4시간봉이 돌파했던 박스 상단 아래로 다시 들어오면 단순 흔들림이 아니라 조정 시작 가능성을 먼저 열어둬.</span></div><div class="correction-step"><strong>② 1차 방어 확인</strong><b>{won(upper_low)} ~ {won(high)}</b><span>이 구간을 빠르게 재탈환하면 알트 강세 유지 가능. 재탈환 전에는 신규 알트 진입을 줄이고 추격매수를 멈춰.</span></div><div class="correction-step"><strong>③ 조정 확대 구간</strong><b>박스 중심 {won(center)}</b><span>중심까지 밀리면 알트 변동성이 더 커질 수 있어. 약한 종목부터 축소하고 손절선을 임의로 내리지 않아.</span></div><div class="correction-step"><strong>④ 구조 훼손 경계</strong><b>{won(buy_low)} ~ {won(buy_high)}</b><span>박스 하단 매수구간까지 내려오면 시장 M단계 하향 가능성이 커져. 신규매수보다 현금 보호를 우선해.</span></div></div><div class="correction-rule"><b>핵심:</b> 장중 꼬리 한 번으로 판단하지 않고 4시간봉 마감을 본다. 다만 급락 중에는 마감까지 버티는 것이 아니라 개별 알트의 정해둔 손절가를 먼저 지킨다.</div></section>'''
+    return f'''<section class="panel btc-correction"><div class="btc-correction-head"><div><h2>BTC 조정이 시작된다면</h2><div class="sub">바이낸스 BTCUSDT의 최근 30일 완성봉으로 계산한 사전 대응 시나리오야.</div></div><span class="correction-alert">BINANCE · BTC/USDT · 4시간봉 마감 기준</span></div><div class="correction-grid"><div class="correction-step"><strong>① 조정 시작 경보</strong><b>기존 박스 상단 {usdt(high)} 이탈 마감</b><span>4시간봉이 돌파했던 박스 상단 아래로 다시 들어오면 단순 흔들림이 아니라 조정 시작 가능성을 먼저 열어둬.</span></div><div class="correction-step"><strong>② 1차 방어 확인</strong><b>{usdt(upper_low)} ~ {usdt(high)}</b><span>이 구간을 빠르게 재탈환하면 알트 강세 유지 가능. 재탈환 전에는 신규 알트 진입을 줄이고 추격매수를 멈춰.</span></div><div class="correction-step"><strong>③ 조정 확대 구간</strong><b>박스 중심 {usdt(center)}</b><span>중심까지 밀리면 알트 변동성이 더 커질 수 있어. 약한 종목부터 축소하고 손절선을 임의로 내리지 않아.</span></div><div class="correction-step"><strong>④ 구조 훼손 경계</strong><b>{usdt(buy_low)} ~ {usdt(buy_high)}</b><span>박스 하단 매수구간까지 내려오면 시장 M단계 하향 가능성이 커져. 신규매수보다 현금 보호를 우선해.</span></div></div><div class="correction-rule"><b>핵심:</b> 장중 꼬리 한 번으로 판단하지 않고 4시간봉 마감을 본다. 다만 급락 중에는 마감까지 버티는 것이 아니라 개별 알트의 정해둔 손절가를 먼저 지킨다.</div></section>'''
 
 
 def system_status(basis):
@@ -290,6 +290,7 @@ def main_page(snapshot, btc):
 
 def dashboard_page(snapshot, watch, btc, market_data, regime):
     box=btc.get("box",{})
+    binance_box=(btc.get("binance") or {}).get("box") or {}
     size=int(regime.get("alt_entry_limit_pct") or 0);blocked=size==0
     state="entry" if size>=65 else "caution" if size>0 else "stop";state_class=f"state-{state}";cat=asset_uri(f"cat_{state}.webp")
     colors={"M0":"#ff5d3a","M1":"#ffc247","M2":"#ffd166","M3":"#70c2ff","M4":"#00e783","M5":"#ff8297"};market_color=colors.get(regime.get("stage"),"#91a79b")
@@ -329,7 +330,7 @@ def dashboard_page(snapshot, watch, btc, market_data, regime):
     stage=fmt(regime.get("stage") or "M?");name=fmt(regime.get("name") or "시장 데이터 확인")
     btc_location=box_location_text(box)
     body=intro+f'''<section class="panel btc-live-card"><div class="btc-live-head"><div><h2>BTC · 바이낸스 실시간 차트</h2><div class="sub">차트 왼쪽 위 시간봉 메뉴에서 <b>1일</b> 또는 <b>4시간</b>을 선택해서 봐.</div></div><div><b>BINANCE · BTC/USDT</b><div class="sub">오코탐 구조판정 · {str(btc.get('basis',{}).get('four_hour_end','-')).replace('T',' ')} 완성봉 반영</div></div></div><div class="btc-summary-grid"><div class="btc-summary-item"><span>일봉 해석</span><b>{fmt(btc.get("daily_state"))}</b></div><div class="btc-summary-item"><span>4시간봉 해석</span><b>{fmt(btc.get("four_hour_state"))}</b></div><div class="btc-summary-item"><span>현재 가격 위치</span><b>{fmt(btc_location)}</b></div><div class="btc-summary-item"><span>‘박스’란?</span><b>최근 30일 주요 저점~고점 가격 범위</b></div></div>{bitcoin_tradingview_widget()}</section>
-{btc_correction_panel(box)}
+{btc_correction_panel(binance_box)}
 <section class="panel market-hero" style="--market-color:{market_color}"><div class="market-stage"><div>{stage}<small>시장 {str(regime.get('stage') or 'M?').replace('M','')}단계</small></div></div><div><div class="sub">쉽게 말하면 · {fmt(regime.get("plain"))}</div><div class="market-title">{name}</div><div class="market-reason-title">왜 {stage}로 판정했나</div><ul class="market-reasons">{reasons}</ul><div class="proxy-note">자동판정 · CoinGecko 상위 125개 프록시 · 신뢰도 {fmt(regime.get("confidence"))}%</div></div><div class="market-limit"><span>오늘 알트 신규진입 한도</span><strong>{size}%</strong><div>{"새 매수 금지" if blocked else "개별 조건 확인 후 분할진입"}</div></div></section>
 <section class="dashboard-panel market-mascot {state_class}" style="--market-color:{market_color}"><img class="cat-main" src="{cat}" alt="시장 {stage} 상태 고양이"><div class="market-mascot-copy"><b>{stage} · 오늘의 오코탐 행동</b><div>{fmt(mascot_advice)}</div><div class="sub" style="margin-top:7px">시장 단계가 바뀌면 숙도지의 표정과 행동 안내도 함께 바뀌어.</div></div></section>
 <section class="panel market-stage-guide" style="--market-color:{market_color}"><h2>M단계란?</h2><div class="sub"><b>M은 Market(시장)의 약자</b>야. BTC와 알트 자금 흐름이 현재 어느 국면인지 M0~M5로 표시해. 숫자가 높을수록 무조건 좋은 것은 아니며, M5는 과열 뒤 수익을 보호하는 단계야.</div><div class="market-stage-grid">{stage_cards}</div></section>

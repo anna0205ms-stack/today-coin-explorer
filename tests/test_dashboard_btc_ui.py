@@ -17,6 +17,11 @@ def test_dashboard_has_one_top_bitcoin_tradingview_chart():
             "center": 92_656_160, "buy_zone": [88_990_100, 90_089_950],
             "sell_zone": [94_122_736, 96_322_220],
         },
+        "binance": {"box": {
+            "low": 78_200.25, "high": 84_900.50, "center": 81_550.75,
+            "buy_zone": [78_200.25, 79_205.29],
+            "sell_zone": [82_890.33, 84_900.50],
+        }},
         "basis": {"four_hour_end": "2026-08-24T01:00:00"},
     }
     regime = {
@@ -48,6 +53,8 @@ def test_dashboard_has_one_top_bitcoin_tradingview_chart():
     assert "시장 단계가 바뀌면 고양이의 표정" not in body
     assert body.index("BTC 조정이 시작된다면") < body.index("market-hero")
     assert "4시간봉 마감 기준" in body
-    assert "기존 박스 상단 ₩96,322,220 이탈 마감" in body
-    assert "박스 중심 ₩92,656,160" in body
-    assert "₩88,990,100 ~ ₩90,089,950" in body
+    assert "BINANCE · BTC/USDT · 4시간봉 마감 기준" in body
+    assert "기존 박스 상단 $84,900.50 이탈 마감" in body
+    assert "박스 중심 $81,550.75" in body
+    assert "$78,200.25 ~ $79,205.29" in body
+    assert "₩96,322,220" not in body
