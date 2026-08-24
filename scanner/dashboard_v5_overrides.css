@@ -1,0 +1,76 @@
+.stage-card,
+.btc-card {
+  height: 390px;
+}
+
+.chart-wrap {
+  position: relative;
+}
+
+.tv-main {
+  height: 310px;
+}
+
+.tradingview-widget-container__widget,
+.tv-main iframe,
+.tv-mini iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.chart-metric {
+  height: 300px;
+}
+
+.tv-mini {
+  height: 220px;
+}
+
+.box-legend {
+  position: absolute;
+  z-index: 4;
+  left: 8px;
+  bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border: 1px solid #27313b;
+  border-radius: 6px;
+  background: rgba(5, 9, 13, .88);
+  color: #c8d0d8;
+  font-size: 9px;
+  pointer-events: none;
+}
+
+.box-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 13px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.box-legend .upper::before { background: #ff4d67; }
+.box-legend .basis::before { background: #f0a500; }
+.box-legend .lower::before { background: #2f8cff; }
+.box-legend em { color: #7f8b97; font-style: normal; }
+.box-legend.compact { left: 7px; bottom: 6px; gap: 7px; }
+
+@media (max-width: 900px) {
+  .stage-card { height: 300px; }
+  .btc-card { height: 390px; }
+  .tv-main { height: 310px; }
+}
+
+@media (max-width: 620px) {
+  .metrics { grid-template-columns: 1fr; }
+  .box-legend em { display: none; }
+}
