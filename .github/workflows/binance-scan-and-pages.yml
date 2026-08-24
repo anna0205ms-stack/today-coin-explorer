@@ -8,6 +8,8 @@ on:
       - "scanner_binance/**"
       - "scanner/market_dashboard_v4.py"
       - "scanner/dashboard_asset_inliner.py"
+      - "scanner/header_art.py"
+      - "scanner/apply_space_header.py"
       - "outputs/assets/sukdol_*"
       - "README_BINANCE.md"
   schedule:
@@ -66,6 +68,7 @@ jobs:
           python scanner_binance/render_dashboard.py
           python scanner/market_dashboard_v4.py
           python scanner/dashboard_asset_inliner.py
+          python scanner/apply_space_header.py
 
       - name: Save BINANCE results
         if: steps.guard.outputs.should_run == 'true'
