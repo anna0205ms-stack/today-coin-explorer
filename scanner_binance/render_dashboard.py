@@ -11,7 +11,7 @@ def num(v):
  try:return f"{float(v):,.8f}".rstrip("0").rstrip(".")
  except:return esc(v)
 def nav(active="today"):
- cat=asset_uri("cat_entry.webp");sa=active=="today" or active.startswith("type_");ta=active.startswith("training_")
+ cat="../assets/cat_entry.webp";sa=active=="today" or active.startswith("type_");ta=active.startswith("training_")
  scan=f'''<details class="nav-drop" {"open" if sa else ""}><summary class="{"active" if sa else ""}">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active=="today" else ""}" href="scan.html">전체 보기</a>{''.join(f'<a class="{"active" if active==f"type_{k.lower()}" else ""}" href="type_{k.lower()}.html">{k}형</a>' for k in "ABCDE")}</div></details>'''
  train=f'''<details class="nav-drop" {"open" if ta else ""}><summary class="{"active" if ta else ""}">훈련소 <span>▾</span></summary><div class="nav-drop-menu">{''.join(f'<a class="{"active" if active==f"training_{k.lower()}" else ""}" href="training_{k.lower()}.html">{k}형</a>' for k in "ABCDE")}</div></details>'''
  return f'''<nav><div class="app-brand"><img class="nav-cat" src="{cat}" alt="회색 고양이"><span class="app-title">오늘의 코인 탐험대</span></div><a href="../index.html">메인 대시보드</a>{scan}{train}<a class="{"active" if active=="watch" else ""}" href="watchlist.html">관심종목 추적</a><a class="{"active" if active=="history" else ""}" href="history.html">날짜별 기록</a></nav>'''
