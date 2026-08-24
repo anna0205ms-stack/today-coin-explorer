@@ -14,7 +14,7 @@ on:
       - "scanner/unified_dashboard.py"
       - "scanner/technical_rebound.py"
       - "scanner/upbit_market_breadth.py"
-      - "scanner/market_dashboard_v3.py"
+      - "scanner/market_dashboard_v4.py"
       - "scanner/dashboard_asset_inliner.py"
       - "outputs/assets/sukdol_*"
   schedule:
@@ -47,7 +47,6 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             python scanner/schedule_guard.py check >> "$GITHUB_OUTPUT"
           else
-            # 코드 수정 검증과 수동 실행은 이미 완료된 슬롯도 다시 생성한다.
             python scanner/schedule_guard.py check --force >> "$GITHUB_OUTPUT"
           fi
 
@@ -86,7 +85,7 @@ jobs:
           python scanner/watchlist_store.py
           python scanner/outcome_tracker.py
           python scanner/unified_dashboard.py
-          python scanner/market_dashboard_v3.py
+          python scanner/market_dashboard_v4.py
           python scanner/dashboard_asset_inliner.py
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
