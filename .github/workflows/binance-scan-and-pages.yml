@@ -6,6 +6,9 @@ on:
     paths:
       - ".github/workflows/binance-scan-and-pages.yml"
       - "scanner_binance/**"
+      - "scanner/market_dashboard_v2.py"
+      - "scanner/dashboard_asset_inliner.py"
+      - "outputs/assets/sukdol_*"
       - "README_BINANCE.md"
   schedule:
     # Binance 4H close: KST 01/05/09/13/17/21. Upbit workflow와 분리해 08/18/28/38분 재시도.
@@ -59,14 +62,17 @@ jobs:
 
       - name: Render BINANCE dashboard
         if: steps.guard.outputs.should_run == 'true'
-        run: python scanner_binance/render_dashboard.py
+        run: |
+          python scanner_binance/render_dashboard.py
+          python scanner/market_dashboard_v2.py
+          python scanner/dashboard_asset_inliner.py
 
       - name: Save BINANCE results
         if: steps.guard.outputs.should_run == 'true'
         run: |
           git config user.name "BINANCE Scanner"
           git config user.email "binance-scanner@users.noreply.github.com"
-          git add outputs/binance history/binance
+          git add outputs/binance outputs/index.html history/binance
           git diff --cached --quiet || git commit -m "binance scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
           git pull --rebase origin main
           git push
