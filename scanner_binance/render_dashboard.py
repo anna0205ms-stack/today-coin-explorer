@@ -181,6 +181,7 @@ def binanceize(page: str) -> str:
         ("업비트 차트", "BINANCE 차트"),
         ("업비트에서", "BINANCE에서"),
         ("업비트", "BINANCE"),
+        ('src="assets/', 'src="../assets/'),
         ('href="index.html">메인 대시보드', 'href="../index.html">메인 대시보드'),
     ]
     for old, new in replacements:
