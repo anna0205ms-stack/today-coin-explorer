@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlencode
@@ -52,7 +53,7 @@ def fetch(market: str, unit: str, count: int) -> list[list]:
 
 
 def selected_markets(limit: int | None = None) -> list[str]:
-    groups = {kind: [] for kind in "ABCDE"}
+    groups = {kind: [] for kind in "ABCDEF"}
     for row in read(OUT / "latest_scan.json", []):
         kind = abc_type(row)
         if kind in groups:
@@ -66,8 +67,10 @@ def selected_markets(limit: int | None = None) -> list[str]:
     for row in read(OUT / "technical_rebound.json", []):
         if row.get("status") != "E실패":
             groups["E"].append((action_rank.get(row.get("action"), 9), -float(row.get("score") or 0), row.get("market")))
+    for row in read(OUT / "global_supply.json", []):
+        groups["F"].append((action_rank.get(row.get("action"), 9), -float(row.get("score") or 0), row.get("market")))
     markets = []
-    for kind in "ABCDE":
+    for kind in "ABCDEF":
         ranked=sorted(groups[kind])
         markets.extend(market for _, _, market in (ranked[:limit] if limit else ranked) if market)
     return list(dict.fromkeys(markets))
@@ -75,11 +78,20 @@ def selected_markets(limit: int | None = None) -> list[str]:
 
 def main() -> None:
     cache = {}
-    for market in selected_markets():
-        try:
-            cache[market] = {"day": fetch(market, "day", 60), "4h": fetch(market, "4h", 48)}
-        except Exception as exc:  # 네트워크 한 종목 실패가 전체 화면을 막지 않도록 한다.
-            cache[market] = {"day": [], "4h": [], "error": str(exc)}
+    markets = selected_markets()
+
+    def load(market):
+        return market, {"day": fetch(market, "day", 60), "4h": fetch(market, "4h", 48)}
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {pool.submit(load, market): market for market in markets}
+        for future in as_completed(futures):
+            market = futures[future]
+            try:
+                name, charts = future.result()
+                cache[name] = charts
+            except Exception as exc:  # 네트워크 한 종목 실패가 전체 화면을 막지 않는다.
+                cache[market] = {"day": [], "4h": [], "error": str(exc)}
     (OUT / "chart_cache.json").write_text(json.dumps(cache, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"chart cache: {len(cache)} markets")
 

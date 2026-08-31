@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""최신 A/B/C/D/E 결과를 단일 JSON 파일에 계속 누적한다."""
+"""최신 A/B/C/D/E/F 결과를 단일 JSON 파일에 계속 누적한다."""
 from __future__ import annotations
 
 import argparse
@@ -85,6 +85,21 @@ def normalize_e(row: dict) -> dict:
     }
 
 
+def normalize_f(row: dict) -> dict:
+    """F형 글로벌 과거 매물대 판정을 공통 후보 형식으로 옮긴다."""
+    return {
+        "market": row.get("market"), "name": row.get("name"), "type": "F",
+        "score": row.get("score", 0), "status": row.get("status"),
+        "f_stage": row.get("f_stage"), "f_stage_label": row.get("f_stage_label"),
+        "price": row.get("price"), "entry": row.get("entry") or [],
+        "stop": row.get("stop"), "targets": row.get("targets") or [],
+        "flow": row.get("flow"), "action": row.get("action", "확인 대기"),
+        "reason": row.get("reason"), "missing": row.get("missing") or [],
+        "rr": row.get("rr"), "global_zone": row.get("global_zone") or {},
+        "binance_symbol": row.get("binance_symbol"), "binance_price": row.get("binance_price"),
+    }
+
+
 def completed_4h_at(now: datetime) -> datetime:
     """KST 01/05/09/13/17/21시 중 가장 최근 마감 시각을 반환한다."""
     now = now.astimezone(KST)
@@ -98,9 +113,11 @@ def append_snapshot(at: datetime | None = None) -> dict:
     abc_rows = read_json(OUTPUTS / "latest_scan.json", [])
     d_rows = read_json(OUTPUTS / "pre_breakout_reclaim.json", [])
     e_rows = read_json(OUTPUTS / "technical_rebound.json", [])
+    f_rows = read_json(OUTPUTS / "global_supply.json", [])
     candidates = [normalize_abc(r) for r in abc_rows if abc_type(r) in "ABC"]
     candidates += [normalize_d(r) for r in d_rows if r.get("status") not in {"제외", "자료부족", "오류"}]
     candidates += [normalize_e(r) for r in e_rows if r.get("status") != "E실패"]
+    candidates += [normalize_f(r) for r in f_rows]
     market_regime = read_json(MARKET_REGIME, {})
     if market_regime.get("stage"):
         candidates = [apply_market_gate(row, market_regime) for row in candidates]
@@ -110,7 +127,7 @@ def append_snapshot(at: datetime | None = None) -> dict:
             row["charts"] = chart_cache[row["market"]]
     payload = {
         "snapshot_at": at.isoformat(), "date": at.strftime("%Y-%m-%d"), "time": at.strftime("%H:%M"),
-        "counts": {k: sum(r["type"] == k for r in candidates) for k in "ABCDE"},
+        "counts": {k: sum(r["type"] == k for r in candidates) for k in "ABCDEF"},
         "candidates": candidates,
     }
     if market_regime:

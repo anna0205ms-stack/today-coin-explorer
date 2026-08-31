@@ -75,6 +75,9 @@ jobs:
       - name: Scan E technical rebound
         if: steps.guard.outputs.should_run == 'true'
         run: python scanner/technical_rebound.py
+      - name: Scan F global supply
+        if: steps.guard.outputs.should_run == 'true'
+        run: python scanner/global_supply.py --workers 8
       - name: Append record and render pages
         if: steps.guard.outputs.should_run == 'true'
         env:
