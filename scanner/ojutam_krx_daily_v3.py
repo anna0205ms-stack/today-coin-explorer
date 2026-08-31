@@ -54,7 +54,12 @@ def load_latest():
     latest=max((f.index.max() for f in frames.values() if f is not None and not f.empty),default=pd.Timestamp(date))
     return universe,frames,pd.Timestamp(latest).date().isoformat()
 
+
 app.load_marcap=load_latest
 
 if __name__=="__main__":
     app.main()
+    # IMPORTANT: v3 is the actual workflow entry point. Patch the generated
+    # dashboard here so the public HTML replaces the representative stock hero
+    # with KOSPI and KOSDAQ market-index charts.
+    base.patch_market_indices()
