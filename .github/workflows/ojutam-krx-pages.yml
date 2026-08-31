@@ -50,6 +50,12 @@ jobs:
           set -e
           grep -q 'class=\"expand' outputs/ojutam/scan_v6.js
           grep -q 'toggleExpand' outputs/ojutam/scan_v6.js
+          grep -q '표적 이유' outputs/ojutam/scan_v6.js
+          grep -q '차트 현재판단' outputs/ojutam/scan_v6.js
+          grep -q '남은 조건' outputs/ojutam/scan_v6.js
+          grep -q '<b>진입</b>' outputs/ojutam/scan_v6.js
+          grep -q '<b>손절</b>' outputs/ojutam/scan_v6.js
+          grep -q '<b>목표</b>' outputs/ojutam/scan_v6.js
           if grep -q 'id="detailModal"' outputs/ojutam/scan.html; then
             echo "Popup modal still present"
             exit 1
