@@ -11,8 +11,8 @@ STYLE = r'''<style id="oktam-space-header-style">
 .oktam-space-inner{max-width:1540px;height:112px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 22px;position:relative;overflow:hidden}
 .oktam-space-inner:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 31% 18%,rgba(73,133,255,.15),transparent 17%),radial-gradient(circle at 62% 28%,rgba(255,255,255,.12) 0 1px,transparent 2px),radial-gradient(circle at 73% 61%,rgba(255,255,255,.12) 0 1px,transparent 2px),radial-gradient(circle at 48% 72%,rgba(74,122,255,.09),transparent 24%);pointer-events:none}
 .oktam-brand{height:100%;min-width:0;display:flex;align-items:center;text-decoration:none;color:#fff;position:relative;z-index:2}
-.oktam-astro-wrap{width:265px;height:100%;position:relative;flex:none;overflow:hidden}
-.oktam-astro{position:absolute;left:-8px;bottom:0;width:265px;height:auto;display:block}
+.oktam-astro-wrap{width:210px;height:100%;position:relative;flex:none;overflow:hidden}
+.oktam-astro{position:absolute;left:50%;bottom:0;width:auto;height:108px;max-width:100%;object-fit:contain;object-position:center bottom;display:block;transform:translateX(-50%)}
 .oktam-title-wrap{margin-left:10px;min-width:0}
 .oktam-title{font-size:34px;line-height:1.05;font-weight:900;letter-spacing:-1.7px;white-space:nowrap;color:#f5f7fa;text-shadow:0 3px 18px rgba(0,0,0,.55)}
 .oktam-title .accent{color:#24a8ff}
@@ -23,8 +23,8 @@ STYLE = r'''<style id="oktam-space-header-style">
 .oktam-market-switch .upbit{border:1px solid #2469ba;color:#66b5ff}.oktam-market-switch .upbit.active{background:linear-gradient(180deg,#102f69,#081c40);border-color:#3e8dff;color:#e9f5ff;box-shadow:0 0 20px rgba(46,131,255,.16)}
 .oktam-market-switch .binance{border:1px solid #6a5206;color:#f4c52f}.oktam-market-switch .binance.active{background:linear-gradient(180deg,#332604,#1d1603);border-color:#d9a909;color:#ffe27a;box-shadow:0 0 20px rgba(245,197,51,.14)}
 .oktam-market-switch a:hover{transform:translateY(-1px);filter:brightness(1.08)}
-@media(max-width:900px){.oktam-space-inner{height:92px;padding:0 12px}.oktam-astro-wrap{width:165px}.oktam-astro{width:190px;left:-25px}.oktam-title-wrap{margin-left:0}.oktam-title{font-size:25px}.oktam-subtitle{font-size:11px}.oktam-market-switch a{width:112px;height:50px}}
-@media(max-width:640px){.oktam-space-inner{height:72px;padding:0 8px;gap:7px}.oktam-astro-wrap{width:68px}.oktam-astro{width:132px;left:-48px;bottom:-2px}.oktam-title{font-size:17px;letter-spacing:-.8px}.oktam-subtitle{display:none}.oktam-market-switch{gap:5px}.oktam-market-switch a{width:76px;height:43px;border-radius:9px}.oktam-market-switch b{font-size:12px}.oktam-market-switch small{font-size:7px}}
+@media(max-width:900px){.oktam-space-inner{height:92px;padding:0 12px}.oktam-astro-wrap{width:130px}.oktam-astro{height:88px}.oktam-title-wrap{margin-left:0}.oktam-title{font-size:25px}.oktam-subtitle{font-size:11px}.oktam-market-switch a{width:112px;height:50px}}
+@media(max-width:640px){.oktam-space-inner{height:72px;padding:0 8px;gap:7px}.oktam-astro-wrap{width:54px}.oktam-astro{height:68px;left:50%;bottom:0}.oktam-title{font-size:17px;letter-spacing:-.8px}.oktam-subtitle{display:none}.oktam-market-switch{gap:5px}.oktam-market-switch a{width:76px;height:43px;border-radius:9px}.oktam-market-switch b{font-size:12px}.oktam-market-switch small{font-size:7px}}
 </style>'''
 
 
