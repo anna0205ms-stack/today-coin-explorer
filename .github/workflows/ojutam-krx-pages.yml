@@ -48,7 +48,8 @@ jobs:
       - name: Verify OJUTAM UI contract
         run: |
           set -e
-          grep -q 'class="expand' outputs/ojutam/scan.html
+          grep -q 'class=\"expand' outputs/ojutam/scan_v6.js
+          grep -q 'toggleExpand' outputs/ojutam/scan_v6.js
           if grep -q 'id="detailModal"' outputs/ojutam/scan.html; then
             echo "Popup modal still present"
             exit 1
