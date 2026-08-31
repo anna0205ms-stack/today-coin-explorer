@@ -19,6 +19,7 @@ OUTPUT_JSON = OUT / "global_supply.json"
 OUTPUT_CSV = OUT / "global_supply.csv"
 KST = timezone(timedelta(hours=9))
 HEADERS = {"User-Agent": "oko-tam-f-scanner/1.0"}
+BINANCE_API = "https://data-api.binance.vision/api/v3"
 
 
 def get_json(url: str):
@@ -183,13 +184,13 @@ def fetch_market(market: str) -> dict | None:
     trend = upbit_new_high_trend(completed_upbit_days(upbit))
     if not trend:
         return None
-    binance = get_json("https://api.binance.com/api/v3/klines?" + urlencode({"symbol": ticker + "USDT", "interval": "1d", "limit": 1000}))
+    binance = get_json(BINANCE_API + "/klines?" + urlencode({"symbol": ticker + "USDT", "interval": "1d", "limit": 1000}))
     return analyze(market, upbit, binance)
 
 
 def scan_all(workers: int = 6) -> list[dict]:
     markets = [row["market"] for row in get_json("https://api.upbit.com/v1/market/all?is_details=false") if row["market"].startswith("KRW-")]
-    symbols = {row["symbol"] for row in get_json("https://api.binance.com/api/v3/exchangeInfo")["symbols"] if row.get("status") == "TRADING" and row.get("quoteAsset") == "USDT"}
+    symbols = {row["symbol"] for row in get_json(BINANCE_API + "/exchangeInfo")["symbols"] if row.get("status") == "TRADING" and row.get("quoteAsset") == "USDT"}
     markets = [market for market in markets if market.replace("KRW-", "") + "USDT" in symbols]
     results = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
