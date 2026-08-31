@@ -28,5 +28,3 @@ async function load(){
   const times=[g.generated_at,s.generated_at,u.generated_at].filter(Boolean).sort(),latest=(times.length?times[times.length-1]:'').replace('T',' ').slice(0,16);$('updated').textContent=`업데이트 ${latest} KST`;$('updatedHead').textContent=latest?`${latest} KST`:'-';setInterval(()=>{$('nextScan').textContent=nextScanText()},1000);$('nextScan').textContent=nextScanText();
 }
 document.querySelector('.mobile-refresh')?.addEventListener('click',()=>location.reload());$('btcAutoFit')?.addEventListener('click',()=>{btcChartApi?.timeScale().fitContent();btcChartApi?.priceScale('right').applyOptions({autoScale:true})});$('btcBoxToggle')?.addEventListener('click',event=>{btcBoxVisible=!btcBoxVisible;event.currentTarget.textContent=`박스선 ${btcBoxVisible?'ON':'OFF'}`;event.currentTarget.setAttribute('aria-pressed',String(btcBoxVisible));setBtcPriceLines()});renderCharts();load().catch(err=>{console.error(err);$('stageHelp').textContent='데이터 로드 확인 필요'});
-
-// linked BTC chart deployment
