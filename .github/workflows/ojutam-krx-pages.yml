@@ -12,6 +12,7 @@ on:
       - "scanner/ojutam_krx_daily_v5.py"
       - "scanner/ojutam_krx_daily_v6.py"
       - "scanner/ojutam_krx_daily_v7.py"
+      - "scanner/add_explorer_switch.py"
       - "outputs/ojutam/index_v6.js"
       - "outputs/ojutam/scan_v6.js"
       - ".github/workflows/ojutam-krx-pages.yml"
@@ -45,6 +46,8 @@ jobs:
         env:
           TZ: Asia/Seoul
         run: python scanner/ojutam_krx_daily_v7.py
+      - name: Add OkoTam OjuTam switch
+        run: python scanner/add_explorer_switch.py
       - name: Verify OJUTAM UI contract
         run: |
           set -e
@@ -65,6 +68,10 @@ jobs:
           grep -q '>4시간<' outputs/ojutam/index.html
           grep -q '>일봉<' outputs/ojutam/index.html
           grep -q '>주봉<' outputs/ojutam/index.html
+          grep -q 'COIN 오코탐' outputs/ojutam/index.html
+          grep -q 'KRX 오주탐' outputs/ojutam/index.html
+          grep -q 'href="../index.html"' outputs/ojutam/index.html
+          grep -q 'href="ojutam/index.html"' outputs/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
