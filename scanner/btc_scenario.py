@@ -144,6 +144,11 @@ def build(rows: list[list], btc: dict, stage: str, previous_code: str | None = N
         "family": family(code),
         "market_stage": stage,
         "price": round(current, 2),
+        "btc_state": {
+            "daily_state": btc.get("daily_state"),
+            "four_hour_state": btc.get("four_hour_state"),
+            "box_position_pct": btc.get("box", {}).get("position_pct"),
+        },
         "reasons": reasons,
         "alt_action": alt_action(code, stage),
         "levels": {
