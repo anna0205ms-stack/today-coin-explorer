@@ -11,6 +11,7 @@ on:
       - "scanner/ojutam_krx_daily_v4.py"
       - "scanner/ojutam_krx_daily_v5.py"
       - "scanner/ojutam_krx_daily_v6.py"
+      - "scanner/ojutam_krx_daily_v7.py"
       - "outputs/ojutam/index_v6.js"
       - "outputs/ojutam/scan_v6.js"
       - ".github/workflows/ojutam-krx-pages.yml"
@@ -43,7 +44,7 @@ jobs:
       - name: Scan KRX daily A-F and render OJUTAM
         env:
           TZ: Asia/Seoul
-        run: python scanner/ojutam_krx_daily_v6.py
+        run: python scanner/ojutam_krx_daily_v7.py
       - name: Save OJUTAM output and history
         run: |
           set -e
