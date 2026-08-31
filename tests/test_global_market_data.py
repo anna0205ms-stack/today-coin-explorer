@@ -1,4 +1,13 @@
-from scanner.global_market_data import calculate_proxy
+from scanner.global_market_data import _range_position, calculate_proxy
+
+
+def test_range_position_uses_real_observations():
+    result = _range_position([10, 12, 14, 16, 18, 20], 18)
+    assert result == {"low": 10.0, "center": 15.0, "high": 20.0, "position_pct": 80.0, "sample_count": 6}
+
+
+def test_range_position_requires_enough_observations():
+    assert _range_position([10, 12, 14], 14) is None
 
 
 def test_calculate_proxy_builds_btcd_total2_and_others():

@@ -136,6 +136,22 @@ def _read(path: Path, default):
         return default
 
 
+def _range_position(values: list[float], current: float) -> dict | None:
+    clean = [float(value) for value in values if isinstance(value, (int, float))]
+    if len(clean) < 6:
+        return None
+    low, high = min(clean), max(clean)
+    if high <= low:
+        return None
+    return {
+        "low": low,
+        "center": (low + high) / 2,
+        "high": high,
+        "position_pct": (float(current) - low) / (high - low) * 100,
+        "sample_count": len(clean),
+    }
+
+
 def _add_snapshot(result: dict, now: datetime) -> dict:
     records = _read(HISTORY, [])
     current = {
@@ -163,6 +179,12 @@ def _add_snapshot(result: dict, now: datetime) -> dict:
         result["btc_d"]["change_4h_pct_point"] = None
         result["total2"]["change_4h_pct"] = None
         result["others"]["change_4h_pct"] = None
+    comparable = [row for row in records if row.get("method_version") == current.get("method_version")][-24:]
+    result["ranges_4h"] = {
+        "btc_d": _range_position([row.get("btc_d") for row in comparable], current["btc_d"]),
+        "total2": _range_position([row.get("total2") for row in comparable], current["total2"]),
+        "others": _range_position([row.get("others") for row in comparable], current["others"]),
+    }
     HISTORY.parent.mkdir(parents=True, exist_ok=True)
     HISTORY.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     return result
