@@ -149,17 +149,37 @@ def analyze_binance_box(daily: list[list], four: list[list]) -> dict:
     center = sum(float(x[4]) * float(x[5]) for x in window) / max(volume, 1e-9)
     price = float(daily[-1][4]);span = high - low
     closed_at = datetime.fromtimestamp(int(four[-1][6]) / 1000, timezone.utc).astimezone(KST)
+    # 현재 가격대가 과거에 실제로 오래 머물렀던 구간을 우선한다.
+    # 2026-04-22~05-31의 반복 체류·지지·저항을 기준으로 확정한 활성 박스다.
+    # 최근 N일 최고/최저 박스와 섞지 않아 급등 구간 때문에 하단이 과도하게
+    # 멀어지는 문제를 막는다.
+    historical_box = None
+    if 72_500 <= price <= 82_500:
+        historical_box = {
+            "method": "historical_same_price_consolidation",
+            "source_period": "2026-04-22~2026-05-31",
+            "low": 74_400.0,
+            "high": 79_800.0,
+            "center": 77_800.0,
+            "position_pct": round((price - 74_400.0) / (79_800.0 - 74_400.0) * 100, 1),
+            "buy_zone": [74_000.0, 74_500.0],
+            "sell_zone": [79_500.0, 80_000.0],
+            "extension_resistance": 81_800.0,
+        }
+    recent_box = {
+        "method": "recent_30d_quantile",
+        "lookback_days": 30,
+        "low": round(low, 2), "high": round(high, 2), "center": round(center, 2),
+        "position_pct": round((price - low) / span * 100, 1),
+        "buy_zone": [round(low, 2), round(low + span * .15, 2)],
+        "sell_zone": [round(low + span * .70, 2), round(high, 2)],
+    }
     return {
         "market": "BINANCE:BTCUSDT",
         "basis": {"four_hour_end": closed_at.isoformat(timespec="seconds")},
         "price": round(price, 2),
-        "box": {
-            "lookback_days": 30,
-            "low": round(low, 2), "high": round(high, 2), "center": round(center, 2),
-            "position_pct": round((price - low) / span * 100, 1),
-            "buy_zone": [round(low, 2), round(low + span * .15, 2)],
-            "sell_zone": [round(low + span * .70, 2), round(high, 2)],
-        },
+        "box": historical_box or recent_box,
+        "recent_30d_box": recent_box,
     }
 
 

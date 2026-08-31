@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
 HISTORY = ROOT / "history" / "btc_scenario_history.json"
 BINANCE = OUT / "binance" / "latest.json"
+BITCOIN_REGIME = OUT / "bitcoin_regime.json"
 REGIME = OUT / "market_regime.json"
 OUTPUT = OUT / "btc_scenario.json"
 
@@ -153,7 +154,9 @@ def build(rows: list[list], btc: dict, stage: str, previous_code: str | None = N
         "alt_action": alt_action(code, stage),
         "levels": {
             "box_low": round(low, 2),
+            "box_center": round(float(box.get("center", (low + upper) / 2)), 2),
             "box_high": round(upper, 2),
+            "extension_resistance": box.get("extension_resistance"),
             "up_confirm": round(upper, 2),
             "down_confirm": round(down_line, 2),
             "retest_low": round(down_line, 2),
@@ -199,7 +202,28 @@ def update_history(current: dict, history: dict) -> tuple[dict, dict | None]:
 
 def main() -> None:
     binance = read(BINANCE, {})
-    btc = (binance.get("market_regime") or {}).get("btc") or {}
+    bitcoin_regime = read(BITCOIN_REGIME, {})
+    active = bitcoin_regime.get("binance") or {}
+    box = active.get("box") or {}
+    box_position = box.get("position_pct")
+    if isinstance(box_position, (int, float)):
+        daily_state = "박스 상단" if box_position >= 70 else "박스 중심권" if box_position >= 45 else "박스 하단~중심"
+        four_hour_state = "과거 동일가격 박스 중심 공방" if 45 <= box_position < 70 else "과거 동일가격 박스 경계 확인"
+    else:
+        daily_state = bitcoin_regime.get("daily_state")
+        four_hour_state = bitcoin_regime.get("four_hour_state")
+    btc = {
+        "box": box,
+        "daily_state": daily_state,
+        "four_hour_state": four_hour_state,
+        "correction": {
+            "defense1": box.get("center"),
+            "defense2": box.get("low"),
+            "invalid": round(float(box.get("low")) * .98, 2) if box.get("low") else None,
+        },
+    }
+    if not box:
+        btc = (binance.get("market_regime") or {}).get("btc") or {}
     if not btc.get("box"):
         raise ValueError("outputs/binance/latest.json의 BTC 박스가 없습니다")
     regime = read(REGIME, {})
