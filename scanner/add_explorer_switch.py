@@ -9,14 +9,14 @@ OUT = ROOT / "outputs"
 MARKER = "explorer-switcher"
 
 STYLE = r'''<style id="explorer-switcher-style">
-#explorer-switcher{max-width:1500px;margin:10px auto 0;padding:0 22px;display:flex;justify-content:flex-end;position:relative;z-index:90;font-family:system-ui,"Noto Sans KR",sans-serif}
-#explorer-switcher .explorer-switch-inner{display:inline-flex;gap:3px;padding:4px;border:1px solid #244b38;border-radius:13px;background:#06100b;box-shadow:0 6px 18px rgba(0,0,0,.22)}
-#explorer-switcher a{display:flex;align-items:center;gap:7px;min-height:36px;padding:7px 12px;border:0!important;border-radius:9px!important;background:transparent!important;color:#8fa399!important;text-decoration:none!important;font-size:12px!important;font-weight:800!important;line-height:1!important;white-space:nowrap}
-#explorer-switcher a span{font-size:10px;color:#698277;font-weight:600}
+#explorer-switcher{width:100%;margin:0;padding:7px 12px;display:flex;justify-content:center;position:sticky;top:0;z-index:9999;font-family:system-ui,"Noto Sans KR",sans-serif;background:rgba(3,6,5,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(36,75,56,.55)}
+#explorer-switcher .explorer-switch-inner{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:min(720px,100%);padding:4px;border:1px solid #244b38;border-radius:13px;background:#06100b;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+#explorer-switcher a{display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:8px 12px;border:0!important;border-radius:9px!important;background:transparent!important;color:#8fa399!important;text-decoration:none!important;font-size:14px!important;font-weight:800!important;line-height:1!important;white-space:nowrap}
+#explorer-switcher a span{font-size:12px;color:#698277;font-weight:700}
 #explorer-switcher a.active{background:#0b2619!important;color:#00e783!important;box-shadow:inset 0 0 0 1px #00e783}
 #explorer-switcher a:hover{color:#dfffee!important;background:#0b1912!important}
 #explorer-switcher a.active:hover{color:#00e783!important;background:#0b2619!important}
-@media(max-width:760px){#explorer-switcher{padding:0 12px;margin-top:7px;justify-content:stretch}#explorer-switcher .explorer-switch-inner{display:grid;grid-template-columns:1fr 1fr;width:100%}#explorer-switcher a{justify-content:center;padding:7px 8px}}
+@media(max-width:760px){#explorer-switcher{padding:7px 12px}#explorer-switcher .explorer-switch-inner{width:100%}#explorer-switcher a{min-height:42px;padding:8px 6px;font-size:13px!important}#explorer-switcher a span{font-size:11px}}
 </style>'''
 
 
@@ -33,8 +33,8 @@ def switch_html(page: Path) -> str:
     return (
         '<div id="explorer-switcher" aria-label="탐험대 전환">'
         '<div class="explorer-switch-inner">'
-        f'<a class="{"" if in_ojutam else "active"}" href="{oko}">COIN 오코탐 <span>UPBIT</span></a>'
-        f'<a class="{"active" if in_ojutam else ""}" href="{oju}">KRX 오주탐 <span>STOCK</span></a>'
+        f'<a class="{"" if in_ojutam else "active"}" href="{oko}">오코탐 <span>| BTC</span></a>'
+        f'<a class="{"active" if in_ojutam else ""}" href="{oju}">오주탐 <span>| STOCK</span></a>'
         '</div></div>'
     )
 
@@ -47,11 +47,9 @@ def patch(page: Path) -> bool:
     if "<body" not in text.lower():
         return False
 
-    # Idempotent: remove an older injected switch/style first.
     text = re.sub(r'<style id="explorer-switcher-style">.*?</style>', '', text, flags=re.S)
     text = re.sub(r'<div id="explorer-switcher".*?</div></div>', '', text, count=1, flags=re.S)
 
-    # Put styling in head and switch immediately after the body tag.
     if "</head>" in text:
         text = text.replace("</head>", STYLE + "</head>", 1)
     else:
