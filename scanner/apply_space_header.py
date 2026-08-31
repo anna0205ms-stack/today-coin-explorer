@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-
-from header_art import HEADER_CAT_DATA
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
@@ -29,25 +28,33 @@ STYLE = r'''<style id="oktam-space-header-style">
 </style>'''
 
 
-def header(home: str, upbit: str, binance: str, active: str = "") -> str:
+def header(home: str, upbit: str, binance: str, image_src: str, active: str = "") -> str:
     up = " active" if active == "upbit" else ""
     bn = " active" if active == "binance" else ""
-    return f'''<header class="oktam-space-header" id="oktam-space-header"><div class="oktam-space-inner"><a class="oktam-brand" href="{home}"><span class="oktam-astro-wrap"><img class="oktam-astro" src="{HEADER_CAT_DATA}" alt="우주복 숙돌이"></span><span class="oktam-title-wrap"><span class="oktam-title">오늘의 코인 <span class="accent">탐험대</span></span><span class="oktam-subtitle">시장을 탐험하고, 기회를 발견하세요.</span></span></a><div class="oktam-market-switch"><a class="upbit{up}" href="{upbit}"><b>UPBIT</b><small>KRW</small></a><a class="binance{bn}" href="{binance}"><b>BINANCE</b><small>SPOT USDT</small></a></div></div></header>'''
+    return f'''<header class="oktam-space-header" id="oktam-space-header"><div class="oktam-space-inner"><a class="oktam-brand" href="{home}"><span class="oktam-astro-wrap"><img class="oktam-astro" src="{image_src}" alt="우주복 숙돌이"></span><span class="oktam-title-wrap"><span class="oktam-title">오늘의 코인 <span class="accent">탐험대</span></span><span class="oktam-subtitle">시장을 탐험하고, 기회를 발견하세요.</span></span></a><div class="oktam-market-switch"><a class="upbit{up}" href="{upbit}"><b>UPBIT</b><small>KRW</small></a><a class="binance{bn}" href="{binance}"><b>BINANCE</b><small>SPOT USDT</small></a></div></div></header>'''
 
 
 def patch(path: Path, is_binance: bool = False, is_main: bool = False):
     if not path.exists():
         return
     text = path.read_text(encoding="utf-8")
+    image_src = "../assets/sukdol-stage.webp" if is_binance else "assets/sukdol-stage.webp"
     # repeated runs are idempotent
     if 'id="oktam-space-header"' in text:
+        text = re.sub(
+            r'(<img class="oktam-astro" src=")[^"]*(" alt="우주복 숙돌이">)',
+            rf'\1{image_src}\2',
+            text,
+            count=1,
+        )
+        path.write_text(text, encoding="utf-8")
         return
     if is_binance:
-        bar = header("../index.html", "../scan.html", "scan.html", "binance")
+        bar = header("../index.html", "../scan.html", "scan.html", image_src, "binance")
     elif is_main:
-        bar = header("index.html", "scan.html", "binance/scan.html", "")
+        bar = header("index.html", "scan.html", "binance/scan.html", image_src, "")
     else:
-        bar = header("index.html", "scan.html", "binance/scan.html", "upbit")
+        bar = header("index.html", "scan.html", "binance/scan.html", image_src, "upbit")
     text = text.replace("</head>", STYLE + "</head>", 1)
     body_pos = text.find(">", text.find("<body"))
     if body_pos >= 0:
