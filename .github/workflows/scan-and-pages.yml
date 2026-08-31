@@ -27,6 +27,7 @@ on:
       - "scanner/dashboard_asset_inliner.py"
       - "scanner/header_art.py"
       - "scanner/apply_space_header.py"
+      - "scanner/add_explorer_switch.py"
       - "outputs/dashboard_v5.css"
       - "outputs/dashboard_v5.js"
       - "outputs/header_astronaut.b64"
@@ -103,6 +104,7 @@ jobs:
           python scanner/dashboard_asset_inliner.py
           python scanner/apply_space_header.py
           python scanner/market_dashboard_v5.py
+          python scanner/add_explorer_switch.py
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
         continue-on-error: true
