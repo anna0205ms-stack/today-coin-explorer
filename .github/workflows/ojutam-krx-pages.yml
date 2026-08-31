@@ -19,13 +19,13 @@ on:
     - cron: "20 7 * * 1-5"
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
   group: ojutam-public-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -45,17 +45,19 @@ jobs:
         env:
           TZ: Asia/Seoul
         run: python scanner/ojutam_krx_daily_v7.py
-      - name: Save OJUTAM output and history
+      - name: Verify OJUTAM UI contract
         run: |
           set -e
-          git config user.name "OJUTAM KRX Scanner"
-          git config user.email "ojutam@users.noreply.github.com"
-          git add outputs/ojutam/ history/ojutam_snapshots.json
-          if ! git diff --cached --quiet; then
-            git commit -m "ojutam: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST') [skip ci]"
-            git pull --rebase origin main
-            git push
+          grep -q 'class="expand' outputs/ojutam/scan.html
+          if grep -q 'id="detailModal"' outputs/ojutam/scan.html; then
+            echo "Popup modal still present"
+            exit 1
           fi
+          grep -q '>15분<' outputs/ojutam/index.html
+          grep -q '>1시간<' outputs/ojutam/index.html
+          grep -q '>4시간<' outputs/ojutam/index.html
+          grep -q '>일봉<' outputs/ojutam/index.html
+          grep -q '>주봉<' outputs/ojutam/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
