@@ -1,0 +1,64 @@
+name: OJUTAM KRX Daily Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scanner/ojutam_krx_daily.py"
+      - ".github/workflows/ojutam-krx-pages.yml"
+  schedule:
+    - cron: "20 7 * * 1-5"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ojutam-public-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}ojutam/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install KRX daily dependencies
+        run: pip install pandas numpy requests
+
+      - name: Scan KRX daily A-F and render OJUTAM
+        env:
+          TZ: Asia/Seoul
+        run: python scanner/ojutam_krx_daily.py
+
+      - name: Save OJUTAM output and history
+        run: |
+          set -e
+          git config user.name "OJUTAM KRX Scanner"
+          git config user.email "ojutam@users.noreply.github.com"
+          git add outputs/ojutam/ history/ojutam_snapshots.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ojutam: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST') [skip ci]"
+            git pull --rebase origin main
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: outputs
+
+      - name: Deploy full site with OJUTAM
+        id: deployment
+        uses: actions/deploy-pages@v4
