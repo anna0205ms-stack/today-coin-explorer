@@ -10,6 +10,9 @@ on:
       - "scanner/ojutam_krx_daily_v3.py"
       - "scanner/ojutam_krx_daily_v4.py"
       - "scanner/ojutam_krx_daily_v5.py"
+      - "scanner/ojutam_krx_daily_v6.py"
+      - "outputs/ojutam/index_v6.js"
+      - "outputs/ojutam/scan_v6.js"
       - ".github/workflows/ojutam-krx-pages.yml"
   schedule:
     - cron: "20 7 * * 1-5"
@@ -31,20 +34,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}ojutam/
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-
       - name: Install KRX daily dependencies
         run: pip install pandas numpy requests pyarrow yfinance
-
       - name: Scan KRX daily A-F and render OJUTAM
         env:
           TZ: Asia/Seoul
-        run: python scanner/ojutam_krx_daily_v5.py
-
+        run: python scanner/ojutam_krx_daily_v6.py
       - name: Save OJUTAM output and history
         run: |
           set -e
@@ -56,13 +55,10 @@ jobs:
             git pull --rebase origin main
             git push
           fi
-
       - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: outputs
-
       - name: Deploy full site with OJUTAM
         id: deployment
         uses: actions/deploy-pages@v4
