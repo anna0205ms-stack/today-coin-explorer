@@ -8,6 +8,8 @@ on:
       - ".github/workflows/scan-and-pages.yml"
       - "scanner/schedule_guard.py"
       - "scanner/bitcoin_regime.py"
+      - "scanner/btc_scenario.py"
+      - "scanner/btc_scenario_dashboard.js"
       - "scanner/global_market_data.py"
       - "scanner/market_regime.py"
       - "scanner/history_store.py"
@@ -90,6 +92,7 @@ jobs:
           python scanner/bitcoin_regime.py
           python scanner/global_market_data.py
           python scanner/market_regime.py
+          python scanner/btc_scenario.py
           python scanner/upbit_market_breadth.py
           python scanner/chart_cache.py
           python scanner/history_store.py
@@ -116,7 +119,7 @@ jobs:
         run: |
           git config user.name "UPBIT Scanner"
           git config user.email "scanner@users.noreply.github.com"
-          git add history/snapshots.json history/global_market_snapshots.json history/watchlist.json outputs/
+          git add history/snapshots.json history/global_market_snapshots.json history/watchlist.json history/btc_scenario_history.json outputs/
           if [ -f history/notification_state.json ]; then git add history/notification_state.json; fi
           git diff --cached --quiet || git commit -m "scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
           git pull --rebase origin main

@@ -12,6 +12,7 @@ def main():
     (OUT / "index.html").write_text((SCANNER / "dashboard_v5.html").read_text(encoding="utf-8"), encoding="utf-8")
     (OUT / "dashboard_v5.css").write_text((SCANNER / "dashboard_v5.css").read_text(encoding="utf-8"), encoding="utf-8")
     (OUT / "dashboard_v5.js").write_text((SCANNER / "dashboard_v5.js").read_text(encoding="utf-8"), encoding="utf-8")
+    (OUT / "btc_scenario_dashboard.js").write_text((SCANNER / "btc_scenario_dashboard.js").read_text(encoding="utf-8"), encoding="utf-8")
     assets_out = OUT / "assets"
     assets_out.mkdir(parents=True, exist_ok=True)
     for asset in (SCANNER / "assets").glob("sukdol-*"):
