@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "outputs/ojutam/**"
+      - "scanner/add_explorer_switch.py"
       - ".github/workflows/deploy-ojutam-output.yml"
 
 permissions:
@@ -25,6 +26,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}ojutam/
     steps:
       - uses: actions/checkout@v4
+      - name: Add OkoTam OjuTam switch
+        run: python scanner/add_explorer_switch.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
