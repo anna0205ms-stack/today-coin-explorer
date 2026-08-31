@@ -1,4 +1,4 @@
-from scanner.global_supply import classify_stage, historical_supply_zone, trade_plan
+from scanner.global_supply import classify_stage, f2_zone_position, historical_supply_zone, trade_plan
 
 
 def candle(day, low, high, close):
@@ -30,3 +30,11 @@ def test_f2_plan_waits_and_targets_global_zone_top():
     assert plan["action"] == "확인 대기"
     assert plan["stop"] < min(plan["entry"])
     assert plan["targets"][0] > max(plan["entry"])
+
+
+def test_f2_zone_is_split_into_lower_middle_upper_thirds():
+    zone = {"lower": 6.0, "upper": 9.0}
+    assert f2_zone_position(6.5, zone)["label"] == "하단"
+    assert f2_zone_position(7.5, zone)["label"] == "중앙"
+    assert f2_zone_position(8.5, zone)["label"] == "상단"
+    assert f2_zone_position(9.5, zone)["label"] is None

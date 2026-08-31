@@ -128,6 +128,23 @@ def classify_stage(current: float, zone: dict, recent: list[list]) -> tuple[str,
     return "F1", "신고가 상승", ["글로벌 매물대 하단 도착 대기"]
 
 
+def f2_zone_position(current: float, zone: dict) -> dict:
+    """F2 공급대를 동일한 3구간으로 나눠 현재 위치를 단순하게 표시한다."""
+    lower, upper = float(zone["lower"]), float(zone["upper"])
+    if upper <= lower:
+        return {"label": None, "ratio_pct": None, "mid": None}
+    ratio = (current - lower) / (upper - lower)
+    if ratio < 0 or ratio > 1:
+        label = None
+    elif ratio <= 1 / 3:
+        label = "하단"
+    elif ratio <= 2 / 3:
+        label = "중앙"
+    else:
+        label = "상단"
+    return {"label": label, "ratio_pct": round(max(0, min(1, ratio)) * 100, 1), "mid": round((lower + upper) / 2, 8)}
+
+
 def trade_plan(stage: str, upbit_price: float, binance_price: float, zone: dict) -> dict:
     ratio = upbit_price / binance_price
     lower_krw, upper_krw = zone["lower"] * ratio, zone["upper"] * ratio
@@ -164,11 +181,14 @@ def analyze(market: str, upbit_rows: list[dict], binance_rows: list[list]) -> di
     if not zone:
         return None
     stage, label, missing = classify_stage(binance_price, zone, binance_days)
+    zone_position = f2_zone_position(binance_price, zone) if stage == "F2" else {"label": None, "ratio_pct": None, "mid": round((zone["lower"] + zone["upper"]) / 2, 8)}
     plan = trade_plan(stage, trend["price"], binance_price, zone)
     score = min(10, 5 + trend["upbit_rise_pct"] / 50 + zone["inside_ratio"] * 2 + zone["days"] / 60)
     return {
         "market": market, "name": market.replace("KRW-", ""), "binance_symbol": market.replace("KRW-", "") + "USDT",
         "status": label, "f_stage": stage, "f_stage_label": label,
+        "f2_zone_position": zone_position["label"], "f2_zone_position_pct": zone_position["ratio_pct"],
+        "f2_zone_mid": zone_position["mid"],
         "price": trend["price"], "binance_price": binance_price,
         "score": round(score, 1), **plan, **trend,
         "global_zone": zone, "missing": missing,

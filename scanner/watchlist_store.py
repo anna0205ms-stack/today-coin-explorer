@@ -20,10 +20,14 @@ def update():
         was_new=item.get("last_seen")==stamp and not item.get("four_hour");item["last_seen"]=stamp;item["daily_status"]="신규 관심" if was_new else "관심 유지";item["archived"]=False;item["archive_reason"]=None
         types=sorted({r.get("type") for r in rows if r.get("type")});best=sorted(rows,key=lambda r:({"진입 검토":0,"확인 대기":1,"진입가 대기":2,"추격 금지":3}.get(r.get("action"),9),-float(r.get("score") or 0)))[0]
         previous=item.get("four_hour",{});prev_types=previous.get("types",[])
-        item["four_hour"]={"types":types,"primary_type":best.get("type"),"action":best.get("action"),"status":best.get("status"),"score":best.get("score"),"price":best.get("price"),"entry":best.get("entry"),"stop":best.get("stop"),"last_seen":stamp}
+        f_row=next((r for r in rows if r.get("type")=="F"),None);prev_stage=previous.get("f_stage");new_stage=f_row.get("f_stage") if f_row else None
+        item["four_hour"]={"types":types,"primary_type":best.get("type"),"action":best.get("action"),"status":best.get("status"),"score":best.get("score"),"price":best.get("price"),"entry":best.get("entry"),"stop":best.get("stop"),"last_seen":stamp,"f_stage":new_stage,"f_stage_label":f_row.get("f_stage_label") if f_row else None,"f2_zone_position":f_row.get("f2_zone_position") if f_row else None}
         invalid=all(isinstance(r.get("price"),(int,float)) and isinstance(r.get("stop"),(int,float)) and r["price"]<r["stop"] for r in rows)
         if invalid:item["archived"]=True;item["archive_reason"]="구조 무효선 이탈";item["daily_status"]="구조 무효"
-        event={"at":stamp,"types":types,"action":best.get("action"),"price":best.get("price"),"score":best.get("score"),"note":"유형 전환" if prev_types and prev_types!=types else "4시간봉 갱신"}
+        forward=(prev_stage,new_stage) in {("F1","F2"),("F2","F3")}
+        note=f"{prev_stage} → {new_stage} · {f_row.get('f_stage_label')}" if forward else "유형 전환" if prev_types and prev_types!=types else "4시간봉 갱신"
+        if forward and f_row.get("f2_zone_position"):note+=f" · 매물대 {f_row.get('f2_zone_position')}"
+        event={"at":stamp,"types":types,"action":best.get("action"),"price":best.get("price"),"score":best.get("score"),"note":note,"transition":f"{prev_stage}->{new_stage}" if forward else None,"alert":forward,"f_stage":new_stage,"f2_zone_position":f_row.get("f2_zone_position") if f_row else None}
         if not item["timeline"] or item["timeline"][-1].get("at")!=stamp:item["timeline"].append(event)
         item["timeline"]=item["timeline"][-60:]
     for market,item in items.items():
