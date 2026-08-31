@@ -9,6 +9,7 @@ on:
       - "scanner/ojutam_krx_daily_v2.py"
       - "scanner/ojutam_krx_daily_v3.py"
       - "scanner/ojutam_krx_daily_v4.py"
+      - "scanner/ojutam_krx_daily_v5.py"
       - ".github/workflows/ojutam-krx-pages.yml"
   schedule:
     - cron: "20 7 * * 1-5"
@@ -42,7 +43,7 @@ jobs:
       - name: Scan KRX daily A-F and render OJUTAM
         env:
           TZ: Asia/Seoul
-        run: python scanner/ojutam_krx_daily_v4.py
+        run: python scanner/ojutam_krx_daily_v5.py
 
       - name: Save OJUTAM output and history
         run: |
