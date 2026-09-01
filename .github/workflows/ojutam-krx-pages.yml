@@ -51,27 +51,37 @@ jobs:
       - name: Verify OJUTAM UI contract
         run: |
           set -e
+          grep -q 'id="stockSearch"' outputs/ojutam/scan.html
+          grep -q '종목명 또는 종목코드 검색' outputs/ojutam/scan.html
+          grep -q '현재판단·남은 조건' outputs/ojutam/scan.html
           grep -q 'class=\"expand' outputs/ojutam/scan_v6.js
           grep -q 'toggleExpand' outputs/ojutam/scan_v6.js
+          grep -q 'setOjutamQuery' outputs/ojutam/scan_v6.js
           grep -q '표적 이유' outputs/ojutam/scan_v6.js
           grep -q '차트 현재판단' outputs/ojutam/scan_v6.js
           grep -q '남은 조건' outputs/ojutam/scan_v6.js
           grep -q '<b>진입</b>' outputs/ojutam/scan_v6.js
           grep -q '<b>손절</b>' outputs/ojutam/scan_v6.js
           grep -q '<b>목표</b>' outputs/ojutam/scan_v6.js
+          grep -q 'data-ojutam-filter="A"' outputs/ojutam/type_a.html
+          grep -q 'data-ojutam-filter="F"' outputs/ojutam/type_f.html
+          grep -q 'id="stockSearch"' outputs/ojutam/type_a.html
+          if grep -q 'class="gallery"' outputs/ojutam/type_a.html; then
+            echo "Type A still uses chart-first gallery"
+            exit 1
+          fi
           if grep -q 'id="detailModal"' outputs/ojutam/scan.html; then
             echo "Popup modal still present"
             exit 1
           fi
+          grep -q '@media(max-width:760px)' outputs/ojutam/scan.html
           grep -q '>15분<' outputs/ojutam/index.html
           grep -q '>1시간<' outputs/ojutam/index.html
           grep -q '>4시간<' outputs/ojutam/index.html
           grep -q '>일봉<' outputs/ojutam/index.html
           grep -q '>주봉<' outputs/ojutam/index.html
-          grep -q 'COIN 오코탐' outputs/ojutam/index.html
-          grep -q 'KRX 오주탐' outputs/ojutam/index.html
-          grep -q 'href="../index.html"' outputs/ojutam/index.html
-          grep -q 'href="ojutam/index.html"' outputs/index.html
+          grep -q '오코탐 <span>| BTC</span>' outputs/ojutam/index.html
+          grep -q '오주탐 <span>| STOCK</span>' outputs/ojutam/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
