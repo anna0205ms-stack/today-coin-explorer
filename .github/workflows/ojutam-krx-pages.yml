@@ -102,6 +102,19 @@ jobs:
           grep -q '국장 <span>| KRX</span>' outputs/ojutam/index.html
           grep -q 'id="stockSearch"' outputs/ojutam/us/scan.html
           grep -q 'ojutamPinsUS' outputs/ojutam/us/scan.html
+          grep -q "draw('us100','D')" outputs/ojutam/us/index_us.js
+          grep -q "draw('dxy','D')" outputs/ojutam/us/index_us.js
+          grep -q 'index_us.js?v=20260902-us100-dxy-1' outputs/ojutam/us/index.html
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("outputs/ojutam/us/index_timeframes.json").read_text())
+          assert {"us100","dxy"} <= data.keys()
+          ndx=data["us100"]["D"]["rows"][-1]["close"]
+          dxy=data["dxy"]["D"]["rows"][-1]["close"]
+          assert ndx > 10_000, f"US100 does not look like Nasdaq-100: {ndx}"
+          assert 50 < dxy < 200, f"DXY out of expected range: {dxy}"
+          PY
       - name: Persist latest OJUTAM output
         run: |
           set -e
