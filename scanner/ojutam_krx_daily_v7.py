@@ -21,7 +21,7 @@ def patch_scan_inline():
     text=text.replace('<thead><tr><th>종목</th><th>유형</th><th>점수</th><th>흐름</th><th>한줄정리</th><th>관심</th></tr></thead>','<thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead>',1)
     text=text.replace('KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 차트 상세</b>','KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 아래에서 상세 펼침</b>')
     # Always force the latest chart script after deploy; prevents iOS/Safari from reusing the previous JS.
-    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260902-chart-visible-1', text)
+    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260902-ema50-g-1', text)
     p.write_text(text,encoding='utf-8')
 
 
@@ -44,7 +44,7 @@ def patch_mobile_chart_script():
 
 def make_type_list_pages():
     src=Path('outputs/ojutam/scan.html').read_text(encoding='utf-8')
-    names={'A':'급등 후 첫 눌림','B':'바닥·박스 하단 반등','C':'박스 상단 돌파','D':'재탈환·압축','E':'급락 후 기술적 반등','F':'고점권·과거 매물대'}
+    names={'A':'급등 후 첫 눌림','B':'바닥·박스 하단 반등','C':'박스 상단 돌파','D':'재탈환·압축','E':'급락 후 기술적 반등','F':'고점권·과거 매물대','G':'주봉 EMA50 첫 터치'}
     for k,name in names.items():
         text=src.replace('<body>','<body data-ojutam-filter="'+k+'">',1)
         text=text.replace('<title>전체 스캔 결과','<title>'+k+'형 · '+name,1)
