@@ -28,6 +28,9 @@ def patch_scan_inline():
 def patch_mobile_chart_script():
     p=Path('outputs/ojutam/scan_v6.js')
     text=p.read_text(encoding='utf-8')
+    mobile_decl="const mobile=window.matchMedia('(max-width:760px)').matches;"
+    while mobile_decl+mobile_decl in text:
+        text=text.replace(mobile_decl+mobile_decl,mobile_decl)
     if "function drawInline(code,type){const mobile=" not in text:
         text=text.replace("function drawInline(code,type){", "function drawInline(code,type){const mobile=window.matchMedia('(max-width:760px)').matches;")
     text=text.replace("rightPriceScale:{borderColor:'#29404d',autoScale:true}", "rightPriceScale:{borderColor:'#29404d',autoScale:true,visible:!mobile,borderVisible:!mobile}")
