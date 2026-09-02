@@ -20,26 +20,19 @@ def patch_scan_inline():
     text=text.replace('</section><section id="scanSummary" class="scan-summary">','</section><div class="search-bar"><input id="stockSearch" type="search" inputmode="search" placeholder="종목명 또는 종목코드 검색"><span id="searchCount"></span></div><section id="scanSummary" class="scan-summary">',1)
     text=text.replace('<thead><tr><th>종목</th><th>유형</th><th>점수</th><th>흐름</th><th>한줄정리</th><th>관심</th></tr></thead>','<thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead>',1)
     text=text.replace('KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 차트 상세</b>','KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 아래에서 상세 펼침</b>')
-    # Always force the latest chart script after deploy; prevents iOS/Safari from reusing the previous JS.
-    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260902-liquidity-1', text)
+    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260903-chartfix-1', text)
     p.write_text(text,encoding='utf-8')
 
 
-def patch_mobile_chart_script():
+def validate_chart_script():
     p=Path('outputs/ojutam/scan_v6.js')
     text=p.read_text(encoding='utf-8')
-    mobile_decl="const mobile=window.matchMedia('(max-width:760px)').matches;"
-    while mobile_decl+mobile_decl in text:
-        text=text.replace(mobile_decl+mobile_decl,mobile_decl)
-    if "function drawInline(code,type){const mobile=" not in text:
-        text=text.replace("function drawInline(code,type){", "function drawInline(code,type){const mobile=window.matchMedia('(max-width:760px)').matches;")
-    text=text.replace("rightPriceScale:{borderColor:'#29404d',autoScale:true}", "rightPriceScale:{borderColor:'#29404d',autoScale:true,visible:!mobile,borderVisible:!mobile}")
-    text=text.replace("timeScale:{borderColor:'#29404d',rightOffset:8,barSpacing:7,minBarSpacing:2}", "timeScale:{borderColor:'#29404d',rightOffset:mobile?0:8,barSpacing:mobile?4.5:7,minBarSpacing:2}")
-    text=text.replace("priceLineVisible:true,lastValueVisible:true", "priceLineVisible:!mobile,lastValueVisible:!mobile,priceScaleId:mobile?'':'right'")
-    text=text.replace("axisLabelVisible:true,title:k.replaceAll('_',' ')", "axisLabelVisible:!mobile,title:mobile?'':k.replaceAll('_',' ')")
-    text=text.replace("axisLabelVisible:true,title})", "axisLabelVisible:!mobile,title:mobile?'':title})")
-    text=text.replace("chart.timeScale().fitContent();ro=new ResizeObserver(()=>chart?.resize(el.clientWidth,el.clientHeight));", "if(mobile){try{chart.priceScale('right').applyOptions({visible:false,borderVisible:false})}catch(e){}}chart.timeScale().fitContent();const fit=()=>{const w=Math.max(1,Math.floor(el.getBoundingClientRect().width));chart?.resize(w,el.clientHeight);chart?.timeScale().fitContent()};requestAnimationFrame(()=>requestAnimationFrame(fit));ro=new ResizeObserver(fit);")
-    p.write_text(text,encoding='utf-8')
+    required=['function drawInline','LightweightCharts.createChart','addCandlestickSeries','ResizeObserver','liqText']
+    missing=[x for x in required if x not in text]
+    if missing:
+        raise RuntimeError('scan_v6.js missing: '+', '.join(missing))
+    if "})();:''}" in text or text.count('function pins()') != 1:
+        raise RuntimeError('scan_v6.js appears duplicated/corrupted')
 
 
 def make_type_list_pages():
@@ -63,7 +56,7 @@ def patch_index_labels():
 def generate(universe,buckets,date):
     v6.generate(universe,buckets,date)
     patch_scan_inline()
-    patch_mobile_chart_script()
+    validate_chart_script()
     make_type_list_pages()
     patch_index_labels()
 
