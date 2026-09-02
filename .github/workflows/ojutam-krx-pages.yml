@@ -16,10 +16,10 @@ on:
       - "outputs/ojutam/index_v6.js"
       - "outputs/ojutam/scan_v6.js"
       - ".github/workflows/ojutam-krx-pages.yml"
-  # KST weekdays: 16:20 primary, 16:50 safety refresh
+  # KST weekdays: 16:20 after KRX close, 20:10 after NXT after-market close
   schedule:
     - cron: "20 7 * * 1-5"
-    - cron: "50 7 * * 1-5"
+    - cron: "10 11 * * 1-5"
 
 permissions:
   contents: read
