@@ -11,6 +11,7 @@ OUT = ROOT / "outputs" / "ojutam"
 HISTORY = ROOT / "history" / "ojutam_snapshots.json"
 KST = timezone(timedelta(hours=9))
 LETTERS = "ABCDEFG"
+LIQUIDITY_STATS = {"total": 0, "eligible": 0, "excluded": 0, "strong": 0, "normal": 0}
 INFO = {
     "A": ("#ff8297", "급등 후 첫 눌림", "강한 상승 → 첫 눌림 → 전고점 재도전 후보"),
     "B": ("#70c2ff", "바닥·박스 하단 반등", "장기 하락 → 바닥 횡보 → 하단 회복"),
@@ -145,14 +146,48 @@ def analyze_one(code,name,market,df):
     return out
 
 
+def liquidity_profile(df, market):
+    """Return tradable-liquidity metadata, or None when the stock is too thin."""
+    if df is None or len(df)<20 or "Amount" not in df:
+        return None
+    amount=pd.to_numeric(df["Amount"].tail(20),errors="coerce").fillna(0)
+    median20=finite(amount.median())
+    min5=finite(amount.tail(5).min())
+    is_us=str(market).upper()=="NASDAQ"
+    floor20=10_000_000 if is_us else 3_000_000_000
+    floor5=3_000_000 if is_us else 1_000_000_000
+    strong20=50_000_000 if is_us else 10_000_000_000
+    active_floor=3_000_000 if is_us else 1_000_000_000
+    active_days=int((amount>=active_floor).sum())
+    if median20<floor20 or min5<floor5 or active_days<15:
+        return None
+    tier="충분" if median20>=strong20 else "보통"
+    return {
+        "tier":tier,"median20":round(median20,2),"min5":round(min5,2),
+        "active_days":active_days,"currency":"USD" if is_us else "KRW"
+    }
+
+
 def scan(universe,frames):
+    global LIQUIDITY_STATS
     buckets={k:[] for k in LETTERS}
+    stats={"total":len(universe),"eligible":0,"excluded":0,"strong":0,"normal":0}
     for _,r in universe.iterrows():
-        code=str(r.Code).zfill(6)
+        raw=str(r.Code)
+        code=raw if str(r.Market).upper()=="NASDAQ" else raw.zfill(6)
+        profile=liquidity_profile(frames.get(code),str(r.Market))
+        if not profile:
+            stats["excluded"]+=1
+            continue
+        stats["eligible"]+=1
+        stats["strong" if profile["tier"]=="충분" else "normal"]+=1
         for item in analyze_one(code,str(r.Name),str(r.Market),frames.get(code)):
+            item["liquidity"]=profile
             buckets[item["type"]].append(item)
+    LIQUIDITY_STATS=stats
     for k in LETTERS:
         buckets[k].sort(key=lambda x:-x["score"]); buckets[k]=buckets[k][:30]
+    print("liquidity",stats)
     return buckets
 
 
@@ -188,13 +223,14 @@ def generate(universe,buckets,date):
     OUT.mkdir(parents=True,exist_ok=True); now=datetime.now(KST).strftime("%Y-%m-%d %H:%M")
     rows=[x for k in LETTERS for x in buckets[k]]; rows.sort(key=lambda x:-x["score"])
     counts={k:len(buckets[k]) for k in LETTERS}; total=len(rows)
+    eligible=LIQUIDITY_STATS.get("eligible",len(universe)); excluded=LIQUIDITY_STATS.get("excluded",0)
     rep=rows[0] if rows else None
     guide=''.join(f'<div class="stage"><img src="../assets/{"sukdol-key-caution.webp" if k in "EF" else "sukdol-key-up.webp"}"><span><b>{k}형 · {INFO[k][1]}</b><small>{INFO[k][2]}</small></span></div>' for k in LETTERS)
     hero=(f'<article class="panel hero"><h2>대표 일봉 · {esc(rep["name"])}</h2><div class="sub">{rep["code"]} · {rep["type"]}형 · {esc(rep["flow"])}</div><div class="chart">{chart_svg(rep["charts"]["day"],820,390,180,rep.get("levels"))}</div><p class="sub">기본 자동 스캔은 일봉만 사용해. 진입판정이 아니라 볼 차트를 골라주는 탐색 화면이야.</p></article>' if rep else '<article class="panel hero">후보 없음</article>')
-    status=f'<article class="panel status"><span class="sub">오늘의 탐색 상태</span><strong>{total}</strong><h2>개 차트 후보 발견</h2><p class="sub">KRX {len(universe)}종목을 일봉으로 훑었어.</p><img src="../assets/sukdol-plain-up.webp"></article>'
+    status=f'<article class="panel status"><span class="sub">오늘의 탐색 상태</span><strong>{total}</strong><h2>개 차트 후보 발견</h2><p class="sub">KRX {eligible}종목을 일봉으로 훑었어. · 유동성 부족 {excluded}종목 제외</p><img src="../assets/sukdol-plain-up.webp"></article>'
     types=''.join(f'<a class="type" style="--c:{INFO[k][0]}" href="type_{k.lower()}.html"><strong>{k} · {counts[k]}</strong><b>{INFO[k][1]}</b><small>{INFO[k][2]}</small></a>' for k in LETTERS)
     top=''.join(f'<div class="toprow"><span class="rank">{i}</span><span><b>{esc(r["name"])}</b><small class="sub"> {r["code"]}</small></span><b>{r["type"]}형</b><b>{r["score"]}점</b></div>' for i,r in enumerate(rows[:5],1))
-    home=f'<main><section class="cockpit">{status}{hero}<aside class="panel guide"><h2>A~F 차트 모양</h2>{guide}</aside></section><section class="six">{types}</section><section class="bottom"><article class="panel summary"><h2>▱ 오늘 탐색 요약</h2><ul><li>전체 스캔 대상 <b>{len(universe)}종목</b></li><li>발견 후보 <b>{total}개</b></li><li>기준 시간봉 <b>일봉 1D</b></li><li>분봉 <b>기본 스캔에서 사용 안 함</b></li></ul><div style="display:flex;gap:16px;align-items:center"><img src="../assets/sukdol-caution.webp"><p class="sub">점수보다 차트 모양을 먼저 봐. 유형 페이지에서 일봉을 쭉 훑는 게 오주탐의 핵심이야.</p></div></article><article class="panel toplist"><h2>오늘 먼저 볼 차트</h2>{top}</article></section></main>'
+    home=f'<main><section class="cockpit">{status}{hero}<aside class="panel guide"><h2>A~F 차트 모양</h2>{guide}</aside></section><section class="six">{types}</section><section class="bottom"><article class="panel summary"><h2>▱ 오늘 탐색 요약</h2><ul><li>유동성 통과 <b>{eligible}종목</b></li><li>유동성 부족 제외 <b>{excluded}종목</b></li><li>발견 후보 <b>{total}개</b></li><li>기준 시간봉 <b>일봉 1D</b></li><li>분봉 <b>기본 스캔에서 사용 안 함</b></li></ul><div style="display:flex;gap:16px;align-items:center"><img src="../assets/sukdol-caution.webp"><p class="sub">점수보다 차트 모양을 먼저 봐. 유형 페이지에서 일봉을 쭉 훑는 게 오주탐의 핵심이야.</p></div></article><article class="panel toplist"><h2>오늘 먼저 볼 차트</h2>{top}</article></section></main>'
     (OUT/"index.html").write_text(shell("메인 대시보드",home,"home",date,now),encoding="utf-8")
     # gallery pages
     def gallery_page(title,items,active):
@@ -219,7 +255,7 @@ def generate(universe,buckets,date):
         sb=''.join(f'<div class="step"><b>{i}</b>{esc(s)}</div>' for i,s in enumerate(steps[k],1)); sample=buckets[k][0] if buckets[k] else None; sample_html=(f'<div class="chart">{chart_svg(sample["charts"]["day"],900,400,180,sample.get("levels"))}</div><p>{esc(sample["reason"])}</p>' if sample else '<p class="sub">오늘은 이 유형 후보가 없어.</p>')
         body=f'<section class="panel training" style="--accent:{INFO[k][0]}"><img src="../assets/sukdol-stage.webp" style="width:90px;float:right"><h2>{k}형 훈련소 · {INFO[k][1]}</h2><div class="flow">{INFO[k][2]}</div><div class="steps">{sb}</div><h3>오늘 실제 예시</h3>{sample_html}</section>'
         (OUT/f"training_{k.lower()}.html").write_text(shell(f"{k}형 훈련소",body,"training",date,now),encoding="utf-8")
-    (OUT/"latest.json").write_text(json.dumps({"market_date":date,"generated_at":now,"counts":counts,"universe_count":len(universe),"candidates":rows},ensure_ascii=False),encoding="utf-8")
+    (OUT/"latest.json").write_text(json.dumps({"market_date":date,"generated_at":now,"counts":counts,"universe_count":eligible,"liquidity_filter":LIQUIDITY_STATS,"candidates":rows},ensure_ascii=False),encoding="utf-8")
     print("OJUTAM",date,len(universe),counts,total)
 
 
