@@ -21,7 +21,7 @@ def patch_scan_inline():
     text=text.replace('<thead><tr><th>종목</th><th>유형</th><th>점수</th><th>흐름</th><th>한줄정리</th><th>관심</th></tr></thead>','<thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead>',1)
     text=text.replace('KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 차트 상세</b>','KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 아래에서 상세 펼침</b>')
     # Always force the latest chart script after deploy; prevents iOS/Safari from reusing the previous JS.
-    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260902-ema50-g-1', text)
+    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260902-liquidity-1', text)
     p.write_text(text,encoding='utf-8')
 
 
