@@ -96,6 +96,18 @@ def load_nasdaq():
     return universe, frames, latest
 
 
+def scan_us(universe, frames):
+    buckets = {k: [] for k in app.LETTERS}
+    for _, row in universe.iterrows():
+        code = str(row.Code)
+        for item in app.analyze_one(code, str(row.Name), "NASDAQ", frames.get(code)):
+            buckets[item["type"]].append(item)
+    for key in app.LETTERS:
+        buckets[key].sort(key=lambda x: -x["score"])
+        buckets[key] = buckets[key][:30]
+    return buckets
+
+
 def market_facts(payload):
     rows = payload.get("D", {}).get("rows", [])
     if not rows:
@@ -153,10 +165,16 @@ def localize_us(out: Path):
 
 def main():
     universe, frames, date = load_nasdaq()
-    buckets = app.scan(universe, frames)
+    buckets = scan_us(universe, frames)
     with tempfile.TemporaryDirectory(prefix="ojutam-us-") as td:
         staging = Path(td)
         out = staging / "outputs" / "ojutam"
+        out.mkdir(parents=True, exist_ok=True)
+        production = ROOT / "outputs" / "ojutam"
+        for asset in ("scan_v6.js", "index_v6.js"):
+            source = production / asset
+            if source.exists():
+                shutil.copy2(source, out / asset)
         app.OUT = out
         app.HISTORY = HISTORY
         previous = Path.cwd()
