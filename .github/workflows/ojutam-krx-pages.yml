@@ -14,11 +14,10 @@ on:
       - "scanner/ojutam_krx_daily_v7.py"
       - "scanner/add_explorer_switch.py"
       - ".github/workflows/ojutam-krx-pages.yml"
-  # KST weekdays: 16:20 after KRX close, 20:10 final after NXT, 20:30 safety refresh
+  # KST weekdays: 15:40 after KRX close, 20:00 final refresh
   schedule:
-    - cron: "20 7 * * 1-5"
-    - cron: "10 11 * * 1-5"
-    - cron: "30 11 * * 1-5"
+    - cron: "40 6 * * 1-5"
+    - cron: "0 11 * * 1-5"
 
 permissions:
   contents: write
