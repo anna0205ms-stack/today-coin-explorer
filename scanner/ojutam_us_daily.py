@@ -143,6 +143,23 @@ def patch_us_dashboard(out: Path):
         lambda m: m.group(1) + dx_price + m.group(2) + dx_change + m.group(3),
         text, count=1, flags=re.S,
     )
+    # The shared dashboard script is KRX-specific. Build a US-specific copy so
+    # timeframe buttons address the us100/dxy payload and chart containers.
+    shared_js = (ROOT / "outputs" / "ojutam" / "index_v6.js").read_text(encoding="utf-8")
+    us_js = shared_js
+    us_js = us_js.replace(
+        "name==='kospi'?'kospiChart':'kosdaqChart'",
+        "name==='us100'?'us100Chart':'dxyChart'",
+    )
+    us_js = us_js.replace("draw('kospi','D')", "draw('us100','D')")
+    us_js = us_js.replace("draw('kosdaq','D')", "draw('dxy','D')")
+    us_js = us_js.replace("'krxAutoFit'", "'usAutoFit'")
+    us_js = us_js.replace("'krxBoxToggle'", "'usBoxToggle'")
+    (out / "index_us.js").write_text(us_js, encoding="utf-8")
+    text = text.replace(
+        '<script src="index_v6.js"></script>',
+        '<script src="index_us.js?v=20260902-us100-dxy-1"></script>',
+    )
     p.write_text(text, encoding="utf-8")
 
 
