@@ -13,6 +13,8 @@ on:
       - "scanner/ojutam_krx_daily_v6.py"
       - "scanner/ojutam_krx_daily_v7.py"
       - "scanner/add_explorer_switch.py"
+      - "scanner/ojutam_us_daily.py"
+      - "scanner/add_ojutam_market_switch.py"
       - ".github/workflows/ojutam-krx-pages.yml"
   # KST weekdays: 15:40 after KRX close, 20:00 final refresh
   schedule:
@@ -42,14 +44,20 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install KRX daily dependencies
+      - name: Install stock scanner dependencies
         run: pip install pandas numpy requests pyarrow yfinance
       - name: Scan KRX daily A-F and render OJUTAM
         env:
           TZ: Asia/Seoul
         run: python scanner/ojutam_krx_daily_v7.py
-      - name: Add OkoTam OjuTam switch
-        run: python scanner/add_explorer_switch.py
+      - name: Scan NASDAQ daily A-F and render US OJUTAM
+        env:
+          TZ: Asia/Seoul
+        run: python scanner/ojutam_us_daily.py
+      - name: Add explorer and stock-market switches
+        run: |
+          python scanner/add_explorer_switch.py
+          python scanner/add_ojutam_market_switch.py
       - name: Verify OJUTAM UI contract
         run: |
           set -e
@@ -84,12 +92,22 @@ jobs:
           grep -q '>주봉<' outputs/ojutam/index.html
           grep -q '오코탐 <span>| BTC</span>' outputs/ojutam/index.html
           grep -q '오주탐 <span>| STOCK</span>' outputs/ojutam/index.html
+          test -f outputs/ojutam/us/index.html
+          test -f outputs/ojutam/us/scan.html
+          grep -q 'US100' outputs/ojutam/us/index.html
+          grep -q 'DXY' outputs/ojutam/us/index.html
+          grep -q 'data-index="us100"' outputs/ojutam/us/index.html
+          grep -q 'data-index="dxy"' outputs/ojutam/us/index.html
+          grep -q '미장 <span>| NASDAQ</span>' outputs/ojutam/us/index.html
+          grep -q '국장 <span>| KRX</span>' outputs/ojutam/index.html
+          grep -q 'id="stockSearch"' outputs/ojutam/us/scan.html
+          grep -q 'ojutamPinsUS' outputs/ojutam/us/scan.html
       - name: Persist latest OJUTAM output
         run: |
           set -e
           git config user.name "OJUTAM Scanner"
           git config user.email "ojutam-scanner@users.noreply.github.com"
-          git add outputs/ojutam/
+          git add outputs/ojutam/ history/ojutam_snapshots.json history/ojutam_us_snapshots.json
           if git diff --cached --quiet; then
             echo "No OJUTAM output changes"
           else
