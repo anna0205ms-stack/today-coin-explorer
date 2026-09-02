@@ -94,6 +94,8 @@ jobs:
             echo "No OJUTAM output changes"
           else
             git commit -m "ojutam: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+            # add_explorer_switch.py may touch non-OJUTAM files; clear them before rebase.
+            git restore --worktree .
             for n in 1 2 3; do
               if git pull --rebase origin main && git push origin HEAD:main; then
                 break
