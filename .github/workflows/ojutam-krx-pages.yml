@@ -75,6 +75,10 @@ jobs:
           grep -q '<b>목표</b>' outputs/ojutam/scan_v6.js
           grep -q 'data-ojutam-filter="A"' outputs/ojutam/type_a.html
           grep -q 'data-ojutam-filter="F"' outputs/ojutam/type_f.html
+          grep -q 'data-ojutam-filter="G"' outputs/ojutam/type_g.html
+          grep -q '주봉 EMA50 첫 터치' outputs/ojutam/index.html
+          grep -q '주봉 EMA50 첫 터치' outputs/ojutam/us/index.html
+          grep -q "G:\['#f2e85c','주봉 EMA50 첫 터치'\]" outputs/ojutam/scan_v6.js
           grep -q 'id="stockSearch"' outputs/ojutam/type_a.html
           if grep -q 'class="gallery"' outputs/ojutam/type_a.html; then
             echo "Type A still uses chart-first gallery"
