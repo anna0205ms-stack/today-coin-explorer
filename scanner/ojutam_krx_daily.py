@@ -215,9 +215,18 @@ def chart_svg(rows,width=820,height=390,count=180,levels=None):
         _,o,h,l,c,_=r;o=float(o);h=float(h);l=float(l);c=float(c);x=(i+.5)*step;col="#00e783" if c>=o else "#ff667e";a=min(y(o),y(c));b=max(y(o),y(c));p.append(f'<line x1="{x:.1f}" y1="{y(h):.1f}" x2="{x:.1f}" y2="{y(l):.1f}" stroke="{col}"/><rect x="{x-body/2:.1f}" y="{a:.1f}" width="{body:.1f}" height="{max(1,b-a):.1f}" fill="{col}"/>')
     return ''.join(p)+'</svg>'
 
+def liquidity_label(r):
+    q=r.get("liquidity") or {}
+    value=finite(q.get("median20"))
+    unit="$" if q.get("currency")=="USD" else ""
+    scaled=(value/1_000_000 if q.get("currency")=="USD" else value/100_000_000)
+    suffix="M" if q.get("currency")=="USD" else "억원"
+    return f'유동성 {q.get("tier","-")} · 20일 중앙 {unit}{scaled:,.1f}{suffix}'
+
+
 def card(r):
     t=r["type"]; color=INFO[t][0]
-    return f'<article class="card" style="--c:{color}"><div class="card-head"><div><b>{esc(r["name"])}</b><div class="sub">{r["code"]} · {r["exchange"]} · {r["score"]}점</div></div><div><span class="tag">{t}형</span><button class="star" data-code="{r["code"]}" onclick="togglePin(this.dataset.code,this)">☆</button></div></div><div class="chart">{chart_svg(r["charts"]["day"],620,270,150,r.get("levels"))}</div><div class="why"><b>{esc(r["flow"])}</b><small>{esc(r["reason"])}</small></div></article>'
+    return f'<article class="card" style="--c:{color}"><div class="card-head"><div><b>{esc(r["name"])}</b><div class="sub">{r["code"]} · {r["exchange"]} · {r["score"]}점 · {esc(liquidity_label(r))}</div></div><div><span class="tag">{t}형</span><button class="star" data-code="{r["code"]}" onclick="togglePin(this.dataset.code,this)">☆</button></div></div><div class="chart">{chart_svg(r["charts"]["day"],620,270,150,r.get("levels"))}</div><div class="why"><b>{esc(r["flow"])}</b><small>{esc(r["reason"])}</small></div></article>'
 
 def generate(universe,buckets,date):
     OUT.mkdir(parents=True,exist_ok=True); now=datetime.now(KST).strftime("%Y-%m-%d %H:%M")
@@ -229,7 +238,7 @@ def generate(universe,buckets,date):
     hero=(f'<article class="panel hero"><h2>대표 일봉 · {esc(rep["name"])}</h2><div class="sub">{rep["code"]} · {rep["type"]}형 · {esc(rep["flow"])}</div><div class="chart">{chart_svg(rep["charts"]["day"],820,390,180,rep.get("levels"))}</div><p class="sub">기본 자동 스캔은 일봉만 사용해. 진입판정이 아니라 볼 차트를 골라주는 탐색 화면이야.</p></article>' if rep else '<article class="panel hero">후보 없음</article>')
     status=f'<article class="panel status"><span class="sub">오늘의 탐색 상태</span><strong>{total}</strong><h2>개 차트 후보 발견</h2><p class="sub">KRX {eligible}종목을 일봉으로 훑었어. · 유동성 부족 {excluded}종목 제외</p><img src="../assets/sukdol-plain-up.webp"></article>'
     types=''.join(f'<a class="type" style="--c:{INFO[k][0]}" href="type_{k.lower()}.html"><strong>{k} · {counts[k]}</strong><b>{INFO[k][1]}</b><small>{INFO[k][2]}</small></a>' for k in LETTERS)
-    top=''.join(f'<div class="toprow"><span class="rank">{i}</span><span><b>{esc(r["name"])}</b><small class="sub"> {r["code"]}</small></span><b>{r["type"]}형</b><b>{r["score"]}점</b></div>' for i,r in enumerate(rows[:5],1))
+    top=''.join(f'<div class="toprow"><span class="rank">{i}</span><span><b>{esc(r["name"])}</b><small class="sub"> {r["code"]} · {esc(liquidity_label(r))}</small></span><b>{r["type"]}형</b><b>{r["score"]}점</b></div>' for i,r in enumerate(rows[:5],1))
     home=f'<main><section class="cockpit">{status}{hero}<aside class="panel guide"><h2>A~F 차트 모양</h2>{guide}</aside></section><section class="six">{types}</section><section class="bottom"><article class="panel summary"><h2>▱ 오늘 탐색 요약</h2><ul><li>유동성 통과 <b>{eligible}종목</b></li><li>유동성 부족 제외 <b>{excluded}종목</b></li><li>발견 후보 <b>{total}개</b></li><li>기준 시간봉 <b>일봉 1D</b></li><li>분봉 <b>기본 스캔에서 사용 안 함</b></li></ul><div style="display:flex;gap:16px;align-items:center"><img src="../assets/sukdol-caution.webp"><p class="sub">점수보다 차트 모양을 먼저 봐. 유형 페이지에서 일봉을 쭉 훑는 게 오주탐의 핵심이야.</p></div></article><article class="panel toplist"><h2>오늘 먼저 볼 차트</h2>{top}</article></section></main>'
     (OUT/"index.html").write_text(shell("메인 대시보드",home,"home",date,now),encoding="utf-8")
     # gallery pages
