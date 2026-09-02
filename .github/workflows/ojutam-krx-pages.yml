@@ -13,16 +13,15 @@ on:
       - "scanner/ojutam_krx_daily_v6.py"
       - "scanner/ojutam_krx_daily_v7.py"
       - "scanner/add_explorer_switch.py"
-      - "outputs/ojutam/index_v6.js"
-      - "outputs/ojutam/scan_v6.js"
       - ".github/workflows/ojutam-krx-pages.yml"
-  # KST weekdays: 16:20 after KRX close, 20:10 after NXT after-market close
+  # KST weekdays: 16:20 after KRX close, 20:10 final after NXT, 20:30 safety refresh
   schedule:
     - cron: "20 7 * * 1-5"
     - cron: "10 11 * * 1-5"
+    - cron: "30 11 * * 1-5"
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -38,6 +37,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}ojutam/
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -84,6 +85,25 @@ jobs:
           grep -q '>주봉<' outputs/ojutam/index.html
           grep -q '오코탐 <span>| BTC</span>' outputs/ojutam/index.html
           grep -q '오주탐 <span>| STOCK</span>' outputs/ojutam/index.html
+      - name: Persist latest OJUTAM output
+        run: |
+          set -e
+          git config user.name "OJUTAM Scanner"
+          git config user.email "ojutam-scanner@users.noreply.github.com"
+          git add outputs/ojutam/
+          if git diff --cached --quiet; then
+            echo "No OJUTAM output changes"
+          else
+            git commit -m "ojutam: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+            for n in 1 2 3; do
+              if git pull --rebase origin main && git push origin HEAD:main; then
+                break
+              fi
+              git rebase --abort 2>/dev/null || true
+              sleep $((n * 5))
+              if [ "$n" = "3" ]; then exit 1; fi
+            done
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
