@@ -81,9 +81,8 @@ def load_nasdaq():
             if len(q) < 140:
                 continue
             tail = q.tail(20)
-            price = float(tail["Close"].iloc[-1])
             dollar_volume = float(tail["Amount"].median())
-            if price < 2 or dollar_volume < 20_000_000:
+            if dollar_volume < 10_000_000:
                 continue
             frames[ticker] = q
         print("NASDAQ", min(start + len(chunk), len(symbols)), "/", len(symbols), "liquid", len(frames))
@@ -98,13 +97,23 @@ def load_nasdaq():
 
 def scan_us(universe, frames):
     buckets = {k: [] for k in app.LETTERS}
+    stats={"total":len(universe),"eligible":0,"excluded":0,"strong":0,"normal":0}
     for _, row in universe.iterrows():
         code = str(row.Code)
+        profile=app.liquidity_profile(frames.get(code),"NASDAQ")
+        if not profile:
+            stats["excluded"]+=1
+            continue
+        stats["eligible"]+=1
+        stats["strong" if profile["tier"]=="충분" else "normal"]+=1
         for item in app.analyze_one(code, str(row.Name), "NASDAQ", frames.get(code)):
+            item["liquidity"]=profile
             buckets[item["type"]].append(item)
+    app.LIQUIDITY_STATS=stats
     for key in app.LETTERS:
         buckets[key].sort(key=lambda x: -x["score"])
         buckets[key] = buckets[key][:30]
+    print("NASDAQ liquidity",stats)
     return buckets
 
 
