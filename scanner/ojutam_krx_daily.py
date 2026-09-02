@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs" / "ojutam"
 HISTORY = ROOT / "history" / "ojutam_snapshots.json"
 KST = timezone(timedelta(hours=9))
-LETTERS = "ABCDEF"
+LETTERS = "ABCDEFG"
 INFO = {
     "A": ("#ff8297", "급등 후 첫 눌림", "강한 상승 → 첫 눌림 → 전고점 재도전 후보"),
     "B": ("#70c2ff", "바닥·박스 하단 반등", "장기 하락 → 바닥 횡보 → 하단 회복"),
@@ -18,6 +18,7 @@ INFO = {
     "D": ("#5ce2b3", "재탈환·압축", "장기 하락 → 바닥 압축 → 매물대 재탈환 접근"),
     "E": ("#ffb454", "급락 후 기술적 반등", "급락·투매 → 하단 형성 → 기술적 반등 후보"),
     "F": ("#56d6ff", "고점권·과거 매물대", "신고가·고점권 상승 → 과거 횡보 매물대 접근"),
+    "G": ("#f2e85c", "주봉 EMA50 첫 터치", "EMA50 위 상승 → 장기간 미접촉 → 주봉 EMA50 첫 눌림"),
 }
 
 
@@ -115,6 +116,32 @@ def analyze_one(code,name,market,df):
     if rise90>=30 and near<=12 and hh>0 and cur>=hh*0.78:
         dist=(hh-cur)/hh*100; score=min(10,4+rise90/25+(12-near)/6+max(0,10-abs(dist))/8)
         out.append(row_base(code,name,market,"F",score,INFO["F"][2],f"90일 저점 대비 {rise90:.0f}% 상승 · 과거 매물대까지 {dist:+.1f}%",{"recent_high":high120,"historical_supply":hh},d))
+    # G: first weekly EMA50 touch from above after a clean separation
+    try:
+        wk=d[["Open","High","Low","Close","Volume"]].resample("W-FRI").agg(
+            {"Open":"first","High":"max","Low":"min","Close":"last","Volume":"sum"}
+        ).dropna()
+        if len(wk)>=64:
+            ema50=wk.Close.ewm(span=50,adjust=False).mean()
+            ema_now=finite(ema50.iloc[-1])
+            current=wk.iloc[-1]
+            prior=wk.iloc[-13:-1]
+            prior_ema=ema50.iloc[-13:-1]
+            clean_weeks=int((prior.Low.values > prior_ema.values*1.01).sum())
+            closes_above=int((prior.Close.values > prior_ema.values).sum())
+            separated=finite(wk.Close.iloc[-2]) >= finite(ema50.iloc[-2])*1.03
+            touched=finite(current.Low) <= ema_now*1.01 and finite(current.High) >= ema_now*.99
+            held=finite(current.Close) >= ema_now*.97
+            if clean_weeks==12 and closes_above>=10 and separated and touched and held:
+                distance=pct(cur,ema_now)
+                score=min(10,6+min(2,abs(distance)/4)+(1 if finite(current.Close)>=ema_now else .3))
+                out.append(row_base(
+                    code,name,market,"G",score,INFO["G"][2],
+                    f"최근 12주 EMA50 미접촉 후 이번 주 첫 터치 · 현재 EMA50 대비 {distance:+.1f}%",
+                    {"weekly_ema50":ema_now,"support":ema_now},d
+                ))
+    except Exception as e:
+        print("weekly EMA50",code,e)
     return out
 
 
@@ -130,7 +157,7 @@ def scan(universe,frames):
 
 
 def css(): return r'''
-:root{--bg:#030605;--panel:#08110d;--line:#1c4432;--text:#f5fff8;--sub:#8fa399;--green:#00e783}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,#082719 0,transparent 28%),var(--bg);color:var(--text);font:14px/1.5 system-ui,"Noto Sans KR",sans-serif}a{color:inherit;text-decoration:none}.wrap{max-width:1500px;margin:auto;padding:22px}.mast{display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{display:flex;align-items:center;gap:13px}.brand img{width:72px;height:72px;object-fit:contain}.brand h1{margin:0;font-size:30px}.brand h1 span{color:var(--green)}.sub{color:var(--sub)}.time{text-align:right;color:var(--sub)}.time b{display:block;color:#eafff2}.nav{display:flex;gap:17px;align-items:center;margin:20px 0;border-bottom:1px solid #183a2b}.nav>a,.drop>summary{padding:12px 3px;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;list-style:none}.nav .on{color:var(--green);border-color:var(--green)}.drop{position:relative}.drop summary::-webkit-details-marker{display:none}.drop>div{position:absolute;z-index:20;top:45px;left:0;min-width:160px;padding:7px;border:1px solid var(--line);border-radius:12px;background:#07100c;box-shadow:0 16px 30px #000}.drop:not([open])>div{display:none}.drop div a{display:block;padding:8px 10px;border-radius:8px}.drop div a:hover{background:#0d2118;color:var(--green)}.panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#060c09,#0b1510)}.cockpit{display:grid;grid-template-columns:250px minmax(560px,1fr) 290px;gap:12px}.status{min-height:520px;padding:20px;display:flex;flex-direction:column;justify-content:flex-end}.status img{width:100%;height:245px;object-fit:contain}.status strong{font-size:66px;line-height:1;color:var(--green)}.hero{padding:16px}.hero h2{margin:0}.chart{margin-top:10px;border:1px solid #17392a;border-radius:13px;background:#050a07;overflow:hidden}.chart svg{display:block;width:100%;height:auto}.guide{padding:17px}.stage{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1c3329}.stage img{width:30px;height:30px}.stage b{display:block}.stage small{color:var(--sub)}.six{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:12px}.type{padding:13px;border:1px solid var(--c);border-radius:15px;background:#06100b}.type strong{font-size:26px;color:var(--c);display:block}.type small{color:var(--sub)}.bottom{display:grid;grid-template-columns:.8fr 1.2fr;gap:12px;margin-top:12px}.summary,.toplist,.intro,.training{padding:18px}.summary img{width:100px;height:100px;object-fit:contain}.toprow{display:grid;grid-template-columns:38px 1fr 65px 65px;gap:8px;padding:9px 0;border-bottom:1px solid #1d352a}.rank{font-size:20px;color:var(--green)}.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.card{border:1px solid #224234;border-radius:15px;background:#07100c;overflow:hidden}.card-head{display:flex;justify-content:space-between;padding:11px 12px 5px}.card-head b{font-size:16px}.tag{padding:3px 8px;border:1px solid var(--c);border-radius:999px;color:var(--c)}.why{padding:9px 12px;border-top:1px solid #1b362a}.why small{display:block;color:var(--sub);margin-top:3px}.star{border:0;background:transparent;color:#ffd166;font-size:22px;cursor:pointer}.history{padding:12px 0;border-bottom:1px solid #1b362a}.flow{padding:14px;border:1px dashed var(--accent);border-radius:12px}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.step{padding:12px;border:1px solid #294438;border-radius:12px}.step b{display:block;color:var(--accent)}@media(max-width:1100px){.cockpit{grid-template-columns:210px 1fr}.guide{grid-column:1/-1}.six{grid-template-columns:repeat(3,1fr)}.bottom{grid-template-columns:1fr}}@media(max-width:760px){.wrap{padding:12px}.mast{align-items:flex-start}.cockpit{grid-template-columns:1fr}.status{min-height:auto}.status img{height:170px}.guide{grid-column:auto}.six{grid-template-columns:1fr 1fr}.gallery{grid-template-columns:1fr}.nav{overflow-x:auto}.drop>div{position:fixed;top:120px;left:12px}.steps{grid-template-columns:1fr 1fr}}
+:root{--bg:#030605;--panel:#08110d;--line:#1c4432;--text:#f5fff8;--sub:#8fa399;--green:#00e783}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,#082719 0,transparent 28%),var(--bg);color:var(--text);font:14px/1.5 system-ui,"Noto Sans KR",sans-serif}a{color:inherit;text-decoration:none}.wrap{max-width:1500px;margin:auto;padding:22px}.mast{display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{display:flex;align-items:center;gap:13px}.brand img{width:72px;height:72px;object-fit:contain}.brand h1{margin:0;font-size:30px}.brand h1 span{color:var(--green)}.sub{color:var(--sub)}.time{text-align:right;color:var(--sub)}.time b{display:block;color:#eafff2}.nav{display:flex;gap:17px;align-items:center;margin:20px 0;border-bottom:1px solid #183a2b}.nav>a,.drop>summary{padding:12px 3px;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;list-style:none}.nav .on{color:var(--green);border-color:var(--green)}.drop{position:relative}.drop summary::-webkit-details-marker{display:none}.drop>div{position:absolute;z-index:20;top:45px;left:0;min-width:160px;padding:7px;border:1px solid var(--line);border-radius:12px;background:#07100c;box-shadow:0 16px 30px #000}.drop:not([open])>div{display:none}.drop div a{display:block;padding:8px 10px;border-radius:8px}.drop div a:hover{background:#0d2118;color:var(--green)}.panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#060c09,#0b1510)}.cockpit{display:grid;grid-template-columns:250px minmax(560px,1fr) 290px;gap:12px}.status{min-height:520px;padding:20px;display:flex;flex-direction:column;justify-content:flex-end}.status img{width:100%;height:245px;object-fit:contain}.status strong{font-size:66px;line-height:1;color:var(--green)}.hero{padding:16px}.hero h2{margin:0}.chart{margin-top:10px;border:1px solid #17392a;border-radius:13px;background:#050a07;overflow:hidden}.chart svg{display:block;width:100%;height:auto}.guide{padding:17px}.stage{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1c3329}.stage img{width:30px;height:30px}.stage b{display:block}.stage small{color:var(--sub)}.six{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}.type{padding:13px;border:1px solid var(--c);border-radius:15px;background:#06100b}.type strong{font-size:26px;color:var(--c);display:block}.type small{color:var(--sub)}.bottom{display:grid;grid-template-columns:.8fr 1.2fr;gap:12px;margin-top:12px}.summary,.toplist,.intro,.training{padding:18px}.summary img{width:100px;height:100px;object-fit:contain}.toprow{display:grid;grid-template-columns:38px 1fr 65px 65px;gap:8px;padding:9px 0;border-bottom:1px solid #1d352a}.rank{font-size:20px;color:var(--green)}.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.card{border:1px solid #224234;border-radius:15px;background:#07100c;overflow:hidden}.card-head{display:flex;justify-content:space-between;padding:11px 12px 5px}.card-head b{font-size:16px}.tag{padding:3px 8px;border:1px solid var(--c);border-radius:999px;color:var(--c)}.why{padding:9px 12px;border-top:1px solid #1b362a}.why small{display:block;color:var(--sub);margin-top:3px}.star{border:0;background:transparent;color:#ffd166;font-size:22px;cursor:pointer}.history{padding:12px 0;border-bottom:1px solid #1b362a}.flow{padding:14px;border:1px dashed var(--accent);border-radius:12px}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.step{padding:12px;border:1px solid #294438;border-radius:12px}.step b{display:block;color:var(--accent)}@media(max-width:1100px){.cockpit{grid-template-columns:210px 1fr}.guide{grid-column:1/-1}.six{grid-template-columns:repeat(3,1fr)}.bottom{grid-template-columns:1fr}}@media(max-width:760px){.wrap{padding:12px}.mast{align-items:flex-start}.cockpit{grid-template-columns:1fr}.status{min-height:auto}.status img{height:170px}.guide{grid-column:auto}.six{grid-template-columns:1fr 1fr}.gallery{grid-template-columns:1fr}.nav{overflow-x:auto}.drop>div{position:fixed;top:120px;left:12px}.steps{grid-template-columns:1fr 1fr}}
 '''
 
 def nav(active):
@@ -187,7 +214,7 @@ def generate(universe,buckets,date):
     (OUT/"history.html").write_text(shell("날짜별 기록",hbody,"history",date,now),encoding="utf-8")
     # training A-F
     steps={
-      "A":["강한 상승 확인","첫 눌림 확인","지지 구간 확인","전고점 재도전 관찰"],"B":["장기 하락","바닥 횡보","하단 회복","박스 내부 반응"],"C":["박스 형성","상단 반복 접촉","상단 돌파","재지지 여부"],"D":["장기 하락","바닥 압축","매물대 재탈환","확장 준비"],"E":["급락·투매","핵심 저점","반등 시작","기술적 반등"],"F":["고점권 상승","과거 횡보대 접근","매물 소화","돌파/거절 관찰"]}
+      "A":["강한 상승 확인","첫 눌림 확인","지지 구간 확인","전고점 재도전 관찰"],"B":["장기 하락","바닥 횡보","하단 회복","박스 내부 반응"],"C":["박스 형성","상단 반복 접촉","상단 돌파","재지지 여부"],"D":["장기 하락","바닥 압축","매물대 재탈환","확장 준비"],"E":["급락·투매","핵심 저점","반등 시작","기술적 반등"],"F":["고점권 상승","과거 횡보대 접근","매물 소화","돌파/거절 관찰"],"G":["EMA50 위 상승","12주 이상 미접촉","주봉 EMA50 첫 터치","지지·이탈 확인"]}
     for k in LETTERS:
         sb=''.join(f'<div class="step"><b>{i}</b>{esc(s)}</div>' for i,s in enumerate(steps[k],1)); sample=buckets[k][0] if buckets[k] else None; sample_html=(f'<div class="chart">{chart_svg(sample["charts"]["day"],900,400,180,sample.get("levels"))}</div><p>{esc(sample["reason"])}</p>' if sample else '<p class="sub">오늘은 이 유형 후보가 없어.</p>')
         body=f'<section class="panel training" style="--accent:{INFO[k][0]}"><img src="../assets/sukdol-stage.webp" style="width:90px;float:right"><h2>{k}형 훈련소 · {INFO[k][1]}</h2><div class="flow">{INFO[k][2]}</div><div class="steps">{sb}</div><h3>오늘 실제 예시</h3>{sample_html}</section>'
