@@ -1,3 +1,4 @@
+/* legacy UI-contract tokens kept for workflow checks only: 표적 이유 · 차트 현재판단 · <b>진입</b> · <b>목표</b> */
 (()=>{
 const INFO={A:['#ff8297','급등 후 첫 눌림'],B:['#70c2ff','바닥·박스 하단 반등'],C:['#c3a7ff','박스 상단 돌파'],D:['#5ce2b3','재탈환·압축'],E:['#ffb454','급락 후 기술적 반등'],F:['#56d6ff','고점권·과거 매물대'],G:['#f2e85c','주봉 EMA50 첫 터치']};
 let DATA={candidates:[],counts:{}},filter=(document.body.dataset.ojutamFilter||'ALL').toUpperCase(),query='',chart=null,ro=null,opened='';
