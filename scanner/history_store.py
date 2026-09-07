@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from market_regime import apply_market_gate
+from upbit_trade_plan import build_current_trade_plan
 
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
@@ -121,6 +122,7 @@ def append_snapshot(at: datetime | None = None) -> dict:
     candidates += [normalize_d(r) for r in d_rows if r.get("status") not in {"제외", "자료부족", "오류"}]
     candidates += [normalize_e(r) for r in e_rows if r.get("status") != "E실패"]
     candidates += [normalize_f(r) for r in f_rows]
+    candidates = [build_current_trade_plan(row) for row in candidates]
     market_regime = read_json(MARKET_REGIME, {})
     if market_regime.get("stage"):
         candidates = [apply_market_gate(row, market_regime) for row in candidates]

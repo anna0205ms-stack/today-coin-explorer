@@ -23,7 +23,7 @@ INFO = {
     "E": ("E형", "#ffb454", "급락 후 0.382 기술적 반등", "급락·투매 → 핵심 하단 도달 → 4H 저점 방어 → 피보나치 0.382 반등", "투매저점 방어 + 4H 양봉·아래꼬리·저점 2% 회복", "투매저점 3% 하단 이탈 · 물타기 금지", "피보나치 0.382에서 전량청산 · 상승 전환 기대 금지"),
     "F": ("F형", "#56d6ff", "신고가 상승과 글로벌 과거 매물대", "업비트 신고가 상승 → 글로벌 과거 횡보 매물대 도착 → 매물 소화·돌파", "매물대 하단 지지 또는 상단 돌파·재지지 확인", "확인한 지지선 또는 돌파 기준선 종가 이탈", "매물대 내부 분할대응 → 상단 돌파 시 잔량 추세 추종"),
 }
-ACTION_RANK={"진입 검토":0,"조건부 진입":1,"확인 대기":2,"시장 대기":3,"진입가 대기":4,"익절 우선":5,"추격 금지":6}
+ACTION_RANK={"진입 검토":0,"조건부 진입":1,"확인 대기":2,"재탈환 확인":3,"눌림 대기":4,"시장 대기":5,"진입가 대기":6,"목표 접근·익절 우선":7,"익절 우선":7,"추격 금지":8,"구조 무효":9,"계획값 확인":10}
 D_STAGE_ORDER={"D4":0,"D3":1,"D2":2,"D1":3,"D0":4,"D-W":5,"D-F":6}
 KST = timezone(timedelta(hours=9))
 TRAINING_A_REV = "20260824-1"
@@ -52,6 +52,9 @@ def fmt(value):
     return html.escape(str(value))
 
 def distance_to_entry(row):
+    plan=row.get("trade_plan") or {}
+    if isinstance(plan.get("distance_pct"),(int,float)):
+        return float(plan["distance_pct"])
     price=row.get("price"); entry=[x for x in row.get("entry",[]) if isinstance(x,(int,float))]
     if not isinstance(price,(int,float)) or not entry:return None
     lo,hi=min(entry),max(entry)
@@ -61,7 +64,7 @@ def distance_to_entry(row):
 
 def action_badge(row):
     action=row.get("action","진입가 대기")
-    style={"진입 검토":"act0","조건부 진입":"act1","확인 대기":"act1","시장 대기":"act2","진입가 대기":"act2","익절 우선":"act4","추격 금지":"act3"}.get(action,"act2")
+    style={"진입 검토":"act0","조건부 진입":"act1","확인 대기":"act1","재탈환 확인":"act1","눌림 대기":"act2","시장 대기":"act2","진입가 대기":"act2","목표 접근·익절 우선":"act4","익절 우선":"act4","추격 금지":"act3","구조 무효":"act3","계획값 확인":"act2"}.get(action,"act2")
     return f'<span class="badge {style}">{fmt(action)}</span>'
 
 def remaining_condition(row):
@@ -82,9 +85,12 @@ def remaining_condition(row):
     return "계획한 진입구간 도착"
 
 def action_cell(row):
+    plan = row.get("trade_plan") or {}
     pattern = row.get("pattern_action")
     original = f'<div class="pattern-note">개별 차트 · {fmt(pattern)}</div>' if pattern and pattern != row.get("action") else ""
-    return f'{action_badge(row)}{original}<div class="condition-note">남은 조건 · {remaining_condition(row)}</div>'
+    reason = f'<div class="condition-note">판단 이유 · {fmt(plan.get("reason"))}</div>' if plan.get("reason") else ""
+    remain = remaining_condition(row) if original else (plan.get("remain") or remaining_condition(row))
+    return f'{action_badge(row)}{original}{reason}<div class="condition-note">남은 조건 · {fmt(remain)}</div>'
 
 def action_guide():
     return '''<details class="action-guide" open><summary>🐱 현재판단 보는 법</summary><div class="action-guide-grid">
@@ -302,7 +308,9 @@ def main_page(snapshot, btc):
     trs=[]
     for r in rows:
         targets=r.get("targets") or []
-        trs.append(f'<tr data-type="{r.get("type")}" data-action="{fmt(r.get("action"))}"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{fmt(r.get("type"))}형</td><td>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}</td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(r.get("rr"))}R</td></tr>')
+        plan=r.get("trade_plan") or {}
+        target_more=" · ".join(x for x in (f'2차 {fmt(plan.get("target2"))}' if plan.get("target2") else "",f'확장 {fmt(plan.get("extension"))}' if plan.get("extension") else "") if x)
+        trs.append(f'<tr data-type="{r.get("type")}" data-action="{fmt(r.get("action"))}"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{fmt(r.get("type"))}형</td><td>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}<br><small class="sub">{target_more}</small></td><td>{fmt(r.get("rr"))}R</td></tr>')
     blocked=int(regime.get("alt_entry_limit_pct") or 0)==0
     filters=''.join(f'<button class="filter" data-kind="{k}" onclick="setType(\'{k}\',this)">{k if k=="ALL" else k+"형"}</button>' for k in ["ALL","A","B","C","D","E","F"])
     body=page_intro("오늘의 전체 스캔","업비트 KRW 전체에서 A/B/C/D/E/F 조건에 맞는 후보를 한 번에 비교하는 곳","① 유형 선택 → ② 단계·점수 비교 → ③ 진입거리·손절·손익비 확인 → ④ 관심종목은 별표")
@@ -374,14 +382,14 @@ def type_page(key, snapshot):
     guide=f'<section class="panel hero-guide" style="--accent:{color}"><div><h2 style="color:{color}">{title}</h2><div class="flow" style="border-color:{color}">{flow}</div><div class="rules" style="margin-top:12px"><div class="rule"><b style="color:{color}">진입</b>{entry}</div><div class="rule"><b style="color:{color}">손절</b>{stop}</div><div class="rule"><b style="color:{color}">분할익절</b>{take}</div></div></div><div class="type-cat-wrap"><img src="{cat}" alt="{name} 안내 고양이"><span class="type-token">{key}</span></div></section>'
     trs=[]
     for i,r in enumerate(rows):
-        targets=r.get("targets") or []; charts=r.get("charts") or {}; levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
+        targets=r.get("targets") or []; plan=r.get("trade_plan") or {}; charts=r.get("charts") or {}; levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
         missing=remaining_condition(r)
         f2_position = f' · 매물대 {fmt(r.get("f2_zone_position"))} ({fmt(r.get("f2_zone_position_pct"))}%)' if key == "F" and r.get("f_stage") == "F2" else ""
         stage_line = f'<br><b>D형 생애주기</b> · {fmt(r.get("d_stage"))} {fmt(r.get("d_stage_label"))}<br><b>단계 근거</b> · {fmt(r.get("d_stage_reason"))}' if key == "D" else f'<br><b>차트 진행상태</b> · {fmt(r.get("f_stage"))} {fmt(r.get("f_stage_label"))}{f2_position}<br><b>글로벌 매물대</b> · {fmt((r.get("global_zone") or {}).get("lower"))} ~ {fmt((r.get("global_zone") or {}).get("upper"))} USDT' if key == "F" else ""
-        detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>차트 현재판단</b> · {fmt(r.get("action"))}{stage_line}<br><b>남은 조건</b> · {missing}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">목표 {fmt(targets[:3])}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
+        detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>현재 행동</b> · {fmt(r.get("action"))}<br><b>판단 이유</b> · {fmt(plan.get("reason"))}{stage_line}<br><b>남은 조건</b> · {fmt(plan.get("remain") or missing)}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">평균 진입 {fmt(plan.get("average_entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">1차 {fmt(plan.get("target1"))}</span><span class="target-chip">2차 {fmt(plan.get("target2"))}</span><span class="target-chip">확장 {fmt(plan.get("extension"))}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
         f_badge_position = f' · {fmt(r.get("f2_zone_position"))}' if r.get("f_stage") == "F2" and r.get("f2_zone_position") else ""
         stage_badge = f'<span class="badge">{fmt(r.get("d_stage"))} · {fmt(r.get("d_stage_label"))}</span><br>' if key == "D" else f'<span class="badge">{fmt(r.get("f_stage"))} · {fmt(r.get("f_stage_label"))}{f_badge_position}</span><br>' if key == "F" else ""
-        trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}</td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}</td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
+        trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}<br><small class="sub">2차 {fmt(plan.get("target2"))} · 확장 {fmt(plan.get("extension"))}</small></td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
     filter_values = ["전체","D0","D1","D2","D3","D4","D-W","D-F"] if key == "D" else ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"]
     buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in filter_values)
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div>{pattern_action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'

@@ -48,6 +48,13 @@ def test_safety_action_is_never_weakened_by_market_gate():
     assert gated["market_gate"]["entry_allowed"] is False
 
 
+@pytest.mark.parametrize("action", ["구조 무효", "목표 접근·익절 우선"])
+def test_trade_plan_exit_actions_are_never_weakened_by_market_gate(action):
+    regime = build_regime({}, flow(status="stale"))
+    gated = apply_market_gate({"type": "A", "action": action}, regime)
+    assert gated["action"] == action
+
+
 def test_alt_breadth_prevents_false_m0_and_detects_rotation():
     global_data = flow(btcd=-.12, total2=.39, others=.33, btc=0)
     global_data["breadth"] = {"positive_ratio_24h_pct": 60, "median_change_24h_pct": .4}

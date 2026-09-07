@@ -107,7 +107,7 @@ def apply_market_gate(candidate: dict, regime: dict) -> dict:
     pattern_action = row.get("pattern_action") or row.get("action") or "진입가 대기"
     code, reason = GATE_RULES[regime["stage"]].get(row.get("type"), ("BLOCK", "시장 단계와 맞지 않음"))
     final_action = pattern_action
-    if pattern_action == "추격 금지":
+    if pattern_action in {"추격 금지", "구조 무효", "목표 접근·익절 우선"}:
         final_action = pattern_action
     elif code == "BLOCK":
         final_action = "시장 대기"
