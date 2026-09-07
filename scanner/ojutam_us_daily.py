@@ -14,7 +14,7 @@ import yfinance as yf
 
 import ojutam_krx_daily as app
 import ojutam_krx_daily_v6 as v6
-import ojutam_krx_daily_v7  # installs the current production renderer
+import ojutam_krx_daily_v7 as v7  # installs the current production renderer
 
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "outputs" / "ojutam" / "us"
@@ -51,9 +51,7 @@ def normalized(raw: pd.DataFrame, ticker: str, single: bool) -> pd.DataFrame:
         else:
             return pd.DataFrame()
         q.columns = [str(c).title() for c in q.columns]
-        q = q[["Open", "High", "Low", "Close", "Volume"]].dropna(
-            subset=["Open", "High", "Low", "Close"]
-        )
+        q = q[["Open", "High", "Low", "Close", "Volume"]].dropna(subset=["Open", "High", "Low", "Close"])
         q.index = pd.to_datetime(q.index).tz_localize(None)
         q["Amount"] = q["Close"] * q["Volume"]
         return q[["Open", "High", "Low", "Close", "Volume", "Amount"]]
@@ -67,12 +65,9 @@ def load_nasdaq():
     symbols = listed["Symbol"].tolist()
     frames = {}
     for start in range(0, len(symbols), 100):
-        chunk = symbols[start : start + 100]
+        chunk = symbols[start:start + 100]
         try:
-            raw = yf.download(
-                chunk, period="2y", interval="1d", group_by="ticker",
-                auto_adjust=False, threads=True, progress=False, timeout=40,
-            )
+            raw = yf.download(chunk, period="2y", interval="1d", group_by="ticker", auto_adjust=False, threads=True, progress=False, timeout=40)
         except Exception as exc:
             print("NASDAQ chunk failed", start, exc)
             continue
@@ -88,33 +83,14 @@ def load_nasdaq():
         print("NASDAQ", min(start + len(chunk), len(symbols)), "/", len(symbols), "liquid", len(frames))
     if not frames:
         raise RuntimeError("NASDAQ market data unavailable")
-    universe = pd.DataFrame(
-        [{"Code": s, "Name": names.get(s, s), "Market": "NASDAQ"} for s in frames]
-    )
+    universe = pd.DataFrame([{"Code": s, "Name": names.get(s, s), "Market": "NASDAQ"} for s in frames])
     latest = max(q.index.max() for q in frames.values()).date().isoformat()
     return universe, frames, latest
 
 
 def scan_us(universe, frames):
-    buckets = {k: [] for k in app.LETTERS}
-    stats={"total":len(universe),"eligible":0,"excluded":0,"strong":0,"normal":0}
-    for _, row in universe.iterrows():
-        code = str(row.Code)
-        profile=app.liquidity_profile(frames.get(code),"NASDAQ")
-        if not profile:
-            stats["excluded"]+=1
-            continue
-        stats["eligible"]+=1
-        stats["strong" if profile["tier"]=="충분" else "normal"]+=1
-        for item in app.analyze_one(code, str(row.Name), "NASDAQ", frames.get(code)):
-            item["liquidity"]=profile
-            buckets[item["type"]].append(item)
-    app.LIQUIDITY_STATS=stats
-    for key in app.LETTERS:
-        buckets[key].sort(key=lambda x: -x["score"])
-        buckets[key] = buckets[key][:30]
-    print("NASDAQ liquidity",stats)
-    return buckets
+    """NASDAQ도 유형별 30개 절단 없이 실제 전체 탐지 후보를 유지한다."""
+    return v7.scan_all_candidates(universe, frames)
 
 
 def market_facts(payload):
@@ -129,9 +105,7 @@ def market_facts(payload):
 
 def patch_us_dashboard(out: Path):
     payload = {"us100": v6.tf("^NDX"), "dxy": v6.tf("DX-Y.NYB")}
-    (out / "index_timeframes.json").write_text(
-        json.dumps(payload, ensure_ascii=False), encoding="utf-8"
-    )
+    (out / "index_timeframes.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     us_price, us_change = market_facts(payload["us100"])
     dx_price, dx_change = market_facts(payload["dxy"])
     p = out / "index.html"
@@ -142,33 +116,17 @@ def patch_us_dashboard(out: Path):
     text = text.replace("유가증권시장", "NASDAQ 100").replace("코스닥시장", "미국 달러 인덱스")
     text = text.replace("kospi", "us100").replace("kosdaq", "dxy")
     text = text.replace("krxAutoFit", "usAutoFit").replace("krxBoxToggle", "usBoxToggle")
-    text = re.sub(
-        r'(<h3>US100</h3>.*?<div><b>).*?(</b><span>).*?(</span>)',
-        lambda m: m.group(1) + us_price + m.group(2) + us_change + m.group(3),
-        text, count=1, flags=re.S,
-    )
-    text = re.sub(
-        r'(<h3>DXY</h3>.*?<div><b>).*?(</b><span>).*?(</span>)',
-        lambda m: m.group(1) + dx_price + m.group(2) + dx_change + m.group(3),
-        text, count=1, flags=re.S,
-    )
-    # The shared dashboard script is KRX-specific. Build a US-specific copy so
-    # timeframe buttons address the us100/dxy payload and chart containers.
+    text = re.sub(r'(<h3>US100</h3>.*?<div><b>).*?(</b><span>).*?(</span>)', lambda m: m.group(1) + us_price + m.group(2) + us_change + m.group(3), text, count=1, flags=re.S)
+    text = re.sub(r'(<h3>DXY</h3>.*?<div><b>).*?(</b><span>).*?(</span>)', lambda m: m.group(1) + dx_price + m.group(2) + dx_change + m.group(3), text, count=1, flags=re.S)
     shared_js = (ROOT / "outputs" / "ojutam" / "index_v6.js").read_text(encoding="utf-8")
     us_js = shared_js
-    us_js = us_js.replace(
-        "name==='kospi'?'kospiChart':'kosdaqChart'",
-        "name==='us100'?'us100Chart':'dxyChart'",
-    )
+    us_js = us_js.replace("name==='kospi'?'kospiChart':'kosdaqChart'", "name==='us100'?'us100Chart':'dxyChart'")
     us_js = us_js.replace("draw('kospi','D')", "draw('us100','D')")
     us_js = us_js.replace("draw('kosdaq','D')", "draw('dxy','D')")
     us_js = us_js.replace("'krxAutoFit'", "'usAutoFit'")
     us_js = us_js.replace("'krxBoxToggle'", "'usBoxToggle'")
     (out / "index_us.js").write_text(us_js, encoding="utf-8")
-    text = text.replace(
-        '<script src="index_v6.js"></script>',
-        '<script src="index_us.js?v=20260902-us100-dxy-1"></script>',
-    )
+    text = text.replace('<script src="index_v6.js"></script>', '<script src="index_us.js?v=20260908-full-count-footer-1"></script>')
     p.write_text(text, encoding="utf-8")
 
 
