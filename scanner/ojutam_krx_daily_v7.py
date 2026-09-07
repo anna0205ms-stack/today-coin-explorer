@@ -2,6 +2,19 @@ from pathlib import Path
 import re
 import ojutam_krx_daily as app
 import ojutam_krx_daily_v6 as v6
+from ojutam_trade_logic import apply_trade_context
+
+
+_BASE_ANALYZE = app.analyze_one
+
+
+def analyze_one_with_trade_context(code, name, market, df):
+    """기존 A~G 패턴 탐지는 그대로 두고 현재 위치 기반 매매선별만 후단 보강."""
+    return [apply_trade_context(item, df) for item in _BASE_ANALYZE(code, name, market, df)]
+
+
+# KRX와 NASDAQ은 데이터 수집부를 분리 유지하고, 패턴 이후 매매선별 원칙만 공통 적용한다.
+app.analyze_one = analyze_one_with_trade_context
 
 
 def patch_scan_inline():
@@ -18,9 +31,9 @@ def patch_scan_inline():
     marker='<section class="panel intro"><h2>전체 스캔 결과</h2>'
     text=text.replace(marker,guide+marker,1)
     text=text.replace('</section><section id="scanSummary" class="scan-summary">','</section><div class="search-bar"><input id="stockSearch" type="search" inputmode="search" placeholder="종목명 또는 종목코드 검색"><span id="searchCount"></span></div><section id="scanSummary" class="scan-summary">',1)
-    text=text.replace('<thead><tr><th>종목</th><th>유형</th><th>점수</th><th>흐름</th><th>한줄정리</th><th>관심</th></tr></thead>','<thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead>',1)
+    text=text.replace('<thead><tr><th>종목</th><th>유형</th><th>점수</th><th>흐름</th><th>한줄정리</th><th>관심</th></tr></thead>','<thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>평균진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead>',1)
     text=text.replace('KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 차트 상세</b>','KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 아래에서 상세 펼침</b>')
-    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260903-chartfix-1', text)
+    text=re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260907-trade-rank-1', text)
     p.write_text(text,encoding='utf-8')
 
 
@@ -42,7 +55,7 @@ def make_type_list_pages():
         text=src.replace('<body>','<body data-ojutam-filter="'+k+'">',1)
         text=text.replace('<title>전체 스캔 결과','<title>'+k+'형 · '+name,1)
         text=text.replace('<h2>전체 스캔 결과</h2>','<h2>'+k+'형 · '+name+'</h2>',1)
-        text=text.replace('A~F 유형 필터 → 종목 클릭 → 일봉 차트와 핵심구간 확인',k+'형 후보를 리스트로 먼저 보고, 종목을 누르면 일봉 차트와 진입·손절·목표를 확인',1)
+        text=text.replace('A~F 유형 필터 → 종목 클릭 → 일봉 차트와 핵심구간 확인',k+'형 후보를 리스트로 먼저 보고, 종목을 누르면 일봉 차트와 평균진입·손절·1차·2차 목표를 확인',1)
         Path(f'outputs/ojutam/type_{k.lower()}.html').write_text(text,encoding='utf-8')
 
 
