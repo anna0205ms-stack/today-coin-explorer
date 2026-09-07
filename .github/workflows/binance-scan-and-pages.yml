@@ -15,6 +15,7 @@ on:
       - "scanner/header_art.py"
       - "scanner/apply_space_header.py"
       - "scanner/add_explorer_switch.py"
+      - "scanner/release_footer.py"
       - "outputs/assets/sukdol_*"
       - "README_BINANCE.md"
   schedule:
@@ -74,6 +75,7 @@ jobs:
           python scanner/apply_space_header.py
           python scanner/market_dashboard_v5.py
           python scanner/add_explorer_switch.py
+          python scanner/release_footer.py --product oco
       - name: Save BINANCE results
         if: steps.guard.outputs.should_run == 'true'
         run: |
