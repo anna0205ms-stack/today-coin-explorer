@@ -10,7 +10,7 @@ OUT = ROOT / "outputs"
 # 자동 scan/schedule 커밋은 제외하고, 사용자 요청으로 묶이는 의미 있는 기능 변경만 기록한다.
 HISTORY = {
     "oco": {
-        "label": "OCO탐 · 오늘의 코인 탐험대",
+        "label": "OCO LAB · 오늘의 코인 탐험대",
         "revision": 12,
         "entries": [
             ("2026-09-08", "R12", "전 페이지 JIWON 발행/저작권·복제금지·버전 타임라인 적용"),
@@ -28,7 +28,7 @@ HISTORY = {
         ],
     },
     "oju": {
-        "label": "OJU탐 · 오늘의 주식 탐험대",
+        "label": "OJU LAB · 오늘의 주식 탐험대",
         "revision": 10,
         "entries": [
             ("2026-09-08", "R10", "전 페이지 JIWON 발행/저작권·복제금지·버전 타임라인 적용"),
