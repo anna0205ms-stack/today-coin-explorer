@@ -14,6 +14,7 @@ on:
       - "scanner/ojutam_krx_daily_v7.py"
       - "scanner/add_explorer_switch.py"
       - "scanner/release_footer.py"
+      - "scanner/ojutam_market_calendar.py"
       - "scanner/ojutam_us_daily.py"
       - "scanner/add_ojutam_market_switch.py"
       - ".github/workflows/ojutam-krx-pages.yml"
@@ -54,12 +55,13 @@ jobs:
         env:
           TZ: Asia/Seoul
         run: python scanner/ojutam_us_daily.py
-      - name: Add explorer and stock-market switches
+      - name: Add switches, market holidays, and release footer
         run: |
           python scanner/add_explorer_switch.py
           python scanner/add_ojutam_market_switch.py
+          python scanner/ojutam_market_calendar.py
           python scanner/release_footer.py --product oju
-      - name: Verify OJUTAM output and footer on every page
+      - name: Verify OJUTAM output, holidays, and footer on every page
         run: |
           set -e
           test -f outputs/ojutam/index.html
@@ -72,19 +74,27 @@ jobs:
           grep -q 'DXY' outputs/ojutam/us/index.html
           python - <<'PY'
           from pathlib import Path
-          pages=list(Path('outputs/ojutam').rglob('*.html'))
+          root=Path('outputs/ojutam')
+          pages=list(root.rglob('*.html'))
           assert pages, 'no OJUTAM html pages generated'
           missing=[]
-          wrong=[]
+          wrong_footer=[]
+          wrong_calendar=[]
           for p in pages:
               text=p.read_text(encoding='utf-8')
+              rel=p.relative_to(root)
+              is_us=bool(rel.parts and rel.parts[0]=='us')
               if 'Published by JIWON' not in text:
                   missing.append(str(p))
-              if 'OJU LAB' not in text or 'Revision 10' not in text:
-                  wrong.append(str(p))
+              if 'OJU LAB' not in text or 'Revision 11' not in text:
+                  wrong_footer.append(str(p))
+              expected='NASDAQ 휴장일' if is_us else 'KRX 휴장일'
+              if 'OJUTAM-MARKET-CALENDAR:START' not in text or expected not in text:
+                  wrong_calendar.append(str(p))
           assert not missing, 'footer missing: ' + ', '.join(missing)
-          assert not wrong, 'OJU LAB/revision missing: ' + ', '.join(wrong)
-          print(f'verified OJU LAB footer on all {len(pages)} OJUTAM pages')
+          assert not wrong_footer, 'OJU LAB/revision missing: ' + ', '.join(wrong_footer)
+          assert not wrong_calendar, 'market holiday notice missing/wrong: ' + ', '.join(wrong_calendar)
+          print(f'verified holiday notice + OJU LAB footer on all {len(pages)} OJUTAM pages')
           PY
       - name: Persist latest OJUTAM output
         run: |
