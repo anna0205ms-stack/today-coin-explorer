@@ -129,7 +129,8 @@ def chart_svg(rows,width=600,height=160,levels=None):
 
 def nav(active="dashboard"):
     links = [("메인 대시보드", "index.html", "dashboard"),
-             ("관심종목 추적", "watchlist.html", "watch"), ("날짜별 기록", "history.html", "history")]
+             ("관심종목 추적", "watchlist.html", "watch"), ("성과 검증", "validation.html", "validation"),
+             ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
     scan_active = active == "today" or active.startswith("type_")
     scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in "ABCDEF")}</div></details>'''
@@ -149,6 +150,7 @@ nav{display:flex;gap:24px;margin:0 0 20px;align-items:center;flex-wrap:wrap}.app
 .nav-drop{position:relative}.nav-drop summary{list-style:none;padding:14px 8px;border-bottom:2px solid transparent;font-size:16px;cursor:pointer}.nav-drop summary::-webkit-details-marker{display:none}.nav-drop summary.active{border-color:var(--green);color:var(--green)}.nav-drop-menu{position:absolute;z-index:40;left:0;top:48px;display:grid;min-width:150px;padding:7px;border:1px solid var(--line);border-radius:12px;background:#07100c;box-shadow:0 14px 28px #000}.nav-drop:not([open]) .nav-drop-menu{display:none}.nav-drop-menu a{padding:9px 12px;border:0;border-radius:8px;font-size:14px}.nav-drop-menu a:hover,.nav-drop-menu a.active{background:#0d2118;color:var(--green)}
 .dual-chart{display:grid;grid-template-columns:1fr 1fr;gap:14px}.chart-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-weight:800}.chart-title small{color:var(--sub);font-weight:400}@media(max-width:900px){.dual-chart{grid-template-columns:1fr}}
 .page-intro{margin:4px 0 18px}.page-intro h1{margin:0 0 4px}.how{margin-top:7px;color:#c8ffdf}.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:4px;border:1px solid #60756a;border-radius:50%;color:#a9b9b0;font-size:10px;cursor:help}.tip:hover:after{content:attr(data-tip);position:absolute;z-index:20;left:0;top:22px;width:220px;padding:9px;border:1px solid var(--green);border-radius:9px;background:#07100c;color:#fff;font-weight:400;white-space:normal}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.filter{padding:8px 13px;border:1px solid #31473c;border-radius:999px;background:#08100c;color:#fff;cursor:pointer}.filter.active{border-color:var(--accent,var(--green));color:var(--accent,var(--green))}.data-table{width:100%;border-collapse:collapse}.data-table th,.data-table td{padding:11px 9px;border-bottom:1px solid #26372f;text-align:left;white-space:nowrap}.data-table th{color:#a6b8ad;font-size:12px}.type-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.type-tab{padding:17px;border:1px solid var(--c);border-radius:16px;background:#050807}.type-tab strong{font-size:28px;color:var(--c)}.type-tab.active{box-shadow:0 0 16px color-mix(in srgb,var(--c) 35%,transparent);background:color-mix(in srgb,var(--c) 9%,#050807)}.expand{display:none}.expand.open{display:table-row}.expand td{padding:16px;background:#07100c}.expand-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.target-strip{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.target-chip{padding:8px 12px;border:1px solid var(--accent,var(--green));border-radius:10px}.help-note{padding:10px 12px;border-left:2px solid var(--accent,var(--green));background:#0a1510;color:#cbd8d0}.calendar-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{padding:9px;text-align:center;border-radius:8px}.day.has{color:#bfffd9}.day.selected{outline:1px solid var(--green);background:#0a2a19}.outcome{padding:3px 8px;border-radius:999px}.ok{color:#73eaa8;border:1px solid #23754b}.wait{color:#ffd166;border:1px solid #755b22}.bad{color:#ff8b78;border:1px solid #82372c}.muted{color:#a5b0aa;border:1px solid #45534b}@media(max-width:900px){.type-tabs,.calendar-layout,.expand-grid{grid-template-columns:1fr}.data-table{font-size:12px}}
+.validation-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.validation-card{padding:17px;border:1px solid var(--c);border-radius:16px;background:#08110d}.validation-card header{display:flex;align-items:flex-start}.validation-card strong{font-size:27px;color:var(--c)}.validation-card .rate{font-size:25px;font-weight:900}.metric-row{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:12px}.metric-row span{padding:8px;border-radius:9px;background:#101e17;color:#b7c8bf}.quality-low{color:#ff8b78}.quality-mid{color:#ffd166}.quality-ok{color:#73eaa8}.validation-note{padding:12px;border:1px solid #735d20;border-radius:12px;background:#211b09;color:#f3d989}@media(max-width:900px){.validation-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.validation-grid{grid-template-columns:1fr}}
 .hero-guide{display:grid;grid-template-columns:1fr 190px;gap:20px;align-items:center;border-color:var(--accent)}.type-cat-wrap{position:relative;height:190px}.type-cat-wrap img{width:100%;height:100%;object-fit:contain}.type-token{position:absolute;right:7px;top:16px;width:58px;height:58px;border:3px solid var(--accent);border-radius:50%;background:#050807;color:var(--accent);font-size:28px;font-weight:900;text-align:center;line-height:52px}.row-click{cursor:pointer}.row-click:hover{background:#0d1b14}.section-label{margin:20px 0 8px;color:var(--accent,var(--green))}.status-line{display:flex;gap:12px;flex-wrap:wrap}.mini-stat{padding:10px 14px;border:1px solid #294438;border-radius:12px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.date-buttons{display:flex;gap:7px;flex-wrap:wrap}.date-btn{padding:8px 11px;border:1px solid #31473c;border-radius:10px;background:#08100c;color:#fff}.date-btn.active{border-color:var(--green);color:var(--green)}@media(max-width:900px){.hero-guide{grid-template-columns:1fr}.type-cat-wrap{height:150px}}
 .system-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:11px 14px;border:1px solid #244b38;border-radius:14px;background:#07110c}.system-dot{width:9px;height:9px;border-radius:50%;background:#00e783;box-shadow:0 0 10px #00e783}.system-bar.waiting .system-dot{background:#ffc247;box-shadow:0 0 10px #ffc247}.system-bar.late .system-dot{background:#ff5d3a;box-shadow:0 0 10px #ff5d3a}.system-divider{color:#365443}.update-stamp{margin-top:7px;color:var(--sub);font-size:12px}@media(max-width:600px){.system-bar{align-items:flex-start}.system-divider{display:none}.system-item{width:100%}}
 .training-tabs{display:flex;gap:8px;margin:10px 0 18px}.training-tab{padding:9px 15px;border:1px solid var(--line);border-radius:10px}.training-tab.active{border-color:#ff8297;color:#ff8297;background:#170b0e}.stage-rail{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin:14px 0}.stage-card{padding:11px;border:1px solid #31473c;border-radius:11px;background:#08100c}.stage-card strong{display:block;font-size:16px}.stage-card span{color:var(--sub);font-size:12px}.stage-card.hot{border-color:var(--green);background:#082418}.stage-card.hot strong{color:var(--green)}.stage-matrix{width:100%;border-collapse:collapse}.stage-matrix th,.stage-matrix td{padding:10px;border-bottom:1px solid #26372f;text-align:left;vertical-align:top}.stage-matrix th{color:var(--sub);font-size:12px}.training-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:14px}.training-chart{border:1px solid #173a2b;border-radius:12px;background:#07100c;overflow:hidden}.training-chart svg{display:block;width:100%;height:auto}.training-notes{border:1px solid #26372f;border-radius:12px;overflow:hidden}.training-note{padding:12px;border-bottom:1px solid #26372f}.training-note:last-child{border:0}.training-note b{display:block;color:var(--green);margin-bottom:3px}.precision-table{width:100%;border-collapse:collapse}.precision-table th,.precision-table td{padding:10px;border-bottom:1px solid #26372f;text-align:left;vertical-align:top}.precision-table th{color:var(--sub);font-size:12px}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.scenario{padding:14px;border:1px solid #294438;border-radius:14px;background:#07100c}.scenario.success{border-color:#00e783}.scenario.warning{border-color:#ffd166}.scenario.failure{border-color:#ff667e}.scenario h3{margin:0 0 8px}.scenario svg{width:100%;height:auto;display:block;border-bottom:1px solid #26372f;margin-bottom:9px}.scenario dl{margin:0}.scenario dt{margin-top:8px;font-weight:800}.scenario dd{margin:2px 0;color:var(--sub)}.training-close{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:16px;border:1px solid var(--line);background:var(--line)}.training-close div{padding:13px;background:#07100c}.training-close b{display:block;margin-bottom:4px}.training-close span{color:var(--sub)}@media(max-width:900px){.stage-rail{grid-template-columns:repeat(4,1fr)}.training-grid,.scenario-grid{grid-template-columns:1fr}.training-close{grid-template-columns:1fr 1fr}}@media(max-width:600px){.stage-rail,.training-close{grid-template-columns:1fr 1fr}.nav-drop-menu{position:static;margin-top:4px}}
@@ -585,6 +587,83 @@ def history_page(records):
     return shell("날짜별 기록", body, basis, "history")
 
 
+def candidate_episodes(records, gap_hours=8):
+    """같은 종목·유형이 연속 봉에 반복 노출되면 하나의 후보 사건으로 묶는다."""
+    active = {}
+    episodes = []
+    for record in sorted(records, key=lambda item: item.get("snapshot_at", "")):
+        at = datetime.fromisoformat(record["snapshot_at"])
+        for row in record.get("candidates", []):
+            kind = row.get("type")
+            market = row.get("market")
+            if kind not in INFO or not market:
+                continue
+            key = (market, kind)
+            previous = active.get(key)
+            if previous and at - previous["last_seen"] <= timedelta(hours=gap_hours):
+                previous["last_seen"] = at
+                continue
+            episode = {"first_seen": at, "last_seen": at, "row": row}
+            active[key] = episode
+            episodes.append(episode)
+    return episodes
+
+
+def validation_stats(records):
+    episodes = candidate_episodes(records)
+    stats = {}
+    for kind in INFO:
+        items = [episode for episode in episodes if episode["row"].get("type") == kind]
+        completed = [episode for episode in items if "72h" in episode["row"].get("outcomes", {})]
+        results = [episode["row"]["outcomes"]["72h"] for episode in completed]
+        wins = sum("목표" in result.get("status", "") for result in results)
+        stops = sum("손절" in result.get("status", "") for result in results)
+        entries = sum(
+            result.get("entry_at") is not None
+            or result.get("status") not in {"진입 미도달", "자료 부족", "확인 예정", ""}
+            for result in results
+        )
+        resolved = wins + stops
+        mfe = [result.get("mfe_pct") for result in results if isinstance(result.get("mfe_pct"), (int, float))]
+        mae = [result.get("mae_pct") for result in results if isinstance(result.get("mae_pct"), (int, float))]
+        stats[kind] = {
+            "detected": len(items), "completed": len(completed), "entries": entries,
+            "wins": wins, "stops": stops,
+            "entry_rate": round(entries / len(completed) * 100, 1) if completed else None,
+            "win_rate": round(wins / resolved * 100, 1) if resolved else None,
+            "avg_mfe": round(sum(mfe) / len(mfe), 2) if mfe else None,
+            "avg_mae": round(sum(mae) / len(mae), 2) if mae else None,
+        }
+    return stats, episodes
+
+
+def validation_page(records):
+    stats, episodes = validation_stats(records)
+    weakest = min(INFO, key=lambda kind: stats[kind]["completed"])
+    cards = []
+    for kind in INFO:
+        item = stats[kind]
+        sample = item["completed"]
+        quality = "quality-low" if sample < 30 else "quality-mid" if sample < 100 else "quality-ok"
+        label = "표본 부족" if sample < 30 else "참고 가능" if sample < 100 else "비교 가능"
+        rate = f'{item["win_rate"]:.1f}%' if item["win_rate"] is not None else "계산 전"
+        entry_rate = f'{item["entry_rate"]:.1f}%' if item["entry_rate"] is not None else "-"
+        mfe = f'+{item["avg_mfe"]:.2f}%' if item["avg_mfe"] is not None else "-"
+        mae = f'{item["avg_mae"]:.2f}%' if item["avg_mae"] is not None else "-"
+        cards.append(f'''<article class="validation-card" style="--c:{INFO[kind][1]}"><header><div><strong>{kind}형</strong><div>{INFO[kind][2]}</div></div><b class="{quality}">{label}</b></header><div class="rate">해결 승률 {rate}</div><div class="metric-row"><span>독립 후보 <b>{item["detected"]}</b>건</span><span>72H 완료 <b>{sample}</b>건</span><span>진입 도달률 <b>{entry_rate}</b></span><span>목표/손절 <b>{item["wins"]}/{item["stops"]}</b></span><span>평균 최대상승 <b>{mfe}</b></span><span>평균 최대하락 <b>{mae}</b></span></div></article>''')
+    recent = sorted(episodes, key=lambda episode: episode["first_seen"], reverse=True)[:100]
+    rows = []
+    for episode in recent:
+        row = episode["row"]
+        result = row.get("outcomes", {}).get("72h") or row.get("outcomes", {}).get("24h")
+        status = result.get("status") if result else "확인 예정"
+        cls = "ok" if "목표" in status else "bad" if "손절" in status else "wait"
+        rows.append(f'''<tr><td>{episode["first_seen"].strftime("%m-%d %H:%M")}</td><td><b>{fmt(row.get("market"))}</b></td><td>{fmt(row.get("type"))}형</td><td>{fmt(row.get("action"))}</td><td>{fmt(row.get("entry"))}</td><td>{fmt(row.get("stop"))}</td><td>{fmt((row.get("targets") or [None])[0])}</td><td><span class="outcome {cls}">{fmt(status)}</span></td><td>{fmt(result.get("mfe_pct") if result else None)}%</td><td>{fmt(result.get("mae_pct") if result else None)}%</td></tr>''')
+    intro = page_intro("성과 검증", "후보가 뜬 뒤 진입구간·1차 목표·손절 도달을 24시간과 72시간 동안 자동 추적하는 곳", "① 유형별 표본 확인 → ② 진입 도달률 확인 → ③ 목표·손절로 해결된 건의 승률 비교 → ④ 개별 후보 복기")
+    body = intro + f'''<div class="validation-note"><b>현재 검증이 가장 부족한 유형은 {weakest}형</b>이야. 같은 종목·유형이 연속 마감봉에 반복된 경우 8시간 이내 노출은 한 건으로 묶었어. 해결 승률은 1차 목표 또는 손절에 먼저 닿아 결과가 확정된 건만 계산하며, 수수료·슬리피지는 포함하지 않아.</div><section class="panel"><h2>A~F형 자동 성과표</h2><div class="validation-grid">{"".join(cards)}</div></section><section class="panel"><h2>최근 독립 후보 100건</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>최초 발견</th><th>종목</th><th>유형</th><th>당시 판단</th><th>진입구간</th><th>손절</th><th>1차 목표</th><th>24/72H 결과</th><th>최대상승</th><th>최대하락</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div></section>'''
+    return shell("성과 검증", body, records[-1] if records else {}, "validation")
+
+
 def generate():
     records = read(STORE, [])
     watch = read(WATCH, {"items":{}})
@@ -604,6 +683,7 @@ def generate():
     for old in OUT.glob("main_dashboard_review_*.html"):
         old.unlink()
     (OUT / "history.html").write_text(history_page(records), encoding="utf-8")
+    (OUT / "validation.html").write_text(validation_page(records), encoding="utf-8")
     (OUT / "watchlist.html").write_text(watchlist_page(watch,latest),encoding="utf-8")
     print(OUT / "index.html")
 

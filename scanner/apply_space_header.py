@@ -64,9 +64,9 @@ def patch(path: Path, is_binance: bool = False, is_main: bool = False):
 
 def run():
     patch(OUT / "index.html", is_main=True)
-    upbit_pages = [OUT / "scan.html", OUT / "watchlist.html", OUT / "history.html"]
-    upbit_pages += [OUT / f"type_{k}.html" for k in "abcde"]
-    upbit_pages += [OUT / f"training_{k}.html" for k in "abcde"]
+    upbit_pages = [OUT / "scan.html", OUT / "watchlist.html", OUT / "history.html", OUT / "validation.html"]
+    upbit_pages += [OUT / f"type_{k}.html" for k in "abcdef"]
+    upbit_pages += [OUT / f"training_{k}.html" for k in "abcdef"]
     for p in upbit_pages:
         patch(p)
     bindir = OUT / "binance"
