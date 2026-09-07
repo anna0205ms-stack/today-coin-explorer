@@ -30,15 +30,13 @@ on:
       - "scanner/header_art.py"
       - "scanner/apply_space_header.py"
       - "scanner/add_explorer_switch.py"
+      - "scanner/release_footer.py"
       - "outputs/dashboard_v5.css"
       - "outputs/dashboard_v5.js"
       - "outputs/header_astronaut.b64"
       - "outputs/assets/cat_*"
       - "outputs/assets/sukdol_*"
   schedule:
-    # GitHub scheduled workflows can start late during periods of high load.
-    # Retry for two hours after every 4-hour candle close; schedule_guard.py
-    # keeps these retries idempotent once the slot has been published.
     - cron: "3,13,23,33,43,53 0,4,8,12,16,20 * * *"
     - cron: "3,13,23,33,43,53 1,5,9,13,17,21 * * *"
   workflow_dispatch:
@@ -111,6 +109,7 @@ jobs:
           python scanner/apply_space_header.py
           python scanner/market_dashboard_v5.py
           python scanner/add_explorer_switch.py
+          python scanner/release_footer.py --product oco
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
         continue-on-error: true
