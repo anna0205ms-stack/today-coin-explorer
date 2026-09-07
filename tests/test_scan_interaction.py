@@ -4,7 +4,7 @@ from scanner.unified_dashboard import main_page
 def test_scan_page_keeps_inline_charts_and_search():
     candle = ["2026-09-07T09:00:00+09:00", 100.0, 105.0, 98.0, 103.0, 1000.0]
     candidate = {
-        "market": "KRW-XRP", "type": "A", "action": "눌림 대기",
+        "market": "KRW-XRP", "name": "리플", "english_name": "XRP", "type": "A", "action": "눌림 대기",
         "score": 80, "price": 103.0, "entry": [98.0, 100.0],
         "stop": 95.0, "targets": [108.0, 112.0, 120.0], "rr": 1.8,
         "charts": {"day": [candle], "4h": [candle]},
@@ -12,7 +12,10 @@ def test_scan_page_keeps_inline_charts_and_search():
     }
     page = main_page({"snapshot_at": "2026-09-07T21:00:00+09:00", "candidates": [candidate]}, {})
     assert 'id="coinSearch"' in page
+    assert "한글 종목명 또는 심볼 검색" in page
+    assert 'data-search="KRW-XRP 리플 XRP"' in page
     assert 'onclick="toggleScanRow(0)"' in page
     assert 'id="scanDetail0"' in page
     assert "일봉" in page and "4시간봉" in page
     assert "눌러서 차트 보기" in page
+    assert 'id="scanTable"' in page

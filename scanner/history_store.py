@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 STORE = ROOT / "history" / "snapshots.json"
 MARKET_REGIME = OUTPUTS / "market_regime.json"
+MARKET_NAMES = OUTPUTS / "market_names.json"
 
 
 def read_json(path: Path, default):
@@ -122,6 +123,11 @@ def append_snapshot(at: datetime | None = None) -> dict:
     candidates += [normalize_d(r) for r in d_rows if r.get("status") not in {"제외", "자료부족", "오류"}]
     candidates += [normalize_e(r) for r in e_rows if r.get("status") != "E실패"]
     candidates += [normalize_f(r) for r in f_rows]
+    market_names = read_json(MARKET_NAMES, {})
+    for row in candidates:
+        names = market_names.get(row.get("market"), {})
+        row["name"] = names.get("korean_name") or row.get("name") or str(row.get("market", "")).replace("KRW-", "")
+        row["english_name"] = names.get("english_name") or row.get("english_name")
     candidates = [build_current_trade_plan(row) for row in candidates]
     market_regime = read_json(MARKET_REGIME, {})
     if market_regime.get("stage"):

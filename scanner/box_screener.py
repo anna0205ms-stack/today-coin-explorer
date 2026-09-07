@@ -1108,6 +1108,13 @@ def write_outputs(
 
     market_date = max(r["데이터기준일"] for r in records)
     generated_at = datetime.now(KST).isoformat(timespec="seconds")
+    market_names = {
+        str(row["Code"]): {"korean_name": str(row["Name"]), "english_name": str(row["EnglishName"])}
+        for _, row in universe.iterrows()
+    }
+    (OUTPUT_DIR / "market_names.json").write_text(
+        json.dumps(market_names, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     for old_file in DAILY_DIR.glob("*.json"):
         old_file.unlink()
