@@ -12,6 +12,7 @@ on:
       - "scanner/ojutam_krx_daily_v5.py"
       - "scanner/ojutam_krx_daily_v6.py"
       - "scanner/ojutam_krx_daily_v7.py"
+      - "scanner/ojutam_trade_tracker_ui.py"
       - "scanner/add_explorer_switch.py"
       - "scanner/release_footer.py"
       - "scanner/ojutam_market_calendar.py"
@@ -55,21 +56,30 @@ jobs:
         env:
           TZ: Asia/Seoul
         run: python scanner/ojutam_us_daily.py
-      - name: Add switches, market holidays, and release footer
+      - name: Add trade tracker, switches, market holidays, and release footer
         run: |
+          python scanner/ojutam_trade_tracker_ui.py
           python scanner/add_explorer_switch.py
           python scanner/add_ojutam_market_switch.py
           python scanner/ojutam_market_calendar.py
           python scanner/release_footer.py --product oju
-      - name: Verify OJUTAM output, holidays, and footer on every page
+      - name: Verify OJUTAM output, tracker, holidays, and footer on every page
         run: |
           set -e
           test -f outputs/ojutam/index.html
           test -f outputs/ojutam/scan.html
+          test -f outputs/ojutam/trade_tracker.js
           test -f outputs/ojutam/us/index.html
           test -f outputs/ojutam/us/scan.html
+          test -f outputs/ojutam/us/trade_tracker.js
           grep -q 'id="stockSearch"' outputs/ojutam/scan.html
           grep -q '현재판단·남은 조건' outputs/ojutam/scan.html
+          grep -q 'OJUTAM-TRADE-TRACKER' outputs/ojutam/scan.html
+          grep -q 'OJUTAM-TRADE-TRACKER' outputs/ojutam/us/scan.html
+          grep -q '내 매매 추적 목록' outputs/ojutam/trade_tracker.js
+          grep -q '당시 계획' outputs/ojutam/trade_tracker.js
+          grep -q '현재 분석' outputs/ojutam/trade_tracker.js
+          grep -q '실제 매수함' outputs/ojutam/trade_tracker.js
           grep -q 'US100' outputs/ojutam/us/index.html
           grep -q 'DXY' outputs/ojutam/us/index.html
           python - <<'PY'
@@ -80,21 +90,29 @@ jobs:
           missing=[]
           wrong_footer=[]
           wrong_calendar=[]
+          tracker_pages=[]
+          tracker_missing=[]
           for p in pages:
               text=p.read_text(encoding='utf-8')
               rel=p.relative_to(root)
               is_us=bool(rel.parts and rel.parts[0]=='us')
               if 'Published by JIWON' not in text:
                   missing.append(str(p))
-              if 'OJU LAB' not in text or 'Revision 11' not in text:
+              if 'OJU LAB' not in text or 'Revision 12' not in text:
                   wrong_footer.append(str(p))
               expected='NASDAQ 휴장일' if is_us else 'KRX 휴장일'
               if 'OJUTAM-MARKET-CALENDAR:START' not in text or expected not in text:
                   wrong_calendar.append(str(p))
+              if 'scan_v6.js' in text:
+                  tracker_pages.append(str(p))
+                  if 'OJUTAM-TRADE-TRACKER' not in text or 'trade_tracker.js' not in text:
+                      tracker_missing.append(str(p))
           assert not missing, 'footer missing: ' + ', '.join(missing)
           assert not wrong_footer, 'OJU LAB/revision missing: ' + ', '.join(wrong_footer)
           assert not wrong_calendar, 'market holiday notice missing/wrong: ' + ', '.join(wrong_calendar)
-          print(f'verified holiday notice + OJU LAB footer on all {len(pages)} OJUTAM pages')
+          assert tracker_pages, 'no scan/type pages found for tracker verification'
+          assert not tracker_missing, 'trade tracker missing: ' + ', '.join(tracker_missing)
+          print(f'verified tracker + holiday notice + OJU LAB footer on all {len(pages)} OJUTAM pages; tracker on {len(tracker_pages)} scan/type pages')
           PY
       - name: Persist latest OJUTAM output
         run: |
