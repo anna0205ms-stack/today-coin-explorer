@@ -68,15 +68,21 @@ jobs:
           set -e
           test -f outputs/ojutam/index.html
           test -f outputs/ojutam/scan.html
+          test -f outputs/ojutam/watchlist.html
           test -f outputs/ojutam/trade_tracker.js
           test -f outputs/ojutam/us/index.html
           test -f outputs/ojutam/us/scan.html
+          test -f outputs/ojutam/us/watchlist.html
           test -f outputs/ojutam/us/trade_tracker.js
           grep -q 'id="stockSearch"' outputs/ojutam/scan.html
           grep -q '현재판단·남은 조건' outputs/ojutam/scan.html
           grep -q 'OJUTAM-TRADE-TRACKER' outputs/ojutam/scan.html
           grep -q 'OJUTAM-TRADE-TRACKER' outputs/ojutam/us/scan.html
-          grep -q '내 매매 추적 목록' outputs/ojutam/trade_tracker.js
+          grep -q 'OJUTAM-TRADE-TRACKER' outputs/ojutam/watchlist.html
+          grep -q 'OJUTAM-TRADE-TRACKER' outputs/ojutam/us/watchlist.html
+          grep -q '내 매매 추적 목록' outputs/ojutam/watchlist.html
+          grep -q '내 매매 추적 목록' outputs/ojutam/us/watchlist.html
+          grep -q "document.getElementById('watch')" outputs/ojutam/trade_tracker.js
           grep -q '당시 계획' outputs/ojutam/trade_tracker.js
           grep -q '현재 분석' outputs/ojutam/trade_tracker.js
           grep -q '실제 매수함' outputs/ojutam/trade_tracker.js
@@ -103,16 +109,17 @@ jobs:
               expected='NASDAQ 휴장일' if is_us else 'KRX 휴장일'
               if 'OJUTAM-MARKET-CALENDAR:START' not in text or expected not in text:
                   wrong_calendar.append(str(p))
-              if 'scan_v6.js' in text:
+              should_have_tracker=('scan_v6.js' in text) or p.name=='watchlist.html'
+              if should_have_tracker:
                   tracker_pages.append(str(p))
                   if 'OJUTAM-TRADE-TRACKER' not in text or 'trade_tracker.js' not in text:
                       tracker_missing.append(str(p))
           assert not missing, 'footer missing: ' + ', '.join(missing)
           assert not wrong_footer, 'OJU LAB/revision missing: ' + ', '.join(wrong_footer)
           assert not wrong_calendar, 'market holiday notice missing/wrong: ' + ', '.join(wrong_calendar)
-          assert tracker_pages, 'no scan/type pages found for tracker verification'
+          assert tracker_pages, 'no tracker pages found for verification'
           assert not tracker_missing, 'trade tracker missing: ' + ', '.join(tracker_missing)
-          print(f'verified tracker + holiday notice + OJU LAB footer on all {len(pages)} OJUTAM pages; tracker on {len(tracker_pages)} scan/type pages')
+          print(f'verified tracker + holiday notice + OJU LAB footer on all {len(pages)} OJUTAM pages; tracker on {len(tracker_pages)} pages including KRX/NASDAQ watchlists')
           PY
       - name: Persist latest OJUTAM output
         run: |
