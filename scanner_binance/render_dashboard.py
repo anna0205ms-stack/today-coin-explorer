@@ -191,6 +191,7 @@ def binanceize(page: str) -> str:
 
 def render():
     OUT.mkdir(parents=True, exist_ok=True)
+    up.write_tracker_asset(OUT)
     raw = read_json(LATEST, {"generated_at": "", "basis_4h_end": "", "market_regime": {}, "counts": {}, "candidates": []})
     snapshot = adapt_latest(raw)
     if enrich_candidate_charts(snapshot):

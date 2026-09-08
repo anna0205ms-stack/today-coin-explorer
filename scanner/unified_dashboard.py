@@ -8,6 +8,11 @@ import base64
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+try:
+    from .trade_tracker_ui import write_tracker_asset
+except ImportError:
+    from trade_tracker_ui import write_tracker_asset
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
 STORE = ROOT / "history" / "snapshots.json"
@@ -135,7 +140,7 @@ def chart_svg(rows,width=600,height=160,levels=None):
 
 def nav(active="dashboard"):
     links = [("메인 대시보드", "index.html", "dashboard"),
-             ("관심종목 추적", "watchlist.html", "watch"), ("성과 검증", "validation.html", "validation"),
+             ("내 매매 추적 목록", "watchlist.html", "watch"), ("성과 검증", "validation.html", "validation"),
              ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
     scan_active = active == "today" or active.startswith("type_")
@@ -278,7 +283,11 @@ def system_status(basis):
 def shell(title, body, basis, active="dashboard"):
     pins='''<script>function getPins(){try{return JSON.parse(localStorage.getItem("upbitPins")||"[]")}catch(e){return []}}function togglePin(m,b){let p=getPins();p=p.includes(m)?p.filter(x=>x!==m):[...p,m];localStorage.setItem("upbitPins",JSON.stringify(p));if(b){b.classList.toggle("on",p.includes(m));b.textContent=p.includes(m)?"★":"☆"}if(typeof renderWatch==="function")renderWatch()}document.addEventListener("DOMContentLoaded",()=>document.querySelectorAll(".star").forEach(b=>{let on=getPins().includes(b.dataset.market);b.classList.toggle("on",on);b.textContent=on?"★":"☆"}))</script>'''
     nav_behavior='''<script>(function(){const closeMenus=except=>document.querySelectorAll("details.nav-drop[open]").forEach(menu=>{if(menu!==except)menu.removeAttribute("open")});closeMenus();document.querySelectorAll("details.nav-drop summary").forEach(summary=>summary.addEventListener("click",()=>setTimeout(()=>closeMenus(summary.parentElement.open?summary.parentElement:null),0)));document.addEventListener("pointerdown",event=>{if(!event.target.closest("details.nav-drop"))closeMenus()},true);window.addEventListener("pageshow",()=>closeMenus())})()</script>'''
-    return f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title><style>{css()}</style></head><body><main>{nav(active)}{system_status(basis)}{body}</main>{pins}{nav_behavior}</body></html>'
+    tracker_keys=("market","name","type","score","price","entry","stop","targets","action","reason","missing","trade_plan","charts")
+    tracker_candidates=[{k:r.get(k) for k in tracker_keys if k in r} for r in (basis.get("candidates") or [])]
+    tracker_data=json.dumps({"snapshot_at":basis.get("snapshot_at"),"candidates":tracker_candidates},ensure_ascii=False,separators=(",",":"),default=str).replace("<","\\u003c")
+    tracker=f'<script>window.OKO_TRACK_DATA={tracker_data}</script><script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script><script src="trade_tracker.js?v=20260908-1"></script>'
+    return f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title><style>{css()}</style></head><body><main>{nav(active)}{system_status(basis)}{body}</main>{pins}{nav_behavior}{tracker}</body></html>'
 
 
 def grouped(snapshot):
@@ -586,7 +595,7 @@ def watchlist_page(watch,basis):
         items.append(copy)
     data=json.dumps(items,ensure_ascii=False).replace("</","<\\/")
     tabs=''.join(f'<button class="type-tab {"active" if k=="A" else ""}" style="--c:{INFO[k][1]}" onclick="setWatchType(\'{k}\',this)"><strong>{k}형</strong><div>{INFO[k][2]}</div></button>' for k in "ABCDEF")
-    intro=page_intro("관심종목 추적","한 번 포착된 종목을 지우지 않고 보관하면서 4시간봉 변화를 계속 확인하는 곳","① A/B/C/D/E/F 선택 → ② 고정 관심 확인 → ③ 단계·진입거리 확인 → ④ 변화기록 펼쳐보기")
+    intro=page_intro("내 매매 추적 목록","별표 순간의 계획을 고정 보관하고 현재 분석·차트·변화기록과 비교하는 곳","① 후보에서 ☆ 등록 → ② 당시 계획 확인 → ③ 현재 분석 비교 → ④ 실제 매수 여부 표시")
     note='<p class="help-note">별표는 지금 쓰는 브라우저에 바로 저장돼. 다른 사람의 관심종목과 섞이지 않아.</p>'
     body=intro+f'''<div class="type-tabs">{tabs}</div>{note}<div id="watchRoot"></div><script>const watchItems={data};let watchType="A";const esc=s=>String(s??"-").replace(/[&<>]/g,c=>({{"&":"&amp;","<":"&lt;",">":"&gt;"}}[c]));const num=x=>typeof x==="number"?x.toLocaleString("ko-KR",{{maximumFractionDigits:8}}):esc(x);function dtext(x){{const f=x.display||{{}},p=f.price,e=f.entry||[];if(typeof p!=="number"||!e.length)return "-";const lo=Math.min(...e),hi=Math.max(...e);if(p>=lo&&p<=hi)return "구간 안";const edge=p>hi?hi:lo;return Math.abs((p/edge-1)*100).toFixed(1)+"% "+(p>hi?"위":"아래")}}function row(x){{const f=x.display||{{}},ts=(x.types||[]),dup=ts.length>1?`<span class="badge">${{ts.join("/")}} 중복신호</span>`:"",events=(x.timeline||[]).slice(-8).reverse().map(e=>`<div>${{esc(String(e.at||"").slice(5,16).replace("T"," "))}} · ${{esc((e.types||[]).join("/"))}}형 · ${{esc(e.action)}} · ${{esc(e.note)}}</div>`).join("");const targets=f.targets||[];return `<tr class="row-click" onclick="this.nextElementSibling.classList.toggle('open')"><td><button class="star" data-market="${{esc(x.market)}}" onclick="event.stopPropagation();togglePin('${{esc(x.market)}}',this)">☆</button></td><td><b>${{esc(x.market)}}</b> ${{dup}}</td><td>${{esc(ts.join("/"))}}형</td><td>${{esc(f.action||x.daily_status)}}</td><td>${{num(f.price)}}<br><small class="sub">${{dtext(x)}}</small></td><td>${{esc((f.entry||[]).join(" ~ "))}}</td><td>${{num(f.stop)}}</td><td>${{num(targets[0])}}</td><td>${{num(f.score)}}점 · ${{num(f.rr)}}R</td><td>${{esc(String((x.four_hour||{{}}).last_seen||x.last_seen||"-").slice(5,16).replace("T"," "))}}</td></tr><tr class="expand"><td colspan="10"><b>4시간봉 변화기록</b><div class="timeline">${{events||"아직 변화기록 없음"}}</div></td></tr>`}}function section(title,rows){{return `<h2 class="section-label">${{title}} · ${{rows.length}}개</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>신호</th><th>단계</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>점수·손익비</th><th>최근확인</th></tr></thead><tbody>${{rows.map(row).join("")||"<tr><td colspan=10 class=empty>없음</td></tr>"}}</tbody></table></div>`}}function renderWatch(){{const p=getPins(),all=watchItems.filter(x=>(x.types||[]).includes(watchType)),fixed=all.filter(x=>p.includes(x.market)),active=all.filter(x=>!p.includes(x.market)&&!x.archived),archived=all.filter(x=>!p.includes(x.market)&&x.archived);watchRoot.innerHTML=`<section class="panel" style="--accent:${{({{A:"#ff8297",B:"#70c2ff",C:"#c3a7ff",D:"#5ce2b3",E:"#ffb454",F:"#56d6ff"}})[watchType]}}">${{section("⭐ 고정 관심",fixed)}}${{section("활성 추적",active)}}${{section("구조 무효 보관",archived)}}</section>`;document.querySelectorAll(".star").forEach(b=>{{const on=p.includes(b.dataset.market);b.classList.toggle("on",on);b.textContent=on?"★":"☆"}})}}function setWatchType(k,b){{watchType=k;document.querySelectorAll(".type-tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderWatch()}}document.addEventListener("DOMContentLoaded",renderWatch)</script>'''
     return shell("관심종목 추적",body,basis,"watch")
@@ -686,6 +695,7 @@ def generate():
     market_data = read(GLOBAL, {})
     regime = latest.get("market_regime") or read(MARKET, {})
     OUT.mkdir(parents=True, exist_ok=True)
+    write_tracker_asset(OUT)
     (OUT / "index.html").write_text(dashboard_page(latest,watch,btc,market_data,regime), encoding="utf-8")
     (OUT / "scan.html").write_text(main_page(latest,btc), encoding="utf-8")
     for key in "ABCDEF":
