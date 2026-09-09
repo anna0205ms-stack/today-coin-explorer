@@ -1,52 +1,12 @@
 [
   {
-    "market": "KRW-CFG",
-    "name": "센트리퓨즈",
-    "type": "E",
-    "status": "E1 하단 도달",
-    "action": "확인 대기",
-    "score": 8.0,
-    "price": 164.0,
-    "entry": [
-      136.0,
-      144.0
-    ],
-    "stop": 129.0,
-    "targets": [
-      166.0
-    ],
-    "rr": 2.36,
-    "flow": "급락 추세 속 1회성 기술적 반등",
-    "reason": "장기 최저 5% 하단 투매 · 낙폭 52.1% · 투매거래량 3.7배 · 4H 아래꼬리",
-    "missing": [
-      "4시간봉 양봉·아래꼬리·저점 2% 회복 확인"
-    ],
-    "fib": {
-      "high": 219.0,
-      "low": 134.0,
-      "entry_limit_0.236": 154.1,
-      "full_exit_0.382": 166.0,
-      "high_at": "2026-08-22 09:00:00",
-      "low_at": "2026-09-04 09:00:00"
-    },
-    "metrics": {
-      "drawdown_pct": 52.14,
-      "fast_drop_pct": 38.81,
-      "capitulation_volume_ratio": 3.65,
-      "support_distance_pct": 5.97,
-      "rebound_progress_fib": 0.353
-    },
-    "exit_rule": "피보나치 0.382 전량청산 · 추세전환 기대 금지",
-    "invalidation": "투매저점 3% 하단 이탈 시 종료 · 물타기 금지"
-  },
-  {
     "market": "KRW-TRUMP",
     "name": "오피셜트럼프",
     "type": "E",
     "status": "E1 하단 도달",
     "action": "확인 대기",
     "score": 7.8,
-    "price": 3008,
+    "price": 3060,
     "entry": [
       2990,
       3196
@@ -57,7 +17,7 @@
     ],
     "rr": 1.62,
     "flow": "급락 추세 속 1회성 기술적 반등",
-    "reason": "과거 하단 저점 25회 군집 · 낙폭 41.3% · 투매거래량 145.1배 · 4H 반등 확인 전",
+    "reason": "과거 하단 저점 25회 군집 · 낙폭 41.3% · 투매거래량 145.1배 · 4H 양봉 전환",
     "missing": [
       "4시간봉 양봉·아래꼬리·저점 2% 회복 확인"
     ],
@@ -74,7 +34,87 @@
       "fast_drop_pct": 30.34,
       "capitulation_volume_ratio": 145.1,
       "support_distance_pct": 0.03,
-      "rebound_progress_fib": 0.037
+      "rebound_progress_fib": 0.078
+    },
+    "exit_rule": "피보나치 0.382 전량청산 · 추세전환 기대 금지",
+    "invalidation": "투매저점 3% 하단 이탈 시 종료 · 물타기 금지"
+  },
+  {
+    "market": "KRW-CFG",
+    "name": "센트리퓨즈",
+    "type": "E",
+    "status": "E3 반등 진행",
+    "action": "추격 금지",
+    "score": 9.5,
+    "price": 161.0,
+    "entry": [
+      136.0,
+      144.0
+    ],
+    "stop": 129.0,
+    "targets": [
+      166.0
+    ],
+    "rr": 2.36,
+    "flow": "급락 추세 속 1회성 기술적 반등",
+    "reason": "장기 최저 5% 하단 투매 · 낙폭 52.1% · 투매거래량 3.7배 · 4H 양봉 전환 · 투매저점 2% 회복",
+    "missing": [
+      "진입구간 통과 · 0.382 전량청산만 대기"
+    ],
+    "fib": {
+      "high": 219.0,
+      "low": 134.0,
+      "entry_limit_0.236": 154.1,
+      "full_exit_0.382": 166.0,
+      "high_at": "2026-08-22 09:00:00",
+      "low_at": "2026-09-04 09:00:00"
+    },
+    "metrics": {
+      "drawdown_pct": 52.14,
+      "fast_drop_pct": 38.81,
+      "capitulation_volume_ratio": 3.65,
+      "support_distance_pct": 5.97,
+      "rebound_progress_fib": 0.318
+    },
+    "exit_rule": "피보나치 0.382 전량청산 · 추세전환 기대 금지",
+    "invalidation": "투매저점 3% 하단 이탈 시 종료 · 물타기 금지"
+  },
+  {
+    "market": "KRW-PUMP",
+    "name": "펌프펀",
+    "type": "E",
+    "status": "E4 0.382 도달",
+    "action": "추격 금지",
+    "score": 6.8,
+    "price": 6.11,
+    "entry": [
+      5.19,
+      5.54
+    ],
+    "stop": 4.97,
+    "targets": [
+      5.89
+    ],
+    "rr": 1.33,
+    "flow": "급락 추세 속 1회성 기술적 반등",
+    "reason": "과거 하단 저점 2회 군집 · 낙폭 31.1% · 투매거래량 1.4배 · 4H 양봉 전환 · 4H 아래꼬리 · 투매저점 2% 회복",
+    "missing": [
+      "기술적 반등 종료 · 신규진입 금지"
+    ],
+    "fib": {
+      "high": 7.12,
+      "low": 5.13,
+      "entry_limit_0.236": 5.6,
+      "full_exit_0.382": 5.89,
+      "high_at": "2026-08-29 09:00:00",
+      "low_at": "2026-09-06 09:00:00"
+    },
+    "metrics": {
+      "drawdown_pct": 31.14,
+      "fast_drop_pct": 27.95,
+      "capitulation_volume_ratio": 1.36,
+      "support_distance_pct": 0.19,
+      "rebound_progress_fib": 0.492
     },
     "exit_rule": "피보나치 0.382 전량청산 · 추세전환 기대 금지",
     "invalidation": "투매저점 3% 하단 이탈 시 종료 · 물타기 금지"
