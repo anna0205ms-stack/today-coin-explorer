@@ -83,7 +83,7 @@ jobs:
         run: |
           git config user.name "BINANCE Scanner"
           git config user.email "binance-scanner@users.noreply.github.com"
-          git add outputs/binance outputs/index.html outputs/dashboard_v5.css outputs/dashboard_v5.js outputs/header_astronaut.b64 history/binance
+          git add -A outputs history/binance
           git diff --cached --quiet || git commit -m "binance scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
           git pull --rebase -X theirs origin main
           git push
