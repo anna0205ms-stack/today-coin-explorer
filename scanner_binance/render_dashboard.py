@@ -223,6 +223,14 @@ def render():
         pages[f"training_{key.lower()}.html"] = training_page
     pages["training.html"] = pages["training_a.html"]
 
+    # The shared templates embed the saved-plan data and load this Binance-local asset.
+    # Fail the scan before publishing if either half of the tracker is missing.
+    if not (OUT / "trade_tracker.js").is_file():
+        raise RuntimeError("BINANCE tracker script was not generated")
+    for name in ("index.html", "scan.html", "watchlist.html"):
+        if "window.OKO_TRACK_DATA=" not in pages[name] or 'src="trade_tracker.js' not in pages[name]:
+            raise RuntimeError(f"BINANCE tracker is incomplete in {name}")
+
     for name, content in pages.items():
         (OUT / name).write_text(content, encoding="utf-8")
     print("BINANCE pages now use UPBIT templates:", ", ".join(pages))
