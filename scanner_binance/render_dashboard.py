@@ -257,12 +257,12 @@ def render():
         "watchlist.html": binanceize(up.watchlist_page(watch, snapshot)),
         "history.html": binanceize(up.history_page(history)),
     }
-    for key in "ABCDE":
+    for key in ("A","B","C","D","E","F","G","P1","P2","P3","P4"):
         type_page = binanceize(up.type_page(key, snapshot))
-        training_page = binanceize(up.training_page(key, snapshot))
         pages[f"type_{key.lower()}.html"] = type_page
         pages[f"{key.lower()}.html"] = type_page
-        pages[f"training_{key.lower()}.html"] = training_page
+        if key in "ABCDEF":
+            pages[f"training_{key.lower()}.html"] = binanceize(up.training_page(key, snapshot))
     pages["training.html"] = pages["training_a.html"]
 
     # The shared templates embed the saved-plan data and load this Binance-local asset.
