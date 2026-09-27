@@ -50,7 +50,7 @@ LOG_DIR = OUTPUT_DIR / "logs"
 INTRADAY_DIR = OUTPUT_DIR / "intraday"
 G_TYPE_OUTPUT = OUTPUT_DIR / "four_hour_g.json"
 # G_TYPE_4H_BEGIN
-G_TYPE_TARGET_COUNT = int(os.getenv("UPBIT_G_TYPE_TARGET_COUNT", "20"))
+G_TYPE_TARGET_COUNT = int(os.getenv("UPBIT_G_TYPE_TARGET_COUNT", "30"))
 # G_TYPE_4H_END
 
 API_BASE = "https://api.upbit.com/v1"
@@ -314,117 +314,92 @@ def fetch_minute_candles(market: str, unit: int, count: int = 200) -> pd.DataFra
 
 
 # G_TYPE_4H_BEGIN
-def _g_density_lower_zone(frame: pd.DataFrame, recent_top: float) -> Optional[Tuple[float, float, float]]:
-    """4H 가격 분포에서 최근 상단 고점 아래의 가장 가까운 밀집 하단 매수존을 찾는다."""
-    hist = frame.tail(200).copy()
-    if len(hist) < 70 or recent_top <= 0:
-        return None
-    typical = ((hist["High"] + hist["Low"] + hist["Close"]) / 3.0).to_numpy(float)
-    weights = pd.to_numeric(hist["Amount"], errors="coerce").fillna(0.0).to_numpy(float)
-    if weights.sum() <= 0:
-        weights = pd.to_numeric(hist["Volume"], errors="coerce").fillna(1.0).to_numpy(float)
-    lo = max(float(np.nanpercentile(typical, 8)), recent_top * 0.45)
-    hi = min(float(np.nanpercentile(typical, 98)), recent_top * 0.995)
-    if hi <= lo:
-        return None
-    counts, edges = np.histogram(typical, bins=32, range=(lo, hi), weights=weights)
-    if counts.max() <= 0:
-        return None
-    dense = counts >= counts.max() * 0.46
-    groups: List[Tuple[int, int, float]] = []
-    i = 0
-    while i < len(dense):
-        if not dense[i]:
-            i += 1
-            continue
-        j = i
-        mass = 0.0
-        while j < len(dense) and dense[j]:
-            mass += float(counts[j])
-            j += 1
-        groups.append((i, j - 1, mass))
-        i = j
-    current = float(frame["Close"].iloc[-1])
-    choices = []
-    for a, b, mass in groups:
-        zone_low, zone_high = float(edges[a]), float(edges[b + 1])
-        if zone_low >= recent_top * 0.98:
-            continue
-        if zone_low <= current * 1.10:
-            distance = max(0.0, current - zone_high) / max(current, 1e-9)
-            choices.append((distance, -mass, zone_low, zone_high, mass))
-    if not choices:
-        return None
-    choices.sort()
-    _, _, zone_low, zone_high, mass = choices[0]
-    return zone_low, zone_high, mass / max(float(counts.sum()), 1e-9)
-
-
 def analyze_g_type_4h(row: pd.Series, frame: pd.DataFrame) -> Optional[dict]:
-    """G형: 위 박스를 꼬리/몸통으로 도전한 뒤 그 박스 하단에서 지지가 나오는 상승전환 관찰형."""
-    recent = frame.tail(80).copy()
-    if len(recent) < 40:
+    """G형: 최근 상승으로 위 가격대를 도전한 뒤 눌림에서 새 하단 지지가 생긴 차트.
+
+    G형은 정밀한 미래예측이 아니라 '상승 국면 전환 모양'을 넓게 리스트업하는 보조 유형이다.
+    핵심은 ① 최근 위 가격대 도전 ② 이전 베이스보다 높은 곳에서 눌림 지지 ③ 다시 반등/소화 중 여부다.
+    """
+    recent = frame.tail(120).copy()
+    if len(recent) < 60:
         return None
+
+    # 최근 약 7일(4H 42봉) 안의 가장 높은 도전 가격을 잡는다.
+    tail = recent.tail(42)
+    peak_rel = int(np.argmax(tail["High"].to_numpy(float)))
+    peak_i = len(recent) - len(tail) + peak_rel
+    peak = float(recent["High"].iloc[peak_i])
+    if peak <= 0 or peak_i >= len(recent) - 3:
+        return None
+
+    # 급등 전 가격대: 정교한 박스 분해 대신 직전 24봉의 중간 종가를 기준 베이스로 쓴다.
+    pre = recent.iloc[max(0, peak_i - 30):max(0, peak_i - 6)]
+    if len(pre) < 12:
+        return None
+    base = float(pre["Close"].median())
+    if base <= 0 or peak < base * 1.12:
+        return None
+
+    after = recent.iloc[peak_i + 1:].copy()
+    if len(after) < 3:
+        return None
+
+    # 상단 도전 뒤 형성된 눌림 구간 자체에서 하단 지지대를 계산한다.
+    lows = after["Low"].to_numpy(float)
+    closes = after["Close"].to_numpy(float)
+    support_low = float(np.nanpercentile(lows, 15))
+    support_high = float(np.nanpercentile(closes, 40))
+    support_high = max(support_high, support_low * 1.025)
+    support_high = min(support_high, peak * 0.90)
+    if support_high <= support_low:
+        return None
+
+    # 눌림이 과거 베이스까지 완전히 무너지면 '상위 박스 안착'으로 보지 않는다.
+    if support_low < base * 1.02:
+        return None
+
     close = float(recent["Close"].iloc[-1])
     live = float(row.get("CurrentPrice", close) or close)
-    highs = recent["High"].to_numpy(float)
-    top_i = int(np.argmax(highs))
-    top = float(highs[top_i])
-    if top_i > len(recent) - 3 or top <= 0:
+    if close < support_low * 0.97:
         return None
 
-    zone = _g_density_lower_zone(frame.iloc[:-1], top)
-    if not zone:
+    # 하단 지지 흔적: 하단권을 실제로 터치한 뒤 종가가 다시 위에 있거나,
+    # 최근 봉 중 아래꼬리/양봉 반응이 한 번이라도 있으면 충분하다.
+    touch_mask = after["Low"] <= support_high * 1.03
+    if not bool(touch_mask.any()):
         return None
-    buy_low, buy_high, density = zone
-    if buy_high <= buy_low or top <= buy_high:
-        return None
-
-    # 같은 상위 박스 안에서 상단을 한 번 실제로 탐색한 흔적.
-    if top < buy_high * 1.10:
-        return None
-
-    after_top = recent.iloc[top_i + 1 :].copy()
-    if after_top.empty:
-        return None
-
-    # 눌림 뒤에도 박스 하단을 완전히 잃지 않고 하단권으로 재접근한 모습.
-    min_close_after = float(after_top["Close"].min())
-    if min_close_after < buy_low * 0.985:
-        return None
-    if float(after_top["Low"].min()) > buy_high * 1.06:
+    touched = after[touch_mask].tail(8)
+    rebound = False
+    for _, candle in touched.iterrows():
+        op, hi, lo, cl = map(float, (candle["Open"], candle["High"], candle["Low"], candle["Close"]))
+        body = abs(cl - op)
+        lower_wick = min(op, cl) - lo
+        if cl >= op or lower_wick >= max(body * 0.45, (hi - lo) * 0.12):
+            rebound = True
+            break
+    if not rebound and close < support_high:
         return None
 
-    span = top - buy_low
-    position = (close - buy_low) / max(span, 1e-9) * 100.0
-    if position > 58:
-        return None
+    span = peak - support_low
+    position = (close - support_low) / max(span, 1e-9) * 100.0
+    room = max(0.0, (peak / close - 1.0) * 100.0)
 
-    latest = recent.iloc[-1]
-    previous = recent.iloc[-2]
-    lower_wick = min(float(latest["Open"]), float(latest["Close"])) - float(latest["Low"])
-    body = abs(float(latest["Close"]) - float(latest["Open"]))
-    support_reaction = float(latest["Close"]) >= float(previous["Close"]) or lower_wick > body * 0.55
-
-    if close < buy_low:
-        state = "하단 이탈주의"
-    elif close <= buy_high * 1.04 and support_reaction:
-        state = "하단 지지 확인"
-    elif close <= buy_high * 1.08:
-        state = "하단 소화중"
-    else:
+    if close <= support_high * 1.05:
+        state = "하단 지지 확인" if rebound else "하단 소화중"
+    elif close < peak * 0.90:
         state = "박스내 반등"
+    else:
+        state = "상단 재도전"
 
-    room = max(0.0, (top / close - 1.0) * 100.0)
-    score = (3.0 if state == "하단 지지 확인" else 2.0 if state == "하단 소화중" else 1.0)
-    score += 2.0 if room >= 20 else 1.0 if room >= 10 else 0.0
-    score += min(2.0, density * 8.0)
-    if float(row.get("Amount", 0) or 0) >= MIN_24H_TRADE_AMOUNT * 3:
-        score += 1.0
+    expansion = (peak / base - 1.0) * 100.0
+    score = 3.0
+    score += 2.0 if rebound else 1.0
+    score += 2.0 if room >= 15 else 1.0 if room >= 7 else 0.0
+    score += 1.0 if expansion >= 25 else 0.0
 
-    stop = rounded_price(buy_low * 0.985)
-    target1 = rounded_price(top * 0.94)
-    target2 = rounded_price(top)
+    stop = rounded_price(support_low * 0.975)
+    target1 = rounded_price(peak * 0.94)
+    target2 = rounded_price(peak)
     return {
         "market": str(row["Code"]),
         "name": str(row["Name"]),
@@ -433,15 +408,23 @@ def analyze_g_type_4h(row: pd.Series, frame: pd.DataFrame) -> Optional[dict]:
         "score": round(score, 1),
         "price": rounded_price(live),
         "analysis_close": rounded_price(close),
-        "entry": [rounded_price(buy_low), rounded_price(buy_high)],
+        "entry": [rounded_price(support_low), rounded_price(support_high)],
         "stop": stop,
         "targets": [target1, target2],
-        "box": {"low": rounded_price(buy_low), "high": rounded_price(top), "buy_zone": [rounded_price(buy_low), rounded_price(buy_high)]},
+        "box": {
+            "low": rounded_price(support_low),
+            "high": rounded_price(peak),
+            "buy_zone": [rounded_price(support_low), rounded_price(support_high)],
+        },
         "box_position_pct": round(position, 1),
         "room_to_top_pct": round(room, 1),
         "action": "확인 대기" if state in {"하단 지지 확인", "하단 소화중"} else "진입가 대기",
-        "reason": "위 매물대 도전 이력 · 상위 박스 하단 매수존 지지/소화",
-        "missing": ["하단 지지 유지 · 박스 내부 반등 확인"] if state != "박스내 반등" else ["박스 상단 매도존 접근 시 분할 대응"],
+        "reason": "위 매물대 도전 이력 · 눌림 뒤 상위 박스 하단 지지",
+        "missing": (
+            ["하단 지지 유지 · 박스 내부 반등 확인"]
+            if state in {"하단 지지 확인", "하단 소화중"}
+            else ["박스 상단 매도존 접근 시 분할 대응"]
+        ),
     }
 
 
@@ -457,7 +440,7 @@ def scan_g_type_4h(universe: pd.DataFrame) -> List[dict]:
             logging.debug("G형 4H 분석 실패 %s: %s", row["Code"], exc)
         if (idx + 1) % 30 == 0:
             logging.info("G형 4H 스캔: %d/%d · 후보 %d", idx + 1, len(universe), len(records))
-    order = {"하단 지지 확인": 0, "하단 소화중": 1, "박스내 반등": 2, "하단 이탈주의": 9}
+    order = {"하단 지지 확인": 0, "하단 소화중": 1, "박스내 반등": 2, "상단 재도전": 3}
     records.sort(key=lambda x: (order.get(x["status"], 5), -float(x["score"]), -float(x["room_to_top_pct"])))
     return records[:G_TYPE_TARGET_COUNT]
 # G_TYPE_4H_END
