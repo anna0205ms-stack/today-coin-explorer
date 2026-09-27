@@ -60,7 +60,9 @@ def patch_scan_inline():
     text = text.replace('</section><section id="scanSummary" class="scan-summary">', '</section><div class="search-bar"><input id="stockSearch" type="search" inputmode="search" placeholder="종목명 또는 종목코드 검색"><span id="searchCount"></span></div><section id="scanSummary" class="scan-summary">', 1)
     text = text.replace('<thead><tr><th>종목</th><th>유형</th><th>점수</th><th>흐름</th><th>한줄정리</th><th>관심</th></tr></thead>', '<thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>평균진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead>', 1)
     text = text.replace('KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 차트 상세</b>', 'KRX 일봉 스캐너 정상 · 분봉 미사용 · <b>종목을 누르면 아래에서 상세 펼침</b>')
-    text = re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260908-full-count-footer-1', text)
+    text = text.replace('<section id="scanSummary" class="scan-summary">', '<div id="pScopeControls" hidden><button class="tab" onclick="showAllPatternRows()">유형 전체 보기</button><span class="sub">P유형은 기존 A~G 후보의 완성 일봉 형태입니다. 기본 6개만 먼저 표시합니다.</span></div><section id="pExamples" class="panel" hidden></section><section id="scanSummary" class="scan-summary">', 1)
+    text = text.replace('</head>', '<style>.p-example-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.p-example-chart{height:190px;width:100%}#pScopeControls{margin:10px 0 14px}#pScopeControls[hidden],#pExamples[hidden]{display:none}@media(max-width:760px){.p-example-grid{grid-template-columns:1fr}}</style></head>', 1)
+    text = re.sub(r'scan_v6\.js(?:\?[^"\']*)?', 'scan_v6.js?v=20260928-p-types-1', text)
     p.write_text(text, encoding='utf-8')
 
 
@@ -77,13 +79,24 @@ def validate_chart_script():
 
 def make_type_list_pages():
     src = Path('outputs/ojutam/scan.html').read_text(encoding='utf-8')
-    names = {'A': '급등 후 첫 눌림', 'B': '바닥·박스 하단 반등', 'C': '박스 상단 돌파', 'D': '재탈환·압축', 'E': '급락 후 기술적 반등', 'F': '고점권·과거 매물대', 'G': '주봉 EMA50 첫 터치'}
+    names = {'A': '급등 후 첫 눌림', 'B': '바닥·박스 하단 반등', 'C': '박스 상단 돌파', 'D': '재탈환·압축', 'E': '급락 후 기술적 반등', 'F': '고점권·과거 매물대', 'G': '주봉 EMA50 첫 터치', 'P1': '좁은 박스', 'P2': '넓은 박스 반등', 'P3': '단기 상승', 'P4': '큰 폭 박스'}
     for k, name in names.items():
         text = src.replace('<body>', '<body data-ojutam-filter="' + k + '">', 1)
         text = text.replace('<title>전체 스캔 결과', '<title>' + k + '형 · ' + name, 1)
         text = text.replace('<h2>전체 스캔 결과</h2>', '<h2>' + k + '형 · ' + name + '</h2>', 1)
         text = text.replace('A~F 유형 필터 → 종목 클릭 → 일봉 차트와 핵심구간 확인', k + '형 후보를 리스트로 먼저 보고, 종목을 누르면 일봉 차트와 평균진입·손절·1차·2차 목표를 확인', 1)
         Path(f'outputs/ojutam/type_{k.lower()}.html').write_text(text, encoding='utf-8')
+
+
+def patch_pattern_nav():
+    root = Path('outputs/ojutam')
+    links = ''.join(f'<a href="type_p{i}.html">P{i}형</a>' for i in range(1,5))
+    for page in root.glob('*.html'):
+        text = page.read_text(encoding='utf-8')
+        marker = '<a href="type_g.html">G형</a>'
+        if marker in text and '<a href="type_p1.html">P1형</a>' not in text:
+            text = text.replace(marker, marker + links, 1)
+        page.write_text(text, encoding='utf-8')
 
 
 def patch_index_labels():
@@ -120,6 +133,7 @@ def generate(universe, buckets, date):
     patch_scan_inline()
     validate_chart_script()
     make_type_list_pages()
+    patch_pattern_nav()
     patch_index_labels()
     patch_all_pages_release_footer()
 
