@@ -132,7 +132,7 @@ jobs:
           git add history/snapshots.json history/global_market_snapshots.json history/watchlist.json history/btc_scenario_history.json outputs/
           if [ -f history/notification_state.json ]; then git add history/notification_state.json; fi
           git diff --cached --quiet || git commit -m "scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
-          git pull --rebase origin main
+          git pull --rebase -X theirs origin main
           git push
       - uses: actions/configure-pages@v5
         if: steps.guard.outputs.should_run == 'true'
@@ -150,5 +150,5 @@ jobs:
           python scanner/schedule_guard.py mark --slot "${{ steps.guard.outputs.slot }}"
           git add history/schedule_state.json
           git diff --cached --quiet || git commit -m "schedule: ${{ steps.guard.outputs.slot }} 완료"
-          git pull --rebase origin main
+          git pull --rebase -X theirs origin main
           git push
