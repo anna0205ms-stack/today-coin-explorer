@@ -353,12 +353,25 @@ def patterns_page(snapshot):
             day=(r.get("charts") or {}).get("day") or []
             badges=p_badges(pre_rally_tags(day))
             priority=int(ACTION_RANK.get(r.get("action"),9)<=4)
-            cards.append(f'<article class="panel p-card" data-lane="{tag}" data-priority="{priority}" style="margin:12px 0;padding:16px"><div class="toolbar"><strong>{html.escape(str(r.get("market") or ""))} · {html.escape(str(r.get("type") or ""))}형</strong><span>{badges}</span></div><p>{html.escape(str(r.get("action") or "판단 대기"))} · 점수 {fmt(r.get("score"))} · 현재가 {fmt(r.get("price"))}</p><div class="chart-title">완성 일봉 · 최근 48봉</div><div class="chart">{chart_svg(day,600,190)}</div><p class="help-note">진입 {fmt(r.get("entry"))} · 구조 손절 {fmt(r.get("stop"))} · 남은 조건 {html.escape(str((r.get("trade_plan") or {}).get("remain") or remaining_condition(r)))}</p></article>')
+            levels=[]
+            if len(day)>=20:
+                levels=[(max(float(x[2]) for x in day[-21:-1]) if len(day)>=21 else max(float(x[2]) for x in day[-20:]),"#ffc86a","직전 20봉 고점"),(min(float(x[3]) for x in day[-7:]),"#6ab7ff","최근 7봉 저점")]
+            cards.append(f'<article class="panel p-card" data-lane="{tag}" data-priority="{priority}" style="margin:12px 0;padding:16px"><div class="toolbar"><strong>{html.escape(str(r.get("market") or ""))} · {html.escape(str(r.get("type") or ""))}형</strong><span>{badges}</span></div><p>{html.escape(str(r.get("action") or "판단 대기"))} · 점수 {fmt(r.get("score"))} · 현재가 {fmt(r.get("price"))}</p><div class="chart-title">완성 일봉 · 최근 48봉 · 20봉 고점 / 7봉 저점</div><div class="chart">{chart_svg(day,600,190,levels)}</div><p class="help-note">진입 {fmt(r.get("entry"))} · 구조 손절 {fmt(r.get("stop"))} · 남은 조건 {html.escape(str((r.get("trade_plan") or {}).get("remain") or remaining_condition(r)))}</p></article>')
+    examples=read(ROOT / "scanner" / "pattern_examples.json",{})
+    comparisons=[]
+    for tag, pair in examples.items():
+        blocks=[]
+        for item in pair:
+            role=html.escape(str(item.get("outcome") or ""))
+            pre=item.get("pre") or []
+            move=float(item.get("nextday_pct") or 0)
+            blocks.append(f'<div class="panel" style="padding:12px"><strong>{role} · {html.escape(str(item.get("market") or ""))}</strong><br><small>{html.escape(str(item.get("date") or ""))} 신호 전까지 · 다음 일봉 종가 {move:+.1f}%</small><div class="chart">{chart_svg(pre,600,180)}</div></div>')
+        comparisons.append(f'<section class="p-comparison" data-lane="{tag}"><h3>{tag} 성공·실패 비교</h3><p class="help-note">각 봉 차트는 결과가 나온 다음 일봉을 가렸습니다. 성공·실패는 다음 일봉 종가 변화로 나중에 구분한 사례입니다.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px">{"".join(blocks)}</div></section>')
     intro=page_intro("P1~P4 급등 전 형태","A~G 후보를 일봉 형태에 따라 모아 보는 별도 화면","① P유형 선택 → ② 봉 차트와 현재 위치 확인 → ③ 조건이 맞는 후보만 기존 A~G 계획 확인")
     note='<p class="help-note">기존 A~G 스캐너가 찾은 종목만 포함합니다. 같은 코인이 두 P유형에 들어갈 수 있고, P0 및 20봉 미만은 목록 밖입니다. P태그는 매수 신호가 아닙니다.</p>'
-    controls=f'<section class="panel"><div class="filters" id="pLanes">{tabs}</div><div class="filters" id="pScope"><button class="filter active" onclick="setPScope(true,this)">관찰 우선</button><button class="filter" onclick="setPScope(false,this)">유형 전체</button></div><span id="pCount"></span>{note}</section>'
-    script='''<script>let pLane="P1",pPriority=true;function applyP(){let visible=0;document.querySelectorAll(".p-card").forEach(x=>{const on=x.dataset.lane===pLane&&(!pPriority||x.dataset.priority==="1");x.style.display=on?"":"none";if(on)visible++});document.getElementById("pCount").textContent=visible+"개 표시"}function selectPLane(k,b){pLane=k;document.querySelectorAll("#pLanes .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}function setPScope(v,b){pPriority=v;document.querySelectorAll("#pScope .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}document.addEventListener("DOMContentLoaded",()=>document.querySelector("#pLanes .filter").click())</script>'''
-    return shell("P1~P4 급등 전 형태",intro+controls+''.join(cards)+script,snapshot,"patterns")
+    controls=f'<section class="panel"><div class="filters" id="pLanes">{tabs}</div><div class="filters" id="pScope"><button class="filter active" onclick="setPScope(true,this)">관찰 우선 · 최대 6개</button><button class="filter" onclick="setPScope(false,this)">유형 전체</button></div><span id="pCount"></span>{note}</section>'
+    script='''<script>let pLane="P1",pPriority=true;function applyP(){let visible=0,total=0;document.querySelectorAll(".p-card").forEach(x=>{const match=x.dataset.lane===pLane;const on=match&&(!pPriority||(x.dataset.priority==="1"&&visible<6));x.style.display=on?"":"none";if(match)total++;if(on)visible++});document.querySelectorAll(".p-comparison").forEach(x=>x.style.display=x.dataset.lane===pLane?"":"none");document.getElementById("pCount").textContent=visible+"개 표시 / "+total+"개 전체"}function selectPLane(k,b){pLane=k;document.querySelectorAll("#pLanes .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}function setPScope(v,b){pPriority=v;document.querySelectorAll("#pScope .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}document.addEventListener("DOMContentLoaded",()=>document.querySelector("#pLanes .filter").click())</script>'''
+    return shell("P1~P4 급등 전 형태",intro+controls+''.join(comparisons)+''.join(cards)+script,snapshot,"patterns")
 
 
 def main_page(snapshot, btc):
