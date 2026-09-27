@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""BTC 구조와 글로벌 자금 흐름을 합쳐 M0~M5 시장 단계와 A~E 게이트를 만든다."""
+"""BTC 구조와 글로벌 자금 흐름을 합쳐 M0~M5 시장 단계와 A~G 게이트를 만든다."""
 from __future__ import annotations
 
 import json
@@ -29,6 +29,14 @@ GATE_RULES = {
     "M4": {"A": ("ALLOW", "첫 눌림 지지가 확인되면 진입"), "B": ("CONDITIONAL", "못 오른 후발주가 아닌지 재확인"), "C": ("ALLOW", "상단 재지지 때 추격 없이 진입"), "D": ("ALLOW", "D2~D3 확인 후보를 우선"), "E": ("WATCH", "상승장에서는 정상 추세형을 우선")},
     "M5": {"A": ("PROTECT", "신규매수보다 보유 물량 수익 보호"), "B": ("BLOCK", "못 오른 종목을 후발주로 착각하지 않기"), "C": ("PROTECT", "재지지 실패 시 빠르게 정리"), "D": ("BLOCK", "급등 전 후보가 아니라 분배 구간일 수 있음"), "E": ("CONDITIONAL", "개별 급락의 0.382 반등만 짧게")},
 }
+
+# G형은 '큰 상승 예측'이 아니라 상위 박스 하단 지지로 상승전환을 관찰하는 유형이다.
+GATE_RULES["M0"]["G"] = ("BLOCK", "시장 하락에서는 상위 박스 하단 지지도 쉽게 무너질 수 있음")
+GATE_RULES["M1"]["G"] = ("WATCH", "BTC만 강한 구간이라 하단 지지 확인 종목만 관찰")
+GATE_RULES["M2"]["G"] = ("CONDITIONAL", "상위 박스 하단 지지 확인 후 짧은 박스 매매")
+GATE_RULES["M3"]["G"] = ("ALLOW", "알트 순환 시작에서 상위 박스 하단 지지형을 우선 관찰")
+GATE_RULES["M4"]["G"] = ("ALLOW", "알트 확산에서 박스 하단 지지 후 상단 재도전 대응")
+GATE_RULES["M5"]["G"] = ("PROTECT", "과열 구간에서는 박스 상단 접근 시 수익 보호 우선")
 
 GATE_LABELS = {"ALLOW": "진입 허용", "CONDITIONAL": "조건부", "WATCH": "관찰만", "BLOCK": "신규 금지", "PROTECT": "익절 우선"}
 
