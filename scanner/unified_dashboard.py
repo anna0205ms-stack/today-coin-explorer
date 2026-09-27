@@ -144,8 +144,8 @@ def nav(active="dashboard"):
              ("내 매매 추적 목록", "watchlist.html", "watch"), ("성과 검증", "validation.html", "validation"),
              ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
-    scan_active = active == "today" or active.startswith("type_")
-    scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in "ABCDEFG")}</div></details>'''
+    scan_active = active == "today" or active.startswith("type_") or active == "patterns"
+    scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a><a class="{"active" if active == "patterns" else ""}" href="patterns.html" onclick="this.closest('details').removeAttribute('open')">P1~P4 · 급등 전 형태</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in "ABCDEFG")}</div></details>'''
     training_active = active.startswith("training_")
     training_menu = f'''<details class="nav-drop" {"open" if training_active else ""}><summary class="{"active" if training_active else ""}">훈련소 <span>▾</span></summary><div class="nav-drop-menu">{''.join(f'<a class="{"active" if active == f"training_{key.lower()}" else ""}" href="training_{key.lower()}.html{"?v=" + TRAINING_A_REV if key == "A" else ""}">{key}형</a>' for key in "ABCDEF")}</div></details>'''
     first = f'<a class="{"active" if active == "dashboard" else ""}" href="index.html">메인 대시보드</a>'
@@ -334,6 +334,31 @@ def pre_rally_tags(candles):
 
 def p_badges(tags):
     return " ".join('<span class="badge">' + html.escape(tag) + '</span>' for tag in tags)
+
+
+def patterns_page(snapshot):
+    """Dedicated P morphology radar over the existing A–G candidate universe."""
+    names={"P1":"좁은 박스","P2":"넓은 박스 반등","P3":"단기 상승","P4":"큰 폭 박스"}
+    lanes={key:[] for key in names}
+    for row in sum(grouped(snapshot).values(),[]):
+        tags=pre_rally_tags((row.get("charts") or {}).get("day") or [])
+        for tag in tags:
+            if tag in lanes:
+                lanes[tag].append(row)
+    tabs=''.join(f'<button class="filter" data-lane="{key}" onclick="selectPLane(\'{key}\',this)">{key} · {names[key]} ({len(lanes[key])})</button>' for key in lanes)
+    cards=[]
+    for tag, rows in lanes.items():
+        rows.sort(key=lambda r:(ACTION_RANK.get(r.get("action"),9),-float(r.get("score") or 0)))
+        for i,r in enumerate(rows):
+            day=(r.get("charts") or {}).get("day") or []
+            badges=p_badges(pre_rally_tags(day))
+            priority=int(ACTION_RANK.get(r.get("action"),9)<=4)
+            cards.append(f'<article class="panel p-card" data-lane="{tag}" data-priority="{priority}" style="margin:12px 0;padding:16px"><div class="toolbar"><strong>{html.escape(str(r.get("market") or ""))} · {html.escape(str(r.get("type") or ""))}형</strong><span>{badges}</span></div><p>{html.escape(str(r.get("action") or "판단 대기"))} · 점수 {fmt(r.get("score"))} · 현재가 {fmt(r.get("price"))}</p><div class="chart-title">완성 일봉 · 최근 48봉</div><div class="chart">{chart_svg(day,600,190)}</div><p class="help-note">진입 {fmt(r.get("entry"))} · 구조 손절 {fmt(r.get("stop"))} · 남은 조건 {html.escape(str((r.get("trade_plan") or {}).get("remain") or remaining_condition(r)))}</p></article>')
+    intro=page_intro("P1~P4 급등 전 형태","A~G 후보를 일봉 형태에 따라 모아 보는 별도 화면","① P유형 선택 → ② 봉 차트와 현재 위치 확인 → ③ 조건이 맞는 후보만 기존 A~G 계획 확인")
+    note='<p class="help-note">기존 A~G 스캐너가 찾은 종목만 포함합니다. 같은 코인이 두 P유형에 들어갈 수 있고, P0 및 20봉 미만은 목록 밖입니다. P태그는 매수 신호가 아닙니다.</p>'
+    controls=f'<section class="panel"><div class="filters" id="pLanes">{tabs}</div><div class="filters" id="pScope"><button class="filter active" onclick="setPScope(true,this)">관찰 우선</button><button class="filter" onclick="setPScope(false,this)">유형 전체</button></div><span id="pCount"></span>{note}</section>'
+    script='''<script>let pLane="P1",pPriority=true;function applyP(){let visible=0;document.querySelectorAll(".p-card").forEach(x=>{const on=x.dataset.lane===pLane&&(!pPriority||x.dataset.priority==="1");x.style.display=on?"":"none";if(on)visible++});document.getElementById("pCount").textContent=visible+"개 표시"}function selectPLane(k,b){pLane=k;document.querySelectorAll("#pLanes .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}function setPScope(v,b){pPriority=v;document.querySelectorAll("#pScope .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}document.addEventListener("DOMContentLoaded",()=>document.querySelector("#pLanes .filter").click())</script>'''
+    return shell("P1~P4 급등 전 형태",intro+controls+''.join(cards)+script,snapshot,"patterns")
 
 
 def main_page(snapshot, btc):
@@ -727,6 +752,7 @@ def generate():
     write_tracker_asset(OUT)
     (OUT / "index.html").write_text(dashboard_page(latest,watch,btc,market_data,regime), encoding="utf-8")
     (OUT / "scan.html").write_text(main_page(latest,btc), encoding="utf-8")
+    (OUT / "patterns.html").write_text(patterns_page(latest), encoding="utf-8")
     for key in "ABCDEFG":
         (OUT / f"type_{key.lower()}.html").write_text(type_page(key, latest), encoding="utf-8")
     for key in "ABCDEF":
