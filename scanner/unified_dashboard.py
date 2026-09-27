@@ -28,6 +28,10 @@ INFO = {
     "E": ("E형", "#ffb454", "급락 후 0.382 기술적 반등", "급락·투매 → 핵심 하단 도달 → 4H 저점 방어 → 피보나치 0.382 반등", "투매저점 방어 + 4H 양봉·아래꼬리·저점 2% 회복", "투매저점 3% 하단 이탈 · 물타기 금지", "피보나치 0.382에서 전량청산 · 상승 전환 기대 금지"),
     "F": ("F형", "#56d6ff", "신고가 상승과 글로벌 과거 매물대", "업비트 신고가 상승 → 글로벌 과거 횡보 매물대 도착 → 매물 소화·돌파", "매물대 하단 지지 또는 상단 돌파·재지지 확인", "확인한 지지선 또는 돌파 기준선 종가 이탈", "매물대 내부 분할대응 → 상단 돌파 시 잔량 추세 추종"),
     "G": ("G형", "#d6ff67", "상위 박스 하단 지지", "아래 박스 반등 → 상위 박스 상단 도전 → 눌림 → 상위 박스 하단 지지 → 박스 내부 반등", "상위 박스 하단 매수존 지지 확인", "상위 박스 하단을 4H 몸통으로 잃고 재진입 실패", "같은 박스 상단 매도존에서 분할 대응"),
+    "P1": ("P1형", "#88dfb0", "좁은 박스", "완성 일봉 20개의 고저폭 25% 이하", "기존 A~G형의 진입 조건을 별도 확인", "기존 A~G형의 구조 손절을 확인", "기존 A~G형의 목표를 확인"),
+    "P2": ("P2형", "#70c2ff", "넓은 박스 반등", "20봉 고저폭 25% 초과 · 최근 7봉 저점 대비 종가 8% 이상 반등", "저항선 재탈환은 별도 확인", "기존 A~G형의 구조 손절을 확인", "기존 A~G형의 목표를 확인"),
+    "P3": ("P3형", "#ffb454", "단기 상승", "최근 7봉 종가 대비 20% 이상 상승", "추격 전에 기존 A~G형의 진입 조건 확인", "기존 A~G형의 구조 손절을 확인", "기존 A~G형의 목표를 확인"),
+    "P4": ("P4형", "#c3a7ff", "큰 폭 박스", "20봉 고저폭 50% 초과 · 최근 7봉 상승 20% 미만", "변동 폭이 크므로 지지 여부 확인", "기존 A~G형의 구조 손절을 확인", "기존 A~G형의 목표를 확인"),
 }
 ACTION_RANK={"진입 검토":0,"조건부 진입":1,"확인 대기":2,"재탈환 확인":3,"눌림 대기":4,"시장 대기":5,"진입가 대기":6,"목표 접근·익절 우선":7,"익절 우선":7,"추격 금지":8,"구조 무효":9,"계획값 확인":10}
 D_STAGE_ORDER={"D4":0,"D3":1,"D2":2,"D1":3,"D0":4,"D-W":5,"D-F":6}
@@ -145,7 +149,7 @@ def nav(active="dashboard"):
              ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
     scan_active = active == "today" or active.startswith("type_") or active == "patterns"
-    scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a><a class="{"active" if active == "patterns" else ""}" href="patterns.html" onclick="this.closest('details').removeAttribute('open')">P1~P4 · 급등 전 형태</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in "ABCDEFG")}</div></details>'''
+    scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in ("A","B","C","D","E","F","G","P1","P2","P3","P4"))}</div></details>'''
     training_active = active.startswith("training_")
     training_menu = f'''<details class="nav-drop" {"open" if training_active else ""}><summary class="{"active" if training_active else ""}">훈련소 <span>▾</span></summary><div class="nav-drop-menu">{''.join(f'<a class="{"active" if active == f"training_{key.lower()}" else ""}" href="training_{key.lower()}.html{"?v=" + TRAINING_A_REV if key == "A" else ""}">{key}형</a>' for key in "ABCDEF")}</div></details>'''
     first = f'<a class="{"active" if active == "dashboard" else ""}" href="index.html">메인 대시보드</a>'
@@ -379,6 +383,10 @@ def main_page(snapshot, btc):
     regime=snapshot.get("market_regime") or read(MARKET,{})
     updated=str(snapshot.get("snapshot_at") or "-").replace("T"," ")[:16]
     cards="".join(f'<a class="type-tab" href="type_{k.lower()}.html" style="--c:{INFO[k][1]}"><strong>{k}형 · {len(groups[k])}</strong><div>{INFO[k][2]}</div><div class="update-stamp">최근 갱신 · {updated} KST</div></a>' for k in "ABCDEFG")
+    all_rows=sum(groups.values(),[])
+    for k in ("P1","P2","P3","P4"):
+        count=sum(k in pre_rally_tags((row.get("charts") or {}).get("day") or []) for row in all_rows)
+        cards+=f'<a class="type-tab" href="type_{k.lower()}.html" style="--c:{INFO[k][1]}"><strong>{k}형 · {count}</strong><div>{INFO[k][2]}</div><div class="update-stamp">최근 갱신 · {updated} KST</div></a>'
     rows=sum(groups.values(),[]);rows.sort(key=lambda r:(ACTION_RANK.get(r.get("action"),9),-float(r.get("score") or 0),-float(r.get("rr") or 0)))
     trs=[]
     for i,r in enumerate(rows):
@@ -456,9 +464,10 @@ def dashboard_page(snapshot, watch, btc, market_data, regime):
 
 def type_page(key, snapshot):
     name, color, title, flow, entry, stop, take = INFO[key]
-    rows = [pattern_row(row) for row in grouped(snapshot)[key]]
+    base_rows = sum(grouped(snapshot).values(),[]) if key.startswith("P") else grouped(snapshot)[key]
+    rows = [pattern_row(row) for row in base_rows if not key.startswith("P") or key in pre_rally_tags((row.get("charts") or {}).get("day") or [])]
     rows.sort(key=lambda row: (ACTION_RANK.get(row.get("action"), 9), -float(row.get("score") or 0)))
-    purpose={"A":"강한 상승 뒤 첫 눌림에서 지지를 확인하고 반등 후보를 찾는 곳","B":"긴 하락 뒤 바닥·박스 하단에서 상승 전환 후보를 찾는 곳","C":"박스 상단 돌파 뒤 재지지하는 추가 상승 후보를 찾는 곳","D":"바닥 압축과 매물대 재탈환으로 급등 전 후보를 찾는 곳","E":"급락한 코인이 핵심 하단에서 멈춘 뒤 나오는 1회성 기술적 반등만 0.382까지 노리는 곳","F":"업비트 신고가 상승이 글로벌 과거 횡보 매물대에 도착하거나 돌파하는 후보를 찾는 곳","G":"상위 박스를 한 번 도전한 뒤 눌림에서 그 박스 하단 지지가 나오는 상승전환 후보를 찾는 곳"}[key]
+    purpose={"A":"강한 상승 뒤 첫 눌림에서 지지를 확인하고 반등 후보를 찾는 곳","B":"긴 하락 뒤 바닥·박스 하단에서 상승 전환 후보를 찾는 곳","C":"박스 상단 돌파 뒤 재지지하는 추가 상승 후보를 찾는 곳","D":"바닥 압축과 매물대 재탈환으로 급등 전 후보를 찾는 곳","E":"급락한 코인이 핵심 하단에서 멈춘 뒤 나오는 1회성 기술적 반등만 0.382까지 노리는 곳","F":"업비트 신고가 상승이 글로벌 과거 횡보 매물대에 도착하거나 돌파하는 후보를 찾는 곳","G":"상위 박스를 한 번 도전한 뒤 눌림에서 그 박스 하단 지지가 나오는 상승전환 후보를 찾는 곳","P1":"좁은 박스 형태를 비교하는 곳 · 기존 A~G 스캐너 후보에 한정","P2":"넓은 박스에서 반등하는 형태를 비교하는 곳 · 매물대 재탈환은 별도 확인","P3":"단기 상승 흐름을 비교하는 곳 · 추격 전 눌림과 지지 확인","P4":"큰 폭 박스의 형태를 비교하는 곳 · 방향성과 지지 여부 확인"}[key]
     intro=page_intro(f"{name} 후보",purpose,"① 원칙 확인 → ② 단계별 후보 비교 → ③ 필요한 종목만 펼쳐보기 → ④ 자세한 건 업비트에서 확인")
     cat=asset_uri("cat_entry.webp")
     guide=f'<section class="panel hero-guide" style="--accent:{color}"><div><h2 style="color:{color}">{title}</h2><div class="flow" style="border-color:{color}">{flow}</div><div class="rules" style="margin-top:12px"><div class="rule"><b style="color:{color}">진입</b>{entry}</div><div class="rule"><b style="color:{color}">손절</b>{stop}</div><div class="rule"><b style="color:{color}">분할익절</b>{take}</div></div></div><div class="type-cat-wrap"><img src="{cat}" alt="{name} 안내 고양이"><span class="type-token">{key}</span></div></section>'
@@ -466,16 +475,23 @@ def type_page(key, snapshot):
     for i,r in enumerate(rows):
         targets=r.get("targets") or []; plan=r.get("trade_plan") or {}; charts=r.get("charts") or {}; tags=pre_rally_tags(charts.get("day") or []); levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
         missing=remaining_condition(r)
+        if key.startswith("P") and len(charts.get("day") or []) >= 20:
+            day=charts["day"]; levels=[(max(float(x[2]) for x in day[-21:-1]) if len(day)>=21 else max(float(x[2]) for x in day[-20:]),"#ffc86a","직전 20봉 고점"),(min(float(x[3]) for x in day[-7:]),"#6ab7ff","최근 7봉 저점")]
         f2_position = f' · 매물대 {fmt(r.get("f2_zone_position"))} ({fmt(r.get("f2_zone_position_pct"))}%)' if key == "F" and r.get("f_stage") == "F2" else ""
         stage_line = f'<br><b>D형 생애주기</b> · {fmt(r.get("d_stage"))} {fmt(r.get("d_stage_label"))}<br><b>단계 근거</b> · {fmt(r.get("d_stage_reason"))}' if key == "D" else f'<br><b>차트 진행상태</b> · {fmt(r.get("f_stage"))} {fmt(r.get("f_stage_label"))}{f2_position}<br><b>글로벌 매물대</b> · {fmt((r.get("global_zone") or {}).get("lower"))} ~ {fmt((r.get("global_zone") or {}).get("upper"))} USDT' if key == "F" else f'<br><b>G형 특성</b> · 위 매물대 도전 후 상위 박스 하단 지지 확인<br><b>상위 박스</b> · {fmt((r.get("g_box") or {}).get("low"))} ~ {fmt((r.get("g_box") or {}).get("high"))}<br><b>상단까지 여유</b> · {fmt(r.get("g_room_to_top_pct"))}%' if key == "G" else ""
         detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>현재 행동</b> · {fmt(r.get("action"))}<br><b>판단 이유</b> · {fmt(plan.get("reason"))}{stage_line}<br><b>남은 조건</b> · {fmt(plan.get("remain") or missing)}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">평균 진입 {fmt(plan.get("average_entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">1차 {fmt(plan.get("target1"))}</span><span class="target-chip">2차 {fmt(plan.get("target2"))}</span><span class="target-chip">확장 {fmt(plan.get("extension"))}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
         f_badge_position = f' · {fmt(r.get("f2_zone_position"))}' if r.get("f_stage") == "F2" and r.get("f2_zone_position") else ""
         stage_badge = f'<span class="badge">{fmt(r.get("d_stage"))} · {fmt(r.get("d_stage_label"))}</span><br>' if key == "D" else f'<span class="badge">{fmt(r.get("f_stage"))} · {fmt(r.get("f_stage_label"))}{f_badge_position}</span><br>' if key == "F" else ""
-        trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{p_badges(tags)}<br>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}<br><small class="sub">2차 {fmt(plan.get("target2"))} · 확장 {fmt(plan.get("extension"))}</small></td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
+        if key.startswith("P"): stage_badge=f'<span class="badge">기존 {fmt(r.get("type"))}형</span> '
+        trs.append(f'<tr class="row-click {"p-extra" if key.startswith("P") and i>=6 else ""}" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{p_badges(tags)}<br>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}<br><small class="sub">2차 {fmt(plan.get("target2"))} · 확장 {fmt(plan.get("extension"))}</small></td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
     filter_values = ["전체","D0","D1","D2","D3","D4","D-W","D-F"] if key == "D" else ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"]
     buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in filter_values)
+    if key.startswith("P"):
+        buttons+="<button class=\"filter\" onclick=\"document.querySelectorAll('tr.p-extra').forEach(x=>x.classList.remove('p-extra'));this.classList.add('active')\">유형 전체</button>"
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div>{pattern_action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'
     script='''<script>function toggleRow(i){document.getElementById("detail"+i).classList.toggle("open")}function expandAll(open){document.querySelectorAll(".expand").forEach(x=>x.classList.toggle("open",open))}function filterAction(a,b){document.querySelectorAll("#actionFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll("tr.row-click").forEach(r=>{const stageMatch=r.dataset.stage===a;const show=a==="전체"||stageMatch||r.textContent.includes(a);r.style.display=show?"":"none";const d=r.nextElementSibling;if(!show)d.classList.remove("open")})}</script>'''
+    if key.startswith("P"):
+        table='<style>tr.p-extra{display:none}</style>'+table
     return shell(name,intro+guide+table+script,snapshot,f"type_{key.lower()}")
 
 
@@ -766,7 +782,7 @@ def generate():
     (OUT / "index.html").write_text(dashboard_page(latest,watch,btc,market_data,regime), encoding="utf-8")
     (OUT / "scan.html").write_text(main_page(latest,btc), encoding="utf-8")
     (OUT / "patterns.html").write_text(patterns_page(latest), encoding="utf-8")
-    for key in "ABCDEFG":
+    for key in ("A","B","C","D","E","F","G","P1","P2","P3","P4"):
         (OUT / f"type_{key.lower()}.html").write_text(type_page(key, latest), encoding="utf-8")
     for key in "ABCDEF":
         (OUT / f"training_{key.lower()}.html").write_text(training_page(key, latest), encoding="utf-8")
