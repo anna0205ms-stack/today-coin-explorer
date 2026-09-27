@@ -144,8 +144,8 @@ def nav(active="dashboard"):
              ("내 매매 추적 목록", "watchlist.html", "watch"), ("성과 검증", "validation.html", "validation"),
              ("날짜별 기록", "history.html", "history")]
     cat = asset_uri("cat_entry.webp")
-    scan_active = active == "today" or active.startswith("type_")
-    scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in "ABCDEFG")}</div></details>'''
+    scan_active = active == "today" or active.startswith("type_") or active == "patterns"
+    scan_menu = f'''<details class="nav-drop"><summary class="{"active" if scan_active else ""}" onclick="event.preventDefault();this.parentElement.toggleAttribute('open')">오늘의 전체 스캔 <span>▾</span></summary><div class="nav-drop-menu"><a class="{"active" if active == "today" else ""}" href="scan.html" onclick="this.closest('details').removeAttribute('open')">전체 보기</a><a class="{"active" if active == "patterns" else ""}" href="patterns.html" onclick="this.closest('details').removeAttribute('open')">P1~P4 · 급등 전 형태</a>{''.join(f'<a class="{"active" if active == f"type_{key.lower()}" else ""}" href="type_{key.lower()}.html" onclick="this.closest(\'details\').removeAttribute(\'open\')">{key}형</a>' for key in "ABCDEFG")}</div></details>'''
     training_active = active.startswith("training_")
     training_menu = f'''<details class="nav-drop" {"open" if training_active else ""}><summary class="{"active" if training_active else ""}">훈련소 <span>▾</span></summary><div class="nav-drop-menu">{''.join(f'<a class="{"active" if active == f"training_{key.lower()}" else ""}" href="training_{key.lower()}.html{"?v=" + TRAINING_A_REV if key == "A" else ""}">{key}형</a>' for key in "ABCDEF")}</div></details>'''
     first = f'<a class="{"active" if active == "dashboard" else ""}" href="index.html">메인 대시보드</a>'
@@ -311,6 +311,69 @@ def dist_text(row):
     return f'{abs(value):.1f}% {"위" if value>0 else "아래"}'
 
 
+def pre_rally_tags(candles):
+    """Morphology of 20 completed daily candles; no predictive claim."""
+    try:
+        c = candles[-20:]
+        if len(c) < 20 or any(float(x[3]) <= 0 for x in c):
+            return ["자료 부족"]
+        hi = max(float(x[2]) for x in c)
+        lo = min(float(x[3]) for x in c)
+        width = (hi / lo - 1) * 100
+        close = float(c[-1][4])
+        gain = (close / float(c[-8][4]) - 1) * 100
+        tags = []
+        if width <= 25: tags.append("P1")
+        if width > 25 and gain < 20 and close / min(float(x[3]) for x in c[-7:]) >= 1.08: tags.append("P2")
+        if gain >= 20: tags.append("P3")
+        if width > 50 and gain < 20: tags.append("P4")
+        return tags or ["P0"]
+    except (ValueError, TypeError, IndexError, ZeroDivisionError):
+        return ["자료 부족"]
+
+
+def p_badges(tags):
+    return " ".join('<span class="badge">' + html.escape(tag) + '</span>' for tag in tags)
+
+
+def patterns_page(snapshot):
+    """Dedicated P morphology radar over the existing A–G candidate universe."""
+    names={"P1":"좁은 박스","P2":"넓은 박스 반등","P3":"단기 상승","P4":"큰 폭 박스"}
+    lanes={key:[] for key in names}
+    for row in sum(grouped(snapshot).values(),[]):
+        tags=pre_rally_tags((row.get("charts") or {}).get("day") or [])
+        for tag in tags:
+            if tag in lanes:
+                lanes[tag].append(row)
+    tabs=''.join(f'<button class="filter" data-lane="{key}" onclick="selectPLane(\'{key}\',this)">{key} · {names[key]} ({len(lanes[key])})</button>' for key in lanes)
+    cards=[]
+    for tag, rows in lanes.items():
+        rows.sort(key=lambda r:(ACTION_RANK.get(r.get("action"),9),-float(r.get("score") or 0)))
+        for i,r in enumerate(rows):
+            day=(r.get("charts") or {}).get("day") or []
+            badges=p_badges(pre_rally_tags(day))
+            priority=int(ACTION_RANK.get(r.get("action"),9)<=4)
+            levels=[]
+            if len(day)>=20:
+                levels=[(max(float(x[2]) for x in day[-21:-1]) if len(day)>=21 else max(float(x[2]) for x in day[-20:]),"#ffc86a","직전 20봉 고점"),(min(float(x[3]) for x in day[-7:]),"#6ab7ff","최근 7봉 저점")]
+            cards.append(f'<article class="panel p-card" data-lane="{tag}" data-priority="{priority}" style="margin:12px 0;padding:16px"><div class="toolbar"><strong>{html.escape(str(r.get("market") or ""))} · {html.escape(str(r.get("type") or ""))}형</strong><span>{badges}</span></div><p>{html.escape(str(r.get("action") or "판단 대기"))} · 점수 {fmt(r.get("score"))} · 현재가 {fmt(r.get("price"))}</p><div class="chart-title">완성 일봉 · 최근 48봉 · 20봉 고점 / 7봉 저점</div><div class="chart">{chart_svg(day,600,190,levels)}</div><p class="help-note">진입 {fmt(r.get("entry"))} · 구조 손절 {fmt(r.get("stop"))} · 남은 조건 {html.escape(str((r.get("trade_plan") or {}).get("remain") or remaining_condition(r)))}</p></article>')
+    examples=read(ROOT / "scanner" / "pattern_examples.json",{})
+    comparisons=[]
+    for tag, pair in examples.items():
+        blocks=[]
+        for item in pair:
+            role=html.escape(str(item.get("outcome") or ""))
+            pre=item.get("pre") or []
+            move=float(item.get("nextday_pct") or 0)
+            blocks.append(f'<div class="panel" style="padding:12px"><strong>{role} · {html.escape(str(item.get("market") or ""))}</strong><br><small>{html.escape(str(item.get("date") or ""))} 신호 전까지 · 다음 일봉 종가 {move:+.1f}%</small><div class="chart">{chart_svg(pre,600,180)}</div></div>')
+        comparisons.append(f'<section class="p-comparison" data-lane="{tag}"><h3>{tag} 성공·실패 비교</h3><p class="help-note">각 봉 차트는 결과가 나온 다음 일봉을 가렸습니다. 성공·실패는 다음 일봉 종가 변화로 나중에 구분한 사례입니다.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px">{"".join(blocks)}</div></section>')
+    intro=page_intro("P1~P4 급등 전 형태","A~G 후보를 일봉 형태에 따라 모아 보는 별도 화면","① P유형 선택 → ② 봉 차트와 현재 위치 확인 → ③ 조건이 맞는 후보만 기존 A~G 계획 확인")
+    note='<p class="help-note">기존 A~G 스캐너가 찾은 종목만 포함합니다. 같은 코인이 두 P유형에 들어갈 수 있고, P0 및 20봉 미만은 목록 밖입니다. P태그는 매수 신호가 아닙니다.</p>'
+    controls=f'<section class="panel"><div class="filters" id="pLanes">{tabs}</div><div class="filters" id="pScope"><button class="filter active" onclick="setPScope(true,this)">관찰 우선 · 최대 6개</button><button class="filter" onclick="setPScope(false,this)">유형 전체</button></div><span id="pCount"></span>{note}</section>'
+    script='''<script>let pLane="P1",pPriority=true;function applyP(){let visible=0,total=0;document.querySelectorAll(".p-card").forEach(x=>{const match=x.dataset.lane===pLane;const on=match&&(!pPriority||(x.dataset.priority==="1"&&visible<6));x.style.display=on?"":"none";if(match)total++;if(on)visible++});document.querySelectorAll(".p-comparison").forEach(x=>x.style.display=x.dataset.lane===pLane?"":"none");document.getElementById("pCount").textContent=visible+"개 표시 / "+total+"개 전체"}function selectPLane(k,b){pLane=k;document.querySelectorAll("#pLanes .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}function setPScope(v,b){pPriority=v;document.querySelectorAll("#pScope .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyP()}document.addEventListener("DOMContentLoaded",()=>document.querySelector("#pLanes .filter").click())</script>'''
+    return shell("P1~P4 급등 전 형태",intro+controls+''.join(comparisons)+''.join(cards)+script,snapshot,"patterns")
+
+
 def main_page(snapshot, btc):
     groups=grouped(snapshot)
     regime=snapshot.get("market_regime") or read(MARKET,{})
@@ -323,16 +386,18 @@ def main_page(snapshot, btc):
         plan=r.get("trade_plan") or {}
         charts=r.get("charts") or {}
         color=INFO.get(r.get("type"),(None,"#00e783"))[1]
+        tags=pre_rally_tags(charts.get("day") or [])
+        priority=ACTION_RANK.get(r.get("action"),9)<=4 and any(tag in ("P1","P2","P3","P4") for tag in tags)
         levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
         target_more=" · ".join(x for x in (f'2차 {fmt(plan.get("target2"))}' if plan.get("target2") else "",f'확장 {fmt(plan.get("extension"))}' if plan.get("extension") else "") if x)
         detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>현재 행동</b> · {fmt(r.get("action"))}<br><b>판단 이유</b> · {fmt(plan.get("reason"))}<br><b>남은 조건</b> · {fmt(plan.get("remain") or remaining_condition(r))}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">평균 진입 {fmt(plan.get("average_entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">1차 {fmt(plan.get("target1"))}</span><span class="target-chip">2차 {fmt(plan.get("target2"))}</span><span class="target-chip">확장 {fmt(plan.get("extension"))}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">종목 행을 다시 누르면 차트가 접혀.</p>'
         search_text=" ".join(str(x or "") for x in (r.get("market"),r.get("name"),r.get("english_name")))
-        trs.append(f'<tr class="row-click" data-type="{r.get("type")}" data-market="{fmt(r.get("market"))}" data-search="{html.escape(search_text,quote=True)}" data-action="{fmt(r.get("action"))}" onclick="toggleScanRow({i})"><td class="c-star"><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td class="c-coin"><b>{fmt(r.get("market"))}</b><span class="scan-coin-name">{fmt(r.get("name"))}</span><small class="sub">눌러서 차트 보기</small></td><td class="c-type">{fmt(r.get("type"))}형</td><td class="c-action">{action_cell(r)}</td><td class="c-score">{fmt(r.get("score"))}</td><td class="c-price">{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td class="c-entry">{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td class="c-stop">{fmt(r.get("stop"))}</td><td class="c-target">{fmt(targets[0] if targets else None)}<br><small class="sub">{target_more}</small></td><td class="c-rr">{fmt(r.get("rr"))}R</td></tr><tr id="scanDetail{i}" class="expand scan-detail"><td colspan="10">{detail}</td></tr>')
+        trs.append(f'<tr class="row-click" data-type="{r.get("type")}" data-priority="{int(priority)}" data-market="{fmt(r.get("market"))}" data-search="{html.escape(search_text,quote=True)}" data-action="{fmt(r.get("action"))}" onclick="toggleScanRow({i})"><td class="c-star"><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td class="c-coin"><b>{fmt(r.get("market"))}</b><span class="scan-coin-name">{fmt(r.get("name"))}</span><small class="sub">{p_badges(tags)}</small></td><td class="c-type">{fmt(r.get("type"))}형</td><td class="c-action">{action_cell(r)}</td><td class="c-score">{fmt(r.get("score"))}</td><td class="c-price">{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td class="c-entry">{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td class="c-stop">{fmt(r.get("stop"))}</td><td class="c-target">{fmt(targets[0] if targets else None)}<br><small class="sub">{target_more}</small></td><td class="c-rr">{fmt(r.get("rr"))}R</td></tr><tr id="scanDetail{i}" class="expand scan-detail"><td colspan="10">{detail}</td></tr>')
     blocked=int(regime.get("alt_entry_limit_pct") or 0)==0
     filters=''.join(f'<button class="filter" data-kind="{k}" onclick="setType(\'{k}\',this)">{k if k=="ALL" else k+"형"}</button>' for k in ["ALL","A","B","C","D","E","F","G"])
     body=page_intro("오늘의 전체 스캔","업비트 KRW 전체에서 A/B/C/D/E/F/G 조건에 맞는 후보를 한 번에 비교하는 곳","① 유형 선택 → ② 단계·점수 비교 → ③ 진입거리·손절·손익비 확인 → ④ 관심종목은 별표")
     body+=market_gate_panel(regime)
-    body+=f'<div class="type-tabs">{cards}</div><section class="panel" id="scanPanel"><div class="toolbar"><div class="filters" id="typeFilters">{filters}</div><div>{"<span class=trade-lock>시장 M0 · 신규진입 금지</span>" if blocked else ""}</div></div>{action_guide()}<div class="search-bar"><input id="coinSearch" type="search" inputmode="search" placeholder="한글 종목명 또는 심볼 검색 (예: 리플, XRP)"><span id="searchCount"></span></div><div class="table-wrap"><table class="data-table" id="scanTable"><thead><tr><th>관심</th><th>종목</th><th>유형</th><th>최종판단·남은 조건</th><th>점수</th><th>{tip("현재가·진입거리","현재가가 진입구간에서 얼마나 떨어져 있는지 보여줘")}</th><th>진입구간</th><th>{tip("손절가","차트 구조가 무효가 되는 가격")}</th><th>{tip("1차 목표가","처음으로 일부 이익을 정리할 가격")}</th><th>{tip("손익비","감수할 손실 대비 기대수익 비율")}</th></tr></thead><tbody id="scanRows">{"".join(trs)}</tbody></table></div></section><script>let selectedType="ALL";function toggleScanRow(i){{document.getElementById("scanDetail"+i).classList.toggle("open")}}function applyScanFilters(){{const q=(document.getElementById("coinSearch").value||"").trim().toUpperCase();let count=0;document.querySelectorAll("#scanRows tr.row-click").forEach(r=>{{const typeOk=selectedType==="ALL"||r.dataset.type===selectedType,searchOk=!q||(r.dataset.search||"").toUpperCase().includes(q),show=typeOk&&searchOk,d=r.nextElementSibling;r.style.display=show?"":"none";if(!show){{d.style.display="none";d.classList.remove("open")}}else{{d.style.display="";count++}}}});document.getElementById("searchCount").textContent=count+"개 후보"}}function setType(k,b){{selectedType=k;document.querySelectorAll("#typeFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyScanFilters()}}document.addEventListener("DOMContentLoaded",()=>{{document.getElementById("coinSearch").addEventListener("input",applyScanFilters);document.querySelector("#typeFilters .filter").click()}})</script>'
+    body+=f'<div class="type-tabs">{cards}</div><section class="panel" id="scanPanel"><div class="toolbar"><div class="filters" id="typeFilters">{filters}</div><div>{"<span class=trade-lock>시장 M0 · 신규진입 금지</span>" if blocked else ""}</div></div>{action_guide()}<p class="help-note">P1 좁은 박스 · P2 넓은 박스 반등 · P3 단기 상승 · P4 큰 폭 박스 (완성 일봉 20개 기준, 중복 가능). 태그는 매수 신호가 아닙니다.</p><div class="filters" id="priorityFilters"><button class="filter active" onclick="setPriority(true,this)">우선 보기</button><button class="filter" onclick="setPriority(false,this)">모든 후보</button></div><div class="search-bar"><input id="coinSearch" type="search" inputmode="search" placeholder="한글 종목명 또는 심볼 검색 (예: 리플, XRP)"><span id="searchCount"></span></div><div class="table-wrap"><table class="data-table" id="scanTable"><thead><tr><th>관심</th><th>종목</th><th>유형</th><th>최종판단·남은 조건</th><th>점수</th><th>{tip("현재가·진입거리","현재가가 진입구간에서 얼마나 떨어져 있는지 보여줘")}</th><th>진입구간</th><th>{tip("손절가","차트 구조가 무효가 되는 가격")}</th><th>{tip("1차 목표가","처음으로 일부 이익을 정리할 가격")}</th><th>{tip("손익비","감수할 손실 대비 기대수익 비율")}</th></tr></thead><tbody id="scanRows">{"".join(trs)}</tbody></table></div></section><script>let selectedType="ALL",priorityOnly=true;function setPriority(v,b){{priorityOnly=v;document.querySelectorAll("#priorityFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyScanFilters()}}function toggleScanRow(i){{document.getElementById("scanDetail"+i).classList.toggle("open")}}function applyScanFilters(){{const q=(document.getElementById("coinSearch").value||"").trim().toUpperCase();let count=0;document.querySelectorAll("#scanRows tr.row-click").forEach(r=>{{const typeOk=selectedType==="ALL"||r.dataset.type===selectedType,searchOk=!q||(r.dataset.search||"").toUpperCase().includes(q),show=typeOk&&searchOk&&(!priorityOnly||r.dataset.priority==="1"),d=r.nextElementSibling;r.style.display=show?"":"none";if(!show){{d.style.display="none";d.classList.remove("open")}}else{{d.style.display="";count++}}}});document.getElementById("searchCount").textContent=count+"개 표시 / {len(rows)}개 전체"}}function setType(k,b){{selectedType=k;document.querySelectorAll("#typeFilters .filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");applyScanFilters()}}document.addEventListener("DOMContentLoaded",()=>{{document.getElementById("coinSearch").addEventListener("input",applyScanFilters);document.querySelector("#typeFilters .filter").click()}})</script>'
     return shell("오늘의 전체 스캔",body,snapshot,"today")
 
 
@@ -399,14 +464,14 @@ def type_page(key, snapshot):
     guide=f'<section class="panel hero-guide" style="--accent:{color}"><div><h2 style="color:{color}">{title}</h2><div class="flow" style="border-color:{color}">{flow}</div><div class="rules" style="margin-top:12px"><div class="rule"><b style="color:{color}">진입</b>{entry}</div><div class="rule"><b style="color:{color}">손절</b>{stop}</div><div class="rule"><b style="color:{color}">분할익절</b>{take}</div></div></div><div class="type-cat-wrap"><img src="{cat}" alt="{name} 안내 고양이"><span class="type-token">{key}</span></div></section>'
     trs=[]
     for i,r in enumerate(rows):
-        targets=r.get("targets") or []; plan=r.get("trade_plan") or {}; charts=r.get("charts") or {}; levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
+        targets=r.get("targets") or []; plan=r.get("trade_plan") or {}; charts=r.get("charts") or {}; tags=pre_rally_tags(charts.get("day") or []); levels=[(r.get("stop"),"#ff667e","손절")]+[(x,color,"진입") for x in r.get("entry",[]) if isinstance(x,(int,float))]
         missing=remaining_condition(r)
         f2_position = f' · 매물대 {fmt(r.get("f2_zone_position"))} ({fmt(r.get("f2_zone_position_pct"))}%)' if key == "F" and r.get("f_stage") == "F2" else ""
         stage_line = f'<br><b>D형 생애주기</b> · {fmt(r.get("d_stage"))} {fmt(r.get("d_stage_label"))}<br><b>단계 근거</b> · {fmt(r.get("d_stage_reason"))}' if key == "D" else f'<br><b>차트 진행상태</b> · {fmt(r.get("f_stage"))} {fmt(r.get("f_stage_label"))}{f2_position}<br><b>글로벌 매물대</b> · {fmt((r.get("global_zone") or {}).get("lower"))} ~ {fmt((r.get("global_zone") or {}).get("upper"))} USDT' if key == "F" else f'<br><b>G형 특성</b> · 위 매물대 도전 후 상위 박스 하단 지지 확인<br><b>상위 박스</b> · {fmt((r.get("g_box") or {}).get("low"))} ~ {fmt((r.get("g_box") or {}).get("high"))}<br><b>상단까지 여유</b> · {fmt(r.get("g_room_to_top_pct"))}%' if key == "G" else ""
         detail=f'<div class="expand-grid"><div><div class="chart-title">일봉 <small>큰 추세</small></div><div class="chart">{chart_svg(charts.get("day",[]),600,190,levels)}</div></div><div><div class="chart-title">4시간봉 <small>진입 흐름</small></div><div class="chart">{chart_svg(charts.get("4h",[]),600,190,levels)}</div></div></div><div class="reason"><b>포착 이유</b> · {fmt(r.get("reason"))}<br><b>현재 행동</b> · {fmt(r.get("action"))}<br><b>판단 이유</b> · {fmt(plan.get("reason"))}{stage_line}<br><b>남은 조건</b> · {fmt(plan.get("remain") or missing)}</div><div class="target-strip"><span class="target-chip">진입 {fmt(r.get("entry"))}</span><span class="target-chip">평균 진입 {fmt(plan.get("average_entry"))}</span><span class="target-chip">손절 {fmt(r.get("stop"))}</span><span class="target-chip">1차 {fmt(plan.get("target1"))}</span><span class="target-chip">2차 {fmt(plan.get("target2"))}</span><span class="target-chip">확장 {fmt(plan.get("extension"))}</span><span class="target-chip">{fmt(r.get("rr"))}R</span></div><p class="help-note">세부 차트와 실제 진입 여부는 업비트에서 확인</p>'
         f_badge_position = f' · {fmt(r.get("f2_zone_position"))}' if r.get("f_stage") == "F2" and r.get("f2_zone_position") else ""
         stage_badge = f'<span class="badge">{fmt(r.get("d_stage"))} · {fmt(r.get("d_stage_label"))}</span><br>' if key == "D" else f'<span class="badge">{fmt(r.get("f_stage"))} · {fmt(r.get("f_stage_label"))}{f_badge_position}</span><br>' if key == "F" else ""
-        trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}<br><small class="sub">2차 {fmt(plan.get("target2"))} · 확장 {fmt(plan.get("extension"))}</small></td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
+        trs.append(f'<tr class="row-click" data-stage="{fmt(r.get("d_stage"))}" onclick="toggleRow({i})"><td><button class="star" data-market="{fmt(r.get("market"))}" onclick="event.stopPropagation();togglePin(\'{fmt(r.get("market"))}\',this)">☆</button></td><td><b>{fmt(r.get("market"))}</b></td><td>{stage_badge}{p_badges(tags)}<br>{action_cell(r)}</td><td>{fmt(r.get("score"))}</td><td>{fmt(r.get("price"))}<br><small class="sub">{dist_text(r)}</small></td><td>{fmt(r.get("entry"))}<br><small class="sub">평균 {fmt(plan.get("average_entry"))}</small></td><td>{fmt(r.get("stop"))}</td><td>{fmt(targets[0] if targets else None)}<br><small class="sub">2차 {fmt(plan.get("target2"))} · 확장 {fmt(plan.get("extension"))}</small></td><td>{fmt(r.get("rr"))}R</td></tr><tr id="detail{i}" class="expand"><td colspan="9">{detail}</td></tr>')
     filter_values = ["전체","D0","D1","D2","D3","D4","D-W","D-F"] if key == "D" else ["전체","진입 검토","확인 대기","진입가 대기","추격 금지"]
     buttons=''.join(f'<button class="filter {"active" if a=="전체" else ""}" onclick="filterAction(\'{a}\',this)">{a}</button>' for a in filter_values)
     table=f'<section class="panel" style="--accent:{color}"><div class="toolbar"><div class="filters" id="actionFilters">{buttons}</div><div><button class="filter" onclick="expandAll(true)">모두 펼치기</button> <button class="filter" onclick="expandAll(false)">모두 접기</button></div></div>{pattern_action_guide()}<div class="table-wrap"><table class="data-table"><thead><tr><th>관심</th><th>종목</th><th>현재판단·남은 조건</th><th>점수</th><th>현재가·진입거리</th><th>진입</th><th>손절</th><th>1차 목표</th><th>손익비</th></tr></thead><tbody>{"".join(trs) or "<tr><td colspan=9 class=empty>이번 기준봉 후보 없음</td></tr>"}</tbody></table></div></section>'
@@ -700,6 +765,7 @@ def generate():
     write_tracker_asset(OUT)
     (OUT / "index.html").write_text(dashboard_page(latest,watch,btc,market_data,regime), encoding="utf-8")
     (OUT / "scan.html").write_text(main_page(latest,btc), encoding="utf-8")
+    (OUT / "patterns.html").write_text(patterns_page(latest), encoding="utf-8")
     for key in "ABCDEFG":
         (OUT / f"type_{key.lower()}.html").write_text(type_page(key, latest), encoding="utf-8")
     for key in "ABCDEF":
