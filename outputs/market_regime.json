@@ -1,45 +1,44 @@
 {
-  "generated_at": "2026-09-27T18:43:45+09:00",
-  "stage": "M3",
-  "name": "알트 시작",
-  "plain": "돈이 비트코인에서 대형 알트로 이동하기 시작한 장",
+  "generated_at": "2026-09-27T23:50:11+09:00",
+  "stage": "M1",
+  "name": "BTC만 강함",
+  "plain": "비트코인만 오르고 알트는 힘이 없는 장",
   "confidence": 78,
-  "alt_entry_limit_pct": 45,
+  "alt_entry_limit_pct": 20,
   "reasons": [
-    "BTC.D -0.12%p · TOTAL2 +1.4% · OTHERS +2.5%",
-    "상위 10개 밖 알트 상승 비율 70% · 중앙값 +1.0%",
-    "BTC는 상단 과열 구간 · 알트 펌핑은 인정하되 추격 대신 눌림만 선별"
+    "BTC +0.6%와 BTC.D +0.13%p가 함께 상승",
+    "알트 확산 부족 · 상위 10개 밖 알트 상승 비율 36% · 중앙값 -0.0%"
   ],
   "gates": {
     "A": {
-      "code": "ALLOW",
-      "label": "진입 허용",
-      "reason": "첫 눌림 지지가 확인되면 진입"
-    },
-    "B": {
       "code": "CONDITIONAL",
       "label": "조건부",
-      "reason": "대형 알트 강세가 해당 종목까지 번지는지 확인"
+      "reason": "BTC보다 강한 독립 종목만"
+    },
+    "B": {
+      "code": "BLOCK",
+      "label": "신규 금지",
+      "reason": "알트 전반이 약해 바닥잡기 금지"
     },
     "C": {
-      "code": "ALLOW",
-      "label": "진입 허용",
-      "reason": "돌파선 재지지에서 진입"
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "거래량 돌파와 재지지 모두 필요"
     },
     "D": {
-      "code": "ALLOW",
-      "label": "진입 허용",
-      "reason": "D2~D3 재탈환 후보 우선"
-    },
-    "E": {
       "code": "WATCH",
       "label": "관찰만",
-      "reason": "정상 상승형이 더 유리한 단계"
+      "reason": "재탈환 후보를 미리 모으는 단계"
+    },
+    "E": {
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "급락 종목의 짧은 반등만"
     },
     "G": {
-      "code": "ALLOW",
-      "label": "진입 허용",
-      "reason": "알트 순환 시작에서 상위 박스 하단 지지형을 우선 관찰"
+      "code": "WATCH",
+      "label": "관찰만",
+      "reason": "BTC만 강한 구간이라 하단 지지 확인 종목만 관찰"
     }
   },
   "data_status": "ok",
