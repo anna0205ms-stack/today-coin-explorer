@@ -1,4 +1,4 @@
-"""A~F 구조선을 현재 가격 기준의 공통 실전 매매계획으로 변환한다."""
+"""A~G 구조선을 현재 가격 기준의 공통 실전 매매계획으로 변환한다."""
 from __future__ import annotations
 
 from strategy_rules import reward_risk, tick_price
@@ -6,6 +6,7 @@ from strategy_rules import reward_risk, tick_price
 TYPE_LABEL = {
     "A": "첫 눌림 지지", "B": "박스 하단 지지", "C": "돌파선 재지지",
     "D": "재탈환선 지지", "E": "투매저점 방어", "F": "글로벌 매물대 지지",
+    "G": "상위 박스 하단 지지",
 }
 
 
