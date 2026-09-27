@@ -189,6 +189,48 @@ def binanceize(page: str) -> str:
     return page
 
 
+
+def candidate_gallery(snapshot: dict) -> str:
+    """Put real daily candles first so Binance candidates can be browsed by shape."""
+    rows = sum(up.grouped(snapshot).values(), [])
+    rows.sort(key=lambda r: (up.ACTION_RANK.get(r.get("action"), 9),
+                             -float(r.get("score") or 0), -float(r.get("rr") or 0)))
+    cards = []
+    for index, row in enumerate(rows):
+        market = up.fmt(row.get("market"))
+        kind = up.fmt(row.get("type"))
+        stage = up.fmt(row.get("stage"))
+        action = up.fmt(row.get("action"))
+        candles = (row.get("charts") or {}).get("day") or []
+        preview = up.chart_svg(candles[-30:], 360, 110) if candles else '<span class="sub">일봉 자료 없음</span>'
+        cards.append(
+            f'<article class="bn-chart-card" data-type="{kind}">'
+            f'<div class="bn-card-head"><b>{market}</b><span>{kind}형 · {stage}</span></div>'
+            f'<div class="bn-card-chart">{preview}</div>'
+            f'<div class="bn-card-foot"><span>현재 위치 · {action}</span>'
+            f'<button type="button" onclick="toggleScanRow({index});document.getElementById(\'scanDetail{index}\').scrollIntoView({{behavior:\'smooth\',block:\'center\'}})">'
+            f'차트 자세히</button></div></article>'
+        )
+    body = "".join(cards) or '<p class="sub">이번 스캔에서 포착된 후보가 없습니다.</p>'
+    return ('<section class="panel bn-gallery"><h2>유형별 후보 차트</h2>'
+            '<p class="sub">최근 완성 일봉 30개 · 차트 모양을 보고 관심 종목을 선택하세요.</p>'
+            f'<div class="bn-card-grid">{body}</div></section>')
+
+
+def binance_main_page(snapshot: dict, btc: dict) -> str:
+    page = binanceize(up.main_page(snapshot, btc))
+    gallery = candidate_gallery(snapshot)
+    page = page.replace('<section class="panel" id="scanPanel">', gallery + '<section class="panel" id="scanPanel">', 1)
+    style = ('<style>.bn-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}'
+             '.bn-chart-card{min-width:0;padding:13px;border:1px solid #28513d;border-radius:14px;background:#07110d}'
+             '.bn-card-head,.bn-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}'
+             '.bn-card-head b{font-size:17px}.bn-card-head span,.bn-card-foot span{color:#a6bbad}'
+             '.bn-card-chart{margin:9px 0;min-height:110px}.bn-card-chart svg{display:block;width:100%;height:auto}'
+             '.bn-card-foot button{border:1px solid #2c9b69;border-radius:9px;padding:8px;color:#d9ffea;background:#092219;cursor:pointer}'
+             '@media(max-width:960px){.bn-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
+             '@media(max-width:640px){.bn-card-grid{grid-template-columns:1fr}.bn-card-foot span{font-size:14px}}</style>')
+    return page.replace('</head>', style + '</head>', 1)
+
 def render():
     OUT.mkdir(parents=True, exist_ok=True)
     up.write_tracker_asset(OUT)
@@ -210,8 +252,8 @@ def render():
     btc = snapshot.get("btc") or {}
 
     pages: dict[str, str] = {
-        "index.html": binanceize(up.main_page(snapshot, btc)),
-        "scan.html": binanceize(up.main_page(snapshot, btc)),
+        "index.html": binance_main_page(snapshot, btc),
+        "scan.html": binance_main_page(snapshot, btc),
         "watchlist.html": binanceize(up.watchlist_page(watch, snapshot)),
         "history.html": binanceize(up.history_page(history)),
     }
