@@ -169,6 +169,11 @@ def append_snapshot(at: datetime | None = None) -> dict:
     by_time = {record.get("snapshot_at"): record for record in records}
     by_time[payload["snapshot_at"]] = payload
     records = sorted(by_time.values(), key=lambda record: record.get("snapshot_at", ""))
+    # 과거 스냅샷에는 차트 배열을 보관하지 않는다. 현재 화면은 최신 스냅샷의 차트만 사용하고
+    # 날짜별 기록·성과 검증은 숫자 계획과 결과만 필요하므로, 저장소 용량 폭증을 막는다.
+    for old_record in records[:-1]:
+        for old_candidate in old_record.get("candidates", []):
+            old_candidate.pop("charts", None)
     STORE.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     return payload
 
