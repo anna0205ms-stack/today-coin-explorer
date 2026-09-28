@@ -126,6 +126,8 @@ def main():
             if n%30==0: print("scan",n,"/",len(krw),"hits",len(out),flush=True)
     out.sort(key=lambda x:(not x["first_take"], abs(x["position_pct"]), -x["inside_pct"], -x["box_days"]))
     OUT.write_text(json.dumps({"generated_at":"2026-09-28","rule":"시각검수용 넓은 후보: 아래 가격층 → 과거 윗박스 하단 접근/진입, 상단 미장악","candidates":out},ensure_ascii=False,indent=2),encoding="utf-8")
-    print(json.dumps(out[:20],ensure_ascii=False,indent=2))
+    summary=[{k:v for k,v in x.items() if k!="ohlc"} for x in out]
+    (OUT.parent/"g_visual_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf-8")
+    print(json.dumps(summary[:30],ensure_ascii=False,indent=2))
 
 if __name__=="__main__": main()
