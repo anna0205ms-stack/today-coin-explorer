@@ -1,0 +1,27 @@
+name: G A-grade audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scanner/g_audit.py"
+      - ".github/workflows/g-audit.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy
+      - run: python scanner/g_audit.py
+      - run: |
+          git config user.name "UPBIT Scanner"
+          git config user.email "scanner@users.noreply.github.com"
+          git add outputs/g_audit_latest.json
+          git diff --cached --quiet || git commit -m "scan: G A-grade audit"
+          git pull --rebase -X theirs origin main
+          git push
