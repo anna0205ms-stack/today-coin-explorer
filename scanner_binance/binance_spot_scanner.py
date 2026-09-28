@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""BINANCE Spot USDT A/B/C/D/E scanner.
+"""BINANCE Spot USDT A/B/C/D/E/G scanner.
 
 UPBIT scanner와 데이터 수집/유니버스/API/호가단위를 완전히 분리한다.
 공개 Binance Spot market-data만 읽으며 주문은 실행하지 않는다.
@@ -38,12 +38,12 @@ STABLE_BASES = {
 LEVERAGED_SUFFIXES = ("UP", "DOWN", "BULL", "BEAR")
 
 GATE_RULES = {
-    "M0": {"A": "BLOCK", "B": "BLOCK", "C": "BLOCK", "D": "BLOCK", "E": "CONDITIONAL"},
-    "M1": {"A": "CONDITIONAL", "B": "BLOCK", "C": "CONDITIONAL", "D": "WATCH", "E": "CONDITIONAL"},
-    "M2": {"A": "CONDITIONAL", "B": "CONDITIONAL", "C": "CONDITIONAL", "D": "WATCH", "E": "CONDITIONAL"},
-    "M3": {"A": "ALLOW", "B": "CONDITIONAL", "C": "ALLOW", "D": "ALLOW", "E": "WATCH"},
-    "M4": {"A": "ALLOW", "B": "CONDITIONAL", "C": "ALLOW", "D": "ALLOW", "E": "WATCH"},
-    "M5": {"A": "PROTECT", "B": "BLOCK", "C": "PROTECT", "D": "BLOCK", "E": "CONDITIONAL"},
+    "M0": {"A": "BLOCK", "B": "BLOCK", "C": "BLOCK", "D": "BLOCK", "E": "CONDITIONAL", "G": "WATCH"},
+    "M1": {"A": "CONDITIONAL", "B": "BLOCK", "C": "CONDITIONAL", "D": "WATCH", "E": "CONDITIONAL", "G": "WATCH"},
+    "M2": {"A": "CONDITIONAL", "B": "CONDITIONAL", "C": "CONDITIONAL", "D": "WATCH", "E": "CONDITIONAL", "G": "WATCH"},
+    "M3": {"A": "ALLOW", "B": "CONDITIONAL", "C": "ALLOW", "D": "ALLOW", "E": "WATCH", "G": "ALLOW"},
+    "M4": {"A": "ALLOW", "B": "CONDITIONAL", "C": "ALLOW", "D": "ALLOW", "E": "WATCH", "G": "ALLOW"},
+    "M5": {"A": "PROTECT", "B": "BLOCK", "C": "PROTECT", "D": "BLOCK", "E": "CONDITIONAL", "G": "WATCH"},
 }
 GATE_LABELS = {"ALLOW": "진입 허용", "CONDITIONAL": "조건부", "WATCH": "관찰", "BLOCK": "신규 금지", "PROTECT": "익절 우선"}
 STAGE_INFO = {
@@ -120,7 +120,7 @@ def round_tick(value: float, tick: float, mode: str = "nearest") -> float:
     return round(units * tick, decimals_from_tick(tick))
 
 
-def fetch_universe() -> list[dict]:
+def fetch_universe(min_quote_volume: float | None = MIN_QUOTE_VOLUME, limit: int | None = MAX_SYMBOLS) -> list[dict]:
     info = api_get("/exchangeInfo")
     tickers = api_get("/ticker/24hr")
     ticker_map = {str(x.get("symbol")): x for x in tickers if isinstance(x, dict)}
@@ -141,7 +141,9 @@ def fetch_universe() -> list[dict]:
         quote_volume = float(ticker.get("quoteVolume") or 0)
         last_price = float(ticker.get("lastPrice") or 0)
         change = float(ticker.get("priceChangePercent") or 0)
-        if quote_volume < MIN_QUOTE_VOLUME or last_price <= 0:
+        if last_price <= 0:
+            continue
+        if min_quote_volume is not None and quote_volume < float(min_quote_volume):
             continue
         filters = {f.get("filterType"): f for f in item.get("filters", []) if isinstance(f, dict)}
         tick = float((filters.get("PRICE_FILTER") or {}).get("tickSize") or 0.00000001)
@@ -150,7 +152,7 @@ def fetch_universe() -> list[dict]:
             "quote_volume": quote_volume, "change_24h_pct": change, "tick": tick,
         })
     rows.sort(key=lambda x: x["quote_volume"], reverse=True)
-    return rows[:MAX_SYMBOLS]
+    return rows if limit is None else rows[:limit]
 
 
 def fetch_klines(symbol: str, interval: str, limit: int) -> list[dict]:
@@ -392,6 +394,122 @@ def scan_e(row: dict, d: list[dict], h4: list[dict]) -> dict | None:
                      [x["close"] for x in h4], {"fib236": fib236, "fib382": target, "progress": round(progress, 3)})
 
 
+
+def _g_historical_boxes(d: list[dict], upto: int) -> list[dict]:
+    """과거 윗 가격층 후보를 넓게 찾는다. G형은 시각형태 우선."""
+    hist=d[:upto]
+    if len(hist)<70:
+        return []
+    boxes=[]
+    search_start=max(0,len(hist)-190)
+    for length in (24,32,45,60,80):
+        for end_i in range(search_start+length, max(search_start+length, len(hist)-12), 3):
+            if end_i>len(hist)-12:
+                break
+            seg=hist[end_i-length:end_i]
+            if len(seg)<length:
+                continue
+            lows=[x["low"] for x in seg]; highs=[x["high"] for x in seg]; closes=[x["close"] for x in seg]
+            box_low=quantile(lows,.18); box_high=quantile(highs,.82)
+            if box_low<=0 or box_high<=box_low:
+                continue
+            width=box_high/box_low-1
+            if width<.045 or width>.24:
+                continue
+            inside=sum(1 for x in closes if box_low<=x<=box_high)/len(closes)
+            if inside<.64:
+                continue
+            mid=(box_low+box_high)/2
+            if sum(1 for x in closes if x<=mid)<max(4,int(length*.15)):
+                continue
+            if sum(1 for x in closes if x>=mid)<max(4,int(length*.15)):
+                continue
+            boxes.append({"low":box_low,"high":box_high,"length":length,"inside":inside})
+    boxes.sort(key=lambda z:(z["low"],-z["length"],-z["inside"]))
+    out=[]
+    for box in boxes:
+        if any(abs(box["low"]/x["low"]-1)<.025 and abs(box["high"]/x["high"]-1)<.04 for x in out):
+            continue
+        out.append(box)
+    return out
+
+
+def scan_g(row: dict, d: list[dict]) -> dict | None:
+    """G형: 아래 가격층에서 올라와 최신 완성 일봉이 저항매물대 하단을 처음 장악."""
+    if len(d)<100:
+        return None
+    i=len(d)-1
+    cur=d[i]; prev=d[i-1]
+    prev_close=float(prev["close"])
+    op,hi,lo,cl=(float(cur["open"]),float(cur["high"]),float(cur["low"]),float(cur["close"]))
+    recent=d[max(0,i-45):i]
+    if not recent:
+        return None
+    recent_low=min(x["low"] for x in recent)
+    best=None
+    for box in _g_historical_boxes(d,i):
+        b0,b1=float(box["low"]),float(box["high"])
+        span=b1-b0
+        if span<=0:
+            continue
+
+        lower_days=sum(1 for x in recent if x["close"]<b0*.93)
+        if lower_days<3 or recent_low>b0*.94:
+            continue
+
+        r12=d[max(0,i-11):i+1]
+        if len(r12)<6:
+            continue
+        first_avg=sum(x["close"] for x in r12[:4])/4
+        last_avg=sum(x["close"] for x in r12[-4:])/4
+        if last_avg<=first_avg*1.02:
+            continue
+
+        earlier=d[max(0,i-4):i]
+        first_take=(
+            prev_close<b0*.998
+            and min(op,prev_close)<=b0*1.008
+            and cl>b0
+            and all(x["close"]<b0*1.002 for x in earlier)
+        )
+        if not first_take:
+            continue
+
+        pos=(cl-b0)/span
+        if pos<.08 or pos>.68:
+            continue
+        if cl>=b1*.99 or hi>=b1*1.05:
+            continue
+
+        score=box["inside"]*100+box["length"]*.15-abs(pos-.30)*10
+        cand={"box_low":b0,"box_high":b1,"wick":lo,"pos":pos,"lower_days":lower_days,
+              "box_days":box["length"],"inside":box["inside"],"score":score}
+        if best is None or cand["score"]>best["score"]:
+            best=cand
+    if best is None:
+        return None
+
+    b0,b1,w=best["box_low"],best["box_high"],best["wick"]
+    tick=row["tick"]
+    return {
+        "market":row["symbol"],"type":"G","stage":"A급 · 오늘 첫 장악",
+        "score":round(min(10.0,7.0+best["inside"]*3.0),1),
+        "pattern_action":"관찰","action":"관찰","price":round_tick(cl,tick),
+        "entry":[round_tick(w,tick,"up"),round_tick(b0,tick,"down")],
+        "stop":round_tick(w*.985,tick,"down"),"targets":[round_tick(b1,tick,"down")],
+        "rr":None,
+        "reason":"아랫동네에서 반등해 오늘 완성 일봉이 저항매물대 하단을 처음 몸통·종가로 장악",
+        "spark":[round(x["close"],10) for x in d[-30:]],
+        "g_reclaim_date":datetime.fromtimestamp(cur["close_time"]/1000, timezone.utc).astimezone(KST).strftime("%Y-%m-%d"),
+        "g_supply_low":round_tick(b0,tick),"g_supply_high":round_tick(b1,tick),
+        "g_wick_support":round_tick(w,tick),"g_box_top":round_tick(b1,tick),
+        "g_close_depth_pct":round(best["pos"]*100,1),
+        "g_box_days":best["box_days"],"g_box_inside_ratio":round(best["inside"]*100,1),
+        "g_lower_zone_days":best["lower_days"],
+        "extra":{},
+    }
+
+
 def btc_regime(btc_daily: list[dict], btc4: list[dict], universe: list[dict]) -> dict:
     window = btc_daily[-30:]
     low = quantile([x["low"] for x in window], 0.10)
@@ -437,7 +555,7 @@ def btc_regime(btc_daily: list[dict], btc4: list[dict], universe: list[dict]) ->
             "correction": {"defense1": round(low + span * 0.45, 2), "defense2": round(low + span * 0.15, 2), "invalid": round(low * 0.98, 2)},
             "spark": [round(x["close"], 2) for x in btc4[-48:]],
         },
-        "gates": {t: {"code": GATE_RULES[stage][t], "label": GATE_LABELS[GATE_RULES[stage][t]]} for t in "ABCDE"},
+        "gates": {t: {"code": GATE_RULES[stage][t], "label": GATE_LABELS[GATE_RULES[stage][t]]} for t in "ABCDEG"},
     }
 
 
@@ -493,13 +611,34 @@ def scan() -> dict:
         if idx % 20 == 0:
             print(f"Binance scan {idx}/{len(universe)} · candidates {len(found)}")
 
-    found.sort(key=lambda x: (x["action"] in {"진입 검토", "조건부 진입"}, x["score"], x["rr"]), reverse=True)
-    counts = {t: sum(1 for x in found if x["type"] == t) for t in "ABCDE"}
+    # G형은 거래대금/상위 N 필터 없이 Binance Spot USDT 전체를 별도 스캔한다.
+    g_universe = fetch_universe(min_quote_volume=None, limit=None)
+    g_found = 0
+    for idx, row in enumerate(g_universe, start=1):
+        symbol=row["symbol"]
+        try:
+            daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 200)
+            item = scan_g(row, daily)
+            if item:
+                found.append(apply_gate(item, regime))
+                g_found += 1
+        except Exception as exc:
+            failures.append(f"G {symbol}: {exc}")
+        if idx % 50 == 0:
+            print(f"Binance G scan {idx}/{len(g_universe)} · G candidates {g_found}")
+
+    found.sort(key=lambda x: (
+        x["type"] == "G" and x.get("stage") == "A급 · 오늘 첫 장악",
+        x["action"] in {"진입 검토", "조건부 진입"},
+        x["score"],
+        float(x["rr"] or 0),
+    ), reverse=True)
+    counts = {t: sum(1 for x in found if x["type"] == t) for t in "ABCDEG"}
     now = datetime.now(KST)
     completed_4h = datetime.fromtimestamp(btc4[-1]["close_time"] / 1000, timezone.utc).astimezone(KST).isoformat(timespec="seconds")
     result = {
         "generated_at": now.isoformat(timespec="seconds"), "basis_4h_end": completed_4h,
-        "source": "BINANCE SPOT USDT", "universe_count": len(universe), "min_quote_volume": MIN_QUOTE_VOLUME,
+        "source": "BINANCE SPOT USDT", "universe_count": len(universe), "min_quote_volume": MIN_QUOTE_VOLUME, "g_universe_count": len(g_universe), "g_min_quote_volume": None,
         "market_regime": regime, "counts": counts, "candidates": found, "failures": failures[:30],
     }
     LATEST.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
