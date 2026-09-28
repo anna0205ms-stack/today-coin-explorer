@@ -20,6 +20,13 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
 API = "https://api.upbit.com/v1"
 KST = timezone(timedelta(hours=9))
+# Price-pegged currencies and gold trackers have a different price structure
+# from rotating altcoins. Keep this list explicit; do not exclude by name.
+PEGGED_SYMBOLS = {
+    "USDT", "USDC", "USDS", "USD1", "USDG", "USDE", "DAI", "FDUSD",
+    "TUSD", "PYUSD", "RLUSD", "USDD", "EURC", "EURCV", "GUSD",
+    "FRAX", "LUSD", "UST", "USTC", "XAUT", "PAXG",
+}
 lock = threading.Lock()
 last_request = 0.0
 
@@ -93,6 +100,8 @@ def build_market(m):
 
 def collect():
     markets = [m for m in get("/market/all", {"is_details": "true"}) if m["market"].startswith("KRW-")]
+    excluded = [m for m in markets if m["market"].split("-", 1)[1] in PEGGED_SYMBOLS]
+    markets = [m for m in markets if m not in excluded]
     results, failures = [], []
     with ThreadPoolExecutor(max_workers=4) as pool:
         futures = {pool.submit(build_market, m): m["market"] for m in markets}
@@ -106,7 +115,7 @@ def collect():
     if not results:
         raise RuntimeError("No long-range coin data; retaining the previous file")
     return {"updated_at": datetime.now(KST).isoformat(timespec="minutes"), "source": "Upbit KRW daily candles",
-            "covered": len(results), "total": len(markets), "failed": failures,
+            "covered": len(results), "total": len(markets), "excluded": len(excluded), "failed": failures,
             "coins": sorted(results, key=lambda x: (x["location"], x["symbol"]))}
 
 
@@ -114,6 +123,8 @@ def cached_preview():
     """Use stored daily histories only until the first full API scan succeeds."""
     results = []
     for path in (OUT / "daily").glob("KRW-*.json"):
+        if path.stem.split("-", 1)[1] in PEGGED_SYMBOLS:
+            continue
         try:
             source = json.loads(path.read_text(encoding="utf-8"))
             rows = [{"candle_date_time_kst": str(r["date"]), "trade_price": r["close"]} for r in source["daily"]]
@@ -127,13 +138,14 @@ def cached_preview():
         return None
     names_file = OUT / "market_names.json"
     names = json.loads(names_file.read_text(encoding="utf-8")) if names_file.exists() else {}
+    eligible_count = sum(code.startswith("KRW-") and code.split("-", 1)[1] not in PEGGED_SYMBOLS for code in names)
     return {"updated_at": datetime.now(KST).isoformat(timespec="minutes"), "source": "stored Upbit daily candles (partial preview)",
-            "covered": len(results), "total": max(len(names), len(results)), "failed": [], "partial": True,
+            "covered": len(results), "total": max(eligible_count, len(results)), "excluded": 0, "failed": [], "partial": True,
             "coins": sorted(results, key=lambda x: (x["location"], x["symbol"]))}
 
 
 def render():
-    page = '''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>순환매 위치 | 오늘의 코인 탐험대</title><link rel="stylesheet" href="dashboard_v5.css"><link rel="stylesheet" href="rotation_position.css"></head><body><div class="dashboard"><header class="masthead"><a class="brand" href="index.html"><img src="assets/sukdol-stage.webp" alt="숙돌이"><div><h1>오늘의 코인 <span>탐험대</span></h1><p>시장을 탐험하고, 기회를 발견하세요.</p></div></a><div class="exchange-area"><div class="market-switch"><a class="exchange selected" href="rotation_position.html"><b>UPBIT</b><small>KRW</small></a><a class="exchange binance" href="binance/scan.html"><b>◆ BINANCE</b><small>SPOT USDT</small></a></div></div></header><nav class="nav"><a href="index.html">메인 대시보드</a><a href="scan.html">전체 스캔</a><a class="selected" href="rotation_position.html">순환매 위치</a><a href="type_a.html">A형</a><a href="type_b.html">B형</a><a href="type_c.html">C형</a><a href="type_d.html">D형</a><a href="type_e.html">E형</a><a href="type_f.html">F형</a><a href="type_g.html">G형</a><a href="type_p1.html">P형</a><a href="watchlist.html">관심종목</a></nav><main class="rotation"><header class="rotation-head"><h2>알트 순환매 위치</h2><p>장기 일봉에서 현재 가격이 어디에 있는지 확인해요.</p><small id="updated">데이터 불러오는 중</small></header><section id="overview" class="rotation-overview panel"></section><div class="rotation-tools"><label>정렬 <select id="sort"><option value="location">위치 낮은 순</option><option value="trade">거래대금 높은 순</option><option value="name">이름순</option></select></label><span id="coverage"></span></div><div id="groups"></div><section id="detail" class="detail" hidden><button id="close" type="button">← 목록으로</button><h2 id="detail-title"></h2><div id="detail-location"></div><svg id="big-chart" viewBox="0 0 720 350" role="img" aria-label="장기 일봉 종가 차트"></svg><div id="detail-bounds"></div></section><p class="rotation-note">위치는 최근 최대 400개 일봉의 종가 범위로 계산합니다. 짧은 상장 이력은 해당 기간만 사용하며, 위치는 매수 신호가 아닙니다.</p></main></div><script src="rotation_position.js"></script></body></html>'''
+    page = '''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>순환매 위치 | 오늘의 코인 탐험대</title><link rel="stylesheet" href="dashboard_v5.css"><link rel="stylesheet" href="rotation_position.css"></head><body><div class="dashboard"><header class="masthead"><a class="brand" href="index.html"><img src="assets/sukdol-stage.webp" alt="숙돌이"><div><h1>오늘의 코인 <span>탐험대</span></h1><p>시장을 탐험하고, 기회를 발견하세요.</p></div></a><div class="exchange-area"><div class="market-switch"><a class="exchange selected" href="rotation_position.html"><b>UPBIT</b><small>KRW</small></a><a class="exchange binance" href="binance/scan.html"><b>◆ BINANCE</b><small>SPOT USDT</small></a></div></div></header><nav class="nav"><a href="index.html">메인 대시보드</a><a href="scan.html">전체 스캔</a><a class="selected" href="rotation_position.html">순환매 위치</a><a href="type_a.html">A형</a><a href="type_b.html">B형</a><a href="type_c.html">C형</a><a href="type_d.html">D형</a><a href="type_e.html">E형</a><a href="type_f.html">F형</a><a href="type_g.html">G형</a><a href="type_p1.html">P형</a><a href="watchlist.html">관심종목</a></nav><main class="rotation"><header class="rotation-head"><h2>알트 순환매 위치</h2><p>장기 일봉에서 현재 가격이 어디에 있는지 확인해요.</p><small id="updated">데이터 불러오는 중</small></header><section id="overview" class="rotation-overview panel"></section><div class="rotation-tools" hidden><label>정렬 <select id="sort"><option value="location">위치 낮은 순</option><option value="trade">거래대금 높은 순</option><option value="name">이름순</option></select></label><span id="coverage"></span></div><div id="groups"></div><section id="detail" class="detail" hidden><button id="close" type="button">← 목록으로</button><h2 id="detail-title"></h2><div id="detail-location"></div><svg id="big-chart" viewBox="0 0 720 350" role="img" aria-label="장기 일봉 종가 차트"></svg><div id="detail-bounds"></div></section><p class="rotation-note">위치는 최근 최대 400개 일봉의 종가 범위로 계산합니다. 스테이블코인과 금 가격 연동 토큰은 제외합니다. 짧은 상장 이력은 해당 기간만 사용하며, 위치는 매수 신호가 아닙니다.</p></main></div><script src="rotation_position.js"></script></body></html>'''
     (OUT / "rotation_position.html").write_text(page, encoding="utf-8")
     for name in ("rotation_position.css", "rotation_position.js"):
         shutil.copy2(ROOT / "scanner" / name, OUT / name)

@@ -6,6 +6,9 @@ on:
     paths:
       - ".github/workflows/binance-scan-and-pages.yml"
       - "scanner_binance/**"
+      - "scanner/rotation_position.py"
+      - "scanner/rotation_position.js"
+      - "scanner/rotation_position.css"
       - "scanner/unified_dashboard.py"
       - "scanner/trade_tracker_ui.py"
       - "scanner/market_dashboard_v4.py"
@@ -78,6 +81,9 @@ jobs:
           python scanner/market_dashboard_v5.py
           python scanner/add_explorer_switch.py
           python scanner/release_footer.py --product oco
+      - name: Publish Binance rotation map
+        if: steps.guard.outputs.should_run == 'true'
+        run: python scanner_binance/rotation_position.py
       - name: Save BINANCE results
         if: steps.guard.outputs.should_run == 'true'
         run: |
