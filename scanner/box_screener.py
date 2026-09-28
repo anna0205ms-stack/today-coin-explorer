@@ -315,19 +315,14 @@ def fetch_minute_candles(market: str, unit: int, count: int = 200) -> pd.DataFra
 
 # G_TYPE_4H_BEGIN
 def _g_historical_boxes(daily: pd.DataFrame, upto: int) -> List[dict]:
-    """과거에 실제로 오래 머문 횡보구간을 '윗 매물대 박스' 후보로 찾는다.
-
-    최근 고점 몇 개를 선으로 묶지 않고, 과거 일봉이 일정 기간 실제로 머문
-    가격 덩어리만 사용한다. 극단 꼬리는 15/85 분위수로 잘라 박스를 안정화한다.
-    """
+    """G 시각검수용: 과거 윗 가격층 후보를 넓게 찾는다."""
     hist = daily.iloc[:upto].copy()
     if len(hist) < 70:
         return []
     boxes: List[dict] = []
-    # 최근 6개월 안의 과거 횡보를 폭넓게 탐색하되, 후보일과 최소 12일 이상 떨어진 구간만 사용
     search_start = max(0, len(hist) - 190)
     for length in (24, 32, 45, 60, 80):
-        for end_i in range(search_start + length, len(hist) - 12, 4):
+        for end_i in range(search_start + length, len(hist) - 12, 3):
             seg = hist.iloc[end_i-length:end_i]
             if len(seg) < length:
                 continue
@@ -340,31 +335,25 @@ def _g_historical_boxes(daily: pd.DataFrame, upto: int) -> List[dict]:
             if box_low <= 0 or box_high <= box_low:
                 continue
             width = box_high / box_low - 1.0
-            # 주황박스 같은 '횡보 매물대': 너무 좁은 선/너무 넓은 추세구간 제외
-            if width < 0.035 or width > 0.22:
+            if width < 0.045 or width > 0.24:
                 continue
 
             inside = ((closes >= box_low) & (closes <= box_high)).mean()
-            if inside < 0.62:
+            if inside < 0.64:
                 continue
 
-            # 박스 중간을 기준으로 상·하단을 오간 흔적이 있어야 실제 횡보로 인정
             mid = (box_low + box_high) / 2.0
-            lower_visits = int((closes <= mid).sum())
-            upper_visits = int((closes >= mid).sum())
-            if min(lower_visits, upper_visits) < max(4, int(length * 0.15)):
+            if (closes <= mid).sum() < max(4, int(length * 0.15)):
+                continue
+            if (closes >= mid).sum() < max(4, int(length * 0.15)):
                 continue
 
             boxes.append({
-                "low": box_low,
-                "high": box_high,
-                "start": end_i - length,
-                "end": end_i - 1,
-                "length": length,
-                "inside_ratio": float(inside),
+                "low": box_low, "high": box_high,
+                "start": end_i-length, "end": end_i-1,
+                "length": length, "inside_ratio": float(inside),
             })
 
-    # 비슷한 가격대 박스는 가장 오래/안정적인 하나만 남긴다.
     boxes.sort(key=lambda z: (z["low"], -z["length"], -z["inside_ratio"]))
     dedup: List[dict] = []
     for box in boxes:
@@ -375,93 +364,87 @@ def _g_historical_boxes(daily: pd.DataFrame, upto: int) -> List[dict]:
 
 
 def _g_daily_structure(daily: pd.DataFrame) -> Optional[dict]:
-    """G A급: 최근 완성 일봉이 과거 윗 횡보박스 하단을 '처음' 장악한 구조만 찾는다."""
+    """G A급: 아랫동네에서 올라와 오늘 완성 일봉이 윗박스 하단을 처음 장악."""
     if len(daily) < 100:
         return None
 
-    # 오늘(가장 최근 완성 일봉) 우선, 검증을 위해 최대 최근 5개 일봉까지 찾는다.
-    latest_i = len(daily) - 1
-    best: Optional[dict] = None
-    for i in range(latest_i, max(40, latest_i - 5), -1):
-        if i < 2:
-            continue
-        prev = daily.iloc[i-1]
-        cur = daily.iloc[i]
-        prev_close = float(prev["Close"])
-        op, hi, lo, cl = map(float, (cur["Open"], cur["High"], cur["Low"], cur["Close"]))
-        if cl <= 0 or hi <= 0:
-            continue
-
-        boxes = _g_historical_boxes(daily, i)
-        if not boxes:
-            continue
-
-        recent_before = daily.iloc[max(0, i-45):i]
-        recent_low = float(recent_before["Low"].min()) if not recent_before.empty else lo
-
-        candidates: List[dict] = []
-        for box in boxes:
-            b0, b1 = float(box["low"]), float(box["high"])
-            span = b1 - b0
-
-            # 반드시 아래에서 올라와 기존 윗박스 하단을 처음 먹는 장면
-            came_from_below = recent_low <= b0 * 0.93
-            prev_below = prev_close < b0 * 0.995
-
-            # 장악: 현재 봉 몸통이 하단을 가로지르고 종가가 박스 안쪽 15% 이상 들어와야 함
-            body_from_below = min(op, prev_close) <= b0 * 1.005
-            close_depth = (cl - b0) / span if span > 0 else 0.0
-            captured = hi >= b0 and cl > b0 and body_from_below and close_depth >= 0.15
-
-            # POL/SUI처럼 이미 상단까지 먹은 다음 단계는 제외
-            not_top_taken = cl < b1 * 0.985 and hi < b1 * 1.035
-
-            # 최근 10봉 안에 이미 박스 하단 위 종가가 있었다면 '오늘 처음 장악'이 아님
-            earlier = daily.iloc[max(0, i-10):i]
-            first_take = bool((earlier["Close"] < b0 * 0.995).all()) if not earlier.empty else True
-
-            if not (came_from_below and prev_below and captured and not_top_taken and first_take):
-                continue
-
-            candidates.append({
-                "reclaim_index": i,
-                "reclaim_date": str(daily.index[i])[:10],
-                "supply_low": b0,
-                "supply_high": b1,
-                "wick_support": lo,
-                "box_top": b1,
-                "daily_close": float(daily["Close"].iloc[-1]),
-                "daily_reclaim_close": cl,
-                "box_length": int(box["length"]),
-                "box_inside_ratio": float(box["inside_ratio"]),
-                "fresh_days": latest_i - i,
-                "close_depth_pct": close_depth * 100.0,
-            })
-
-        if candidates:
-            # 현재가에 가장 가까운 하단, 오래 유지된 박스를 우선
-            candidates.sort(key=lambda z: (
-                abs(z["supply_low"]/cl - 1.0),
-                -z["box_length"],
-                -z["box_inside_ratio"],
-            ))
-            best = candidates[0]
-            break
-
-    if best is None:
+    i = len(daily) - 1
+    cur = daily.iloc[i]
+    prev = daily.iloc[i-1]
+    prev_close = float(prev["Close"])
+    op, hi, lo, cl = map(float, (cur["Open"], cur["High"], cur["Low"], cur["Close"]))
+    if cl <= 0:
         return None
 
-    # 장악 이후 만들어진 가장 낮은 아랫꼬리를 지켜야 할 선으로 갱신
-    i = int(best["reclaim_index"])
-    since = daily.iloc[i:].copy()
-    valid = since[since["Close"] >= best["supply_low"] * 0.94]
-    if not valid.empty:
-        best["wick_support"] = float(valid["Low"].min())
+    recent = daily.iloc[max(0, i-45):i]
+    if recent.empty:
+        return None
+    recent_low = float(recent["Low"].min())
+
+    best: Optional[dict] = None
+    for box in _g_historical_boxes(daily, i):
+        b0, b1 = float(box["low"]), float(box["high"])
+        span = b1 - b0
+        if span <= 0:
+            continue
+
+        # 아래 가격층에서 충분히 머문 뒤 올라오는 모양
+        lower_days = int((recent["Close"] < b0 * 0.93).sum())
+        if lower_days < 5 or recent_low > b0 * 0.88:
+            continue
+
+        # 최근 12봉은 위쪽으로 진행 중
+        r12 = daily.iloc[max(0, i-11):i+1]
+        if len(r12) < 6:
+            continue
+        first_avg = float(r12["Close"].iloc[:4].mean())
+        last_avg = float(r12["Close"].iloc[-4:].mean())
+        if last_avg <= first_avg * 1.04:
+            continue
+
+        # 전날까지 하단 아래, 오늘 몸통/종가가 하단을 처음 장악
+        earlier = daily.iloc[max(0, i-10):i]
+        first_take = (
+            prev_close < b0 * 0.995
+            and min(op, prev_close) <= b0 * 1.005
+            and cl > b0
+            and bool((earlier["Close"] < b0 * 0.995).all())
+        )
+        if not first_take:
+            continue
+
+        pos = (cl - b0) / span
+        # TRUST/DOGE처럼 경계만 스친 약한 장악은 제외,
+        # POL/SUI처럼 상단까지 먹은 다음 단계도 제외
+        if pos < 0.15 or pos > 0.60:
+            continue
+        if cl >= b1 * 0.985 or hi >= b1 * 1.03:
+            continue
+
+        score = box["inside_ratio"] * 100 + box["length"] * 0.15 - abs(pos - 0.30) * 10
+        cand = {
+            "reclaim_index": i,
+            "reclaim_date": str(daily.index[i])[:10],
+            "supply_low": b0,
+            "supply_high": b1,
+            "wick_support": lo,
+            "box_top": b1,
+            "daily_close": cl,
+            "daily_reclaim_close": cl,
+            "box_length": int(box["length"]),
+            "box_inside_ratio": float(box["inside_ratio"]),
+            "lower_zone_days": lower_days,
+            "close_depth_pct": pos * 100.0,
+            "visual_score": score,
+        }
+        if best is None or cand["visual_score"] > best["visual_score"]:
+            best = cand
+
     return best
 
 
 def analyze_g_type(row: pd.Series, daily: pd.DataFrame) -> Optional[dict]:
-    """G형 1차 선별: 윗 횡보박스 하단 첫 장악만 본다."""
+    """G형 현재 버전: 오늘 완성 일봉 기준 '윗박스 하단 첫 장악'만 리스트업."""
     structure = _g_daily_structure(daily)
     if not structure:
         return None
@@ -470,36 +453,31 @@ def analyze_g_type(row: pd.Series, daily: pd.DataFrame) -> Optional[dict]:
     supply_low = float(structure["supply_low"])
     supply_high = float(structure["supply_high"])
     wick_support = float(structure["wick_support"])
-    fresh_days = int(structure["fresh_days"])
-
-    # A급은 방금 끝난 최신 완성 일봉에서 처음 장악
-    status = "A급 · 오늘 첫 장악" if fresh_days == 0 else f"최근 첫 장악 · {fresh_days}일 전"
-    action = "1H 관찰" if fresh_days == 0 else "지지 확인"
 
     return {
         "market": str(row["Code"]),
         "name": str(row["Name"]),
         "type": "G",
-        "status": status,
-        "score": round(10.0 - min(fresh_days, 5), 1),
+        "status": "A급 · 오늘 첫 장악",
+        "score": round(min(10.0, 7.0 + structure["box_inside_ratio"] * 3.0), 1),
         "price": rounded_price(live),
         "analysis_close": rounded_price(float(structure["daily_close"])),
         "entry": [rounded_price(wick_support), rounded_price(supply_low)],
         "stop": rounded_price(wick_support * 0.985),
         "targets": [rounded_price(supply_high)],
-        "action": action,
-        "reason": "과거 윗 횡보박스 하단을 아래에서 올라와 완성 일봉 몸통·종가로 처음 장악",
-        "missing": ["박스 하단·장악봉 아랫꼬리 지지 확인"],
+        "action": "관찰",
+        "reason": "아랫동네에서 반등해 오늘 완성 일봉이 과거 윗박스 하단을 처음 몸통·종가로 장악",
+        "missing": ["박스 하단과 장악봉 아랫꼬리 지지 여부 확인"],
         "g_reclaim_date": structure["reclaim_date"],
         "g_supply_low": rounded_price(supply_low),
         "g_supply_high": rounded_price(supply_high),
         "g_wick_support": rounded_price(wick_support),
         "g_box_top": rounded_price(supply_high),
-        "g_room_to_top_pct": round(max(0.0, (supply_high/live - 1.0)*100.0), 1),
-        "g_fresh_days": fresh_days,
+        "g_room_to_top_pct": round(max(0.0, (supply_high/live - 1.0) * 100.0), 1),
         "g_close_depth_pct": round(float(structure["close_depth_pct"]), 1),
         "g_box_days": int(structure["box_length"]),
-        "g_box_inside_ratio": round(float(structure["box_inside_ratio"])*100.0, 1),
+        "g_box_inside_ratio": round(float(structure["box_inside_ratio"]) * 100.0, 1),
+        "g_lower_zone_days": int(structure["lower_zone_days"]),
     }
 
 
@@ -515,14 +493,11 @@ def scan_g_type(universe: pd.DataFrame, frames: Dict[str, pd.DataFrame]) -> List
             if candidate:
                 records.append(candidate)
         except Exception as exc:  # noqa: BLE001
-            logging.debug("G형 일봉 첫장악 분석 실패 %s: %s", code, exc)
-        if (idx + 1) % 25 == 0:
-            logging.info("G형 윗박스 하단 첫장악 스캔: %d/%d · 후보 %d", idx + 1, len(universe), len(records))
+            logging.debug("G형 A급 분석 실패 %s: %s", code, exc)
 
     records.sort(key=lambda x: (
-        int(x.get("g_fresh_days", 99)),
         -float(x.get("g_box_inside_ratio", 0)),
-        -float(x.get("g_close_depth_pct", 0)),
+        abs(float(x.get("g_close_depth_pct", 0)) - 30.0),
     ))
     return records[:G_TYPE_TARGET_COUNT]
 # G_TYPE_4H_END
