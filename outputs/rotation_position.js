@@ -24,7 +24,7 @@
     const counts=Object.fromEntries(order.map(k=>[k,data.coins.filter(c=>c.stage===k).length]));
     const total=data.coins.length || 1;
     $('updated').textContent=`최근 업데이트 ${data.updated_at.replace('T',' ').slice(0,16)} KST`;
-    $('coverage').textContent=`분류 ${data.covered}/${data.total}개`;
+    $('coverage').textContent=`분류 ${data.covered}/${data.total}개${data.partial?' · 일부 데이터 미수집':''}`;
     $('overview').innerHTML=`<h3>전체 위치 분포</h3><div class="distribution">${order.map(k=>`<span style="width:${counts[k]/total*100}%;background:${colors[k]}" title="${labels[k]} ${counts[k]}개"></span>`).join('')}</div><div class="jump-links">${order.map(k=>`<a href="#group-${k}" style="color:${colors[k]}">${labels[k]} ${counts[k]}</a>`).join('')}</div>`;
     const sort=$('sort').value;
     $('groups').innerHTML=order.map(k=>{
