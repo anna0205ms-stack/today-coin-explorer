@@ -78,6 +78,7 @@ def chart_rows(rows: list[dict]) -> list[list[float]]:
 def enrich_candidate_charts(snapshot: dict) -> bool:
     """UPBIT 후보 페이지와 같은 일봉/4H 상세 차트를 Binance API만으로 채운다."""
     candidates = snapshot.get("candidates") or []
+    h_markets = {item.get("market") for item in candidates if item.get("type") == "H"}
     cache: dict[str, dict] = {}
     changed = False
     for row in candidates:
@@ -88,7 +89,7 @@ def enrich_candidate_charts(snapshot: dict) -> bool:
         if not charts.get("day") or not charts.get("4h"):
             if market not in cache:
                 try:
-                    day = fetch_klines(market, "1d", 80)
+                    day = fetch_klines(market, "1d", 180 if market in h_markets else 80)
                     h4 = fetch_klines(market, "4h", 80)
                     cache[market] = {"day": chart_rows(day), "4h": chart_rows(h4)}
                 except Exception as exc:
@@ -257,7 +258,7 @@ def render():
         "watchlist.html": binanceize(up.watchlist_page(watch, snapshot)),
         "history.html": binanceize(up.history_page(history)),
     }
-    for key in ("A","B","C","D","E","F","G","P1","P2","P3","P4"):
+    for key in ("A","B","C","D","E","F","G","H","P1","P2","P3","P4"):
         type_page = binanceize(up.type_page(key, snapshot))
         pages[f"type_{key.lower()}.html"] = type_page
         pages[f"{key.lower()}.html"] = type_page

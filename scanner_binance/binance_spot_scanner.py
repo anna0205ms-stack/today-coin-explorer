@@ -45,6 +45,8 @@ GATE_RULES = {
     "M4": {"A": "ALLOW", "B": "CONDITIONAL", "C": "ALLOW", "D": "ALLOW", "E": "WATCH", "G": "ALLOW"},
     "M5": {"A": "PROTECT", "B": "BLOCK", "C": "PROTECT", "D": "BLOCK", "E": "CONDITIONAL", "G": "WATCH"},
 }
+for _stage, _code in {"M0": "BLOCK", "M1": "WATCH", "M2": "CONDITIONAL", "M3": "ALLOW", "M4": "ALLOW", "M5": "PROTECT"}.items():
+    GATE_RULES[_stage]["H"] = _code
 GATE_LABELS = {"ALLOW": "진입 허용", "CONDITIONAL": "조건부", "WATCH": "관찰", "BLOCK": "신규 금지", "PROTECT": "익절 우선"}
 STAGE_INFO = {
     "M0": ("위험장", 0), "M1": ("BTC만 강함", 20), "M2": ("알트 준비", 35),
@@ -510,6 +512,69 @@ def scan_g(row: dict, d: list[dict]) -> dict | None:
     }
 
 
+def scan_h(row: dict, d: list[dict]) -> dict | None:
+    """H: completed daily close above a meaningful older resistance band."""
+    if len(d) < 100 or row.get("base") in STABLE_BASES:
+        return None
+    last, prev = d[-1]["close"], d[-2]["close"]
+    if last <= 0 or prev <= 0 or d[-1]["quote_volume"] < 250_000 or pct(last, prev) > 15:
+        return None
+    upper_floor = quantile([x["high"] for x in d[-185:-5]], .85)
+    choices = []
+
+    def consider(low: float, high: float, strength: float):
+        if high < upper_floor or not 1.5 <= pct(last, high) <= 18:
+            return
+        # One of the last five completed bars first closed above the upper
+        # boundary, and every later completed close remained above it.
+        for age in range(4, -1, -1):
+            i = len(d) - 1 - age
+            if d[i-1]["close"] <= high < d[i]["close"] and all(x["close"] > high for x in d[i:]):
+                choices.append(((strength, -age, -pct(last, high)), low, high, age))
+                break
+
+    for box in _g_historical_boxes(d[:-5], len(d)-5):
+        low, high = box["low"], box["high"]
+        if sum(x["close"] > high*1.025 for x in d[-60:-5]) > 4:
+            continue
+        consider(low, high, box["length"]*box["inside"])
+    if not choices:
+        highs = [x["high"] for x in d[:-5]]
+        for anchor in highs[-160:]:
+            touches = [i for i, value in enumerate(highs) if abs(value/anchor-1) <= .018]
+            if len(touches) < 2 or max(touches)-min(touches) < 10:
+                continue
+            high = median([highs[i] for i in touches])
+            if sum(x["close"] > high*1.025 for x in d[-60:-5]) > 4:
+                continue
+            low = quantile([x["low"] for x in d[min(touches):max(touches)+1]], .25)
+            if .70 <= low/high <= .96:
+                consider(low, high, -(pct(last, high)))
+    if not choices:
+        return None
+    _, low, high, age = max(choices, key=lambda x:x[0])
+    distance = pct(last, high)
+    chased = distance > 8
+    status = "추격 금지" if chased else "첫 돌파" if age == 0 else "상단 위 유지"
+    tick = row["tick"]
+    return {
+        "market": row["symbol"], "type": "H", "stage": status, "status": status,
+        "score": round(max(0, min(10, 8-distance*.18)), 1),
+        "pattern_action": "추격 금지" if chased else "확인 대기", "action": "추격 금지" if chased else "확인 대기",
+        "price": round_tick(last, tick), "analysis_close": round_tick(last, tick),
+        "entry": [round_tick(high, tick, "up"), round_tick(high*1.025, tick, "up")],
+        "stop": round_tick(high*.985, tick, "down"), "targets": [], "rr": None,
+        "reason": "완성 일봉이 과거 저항 매물대 상단 위에서 마감",
+        "spark": [round(x["close"], 10) for x in d[-30:]],
+        "h_zone_low": round_tick(low, tick), "h_zone_high": round_tick(high, tick),
+        "h_distance_pct": round(distance, 2), "h_breakout_age": age,
+        "h_daily_rise_pct": round(pct(last,prev),2),
+        "h_daily_value_usdt": round(d[-1]["quote_volume"]),
+        "h_candle_date": datetime.fromtimestamp(d[-1]["close_time"]/1000, timezone.utc).astimezone(KST).strftime("%Y-%m-%d"),
+        "extra": {},
+    }
+
+
 def btc_regime(btc_daily: list[dict], btc4: list[dict], universe: list[dict]) -> dict:
     window = btc_daily[-30:]
     low = quantile([x["low"] for x in window], 0.10)
@@ -555,7 +620,7 @@ def btc_regime(btc_daily: list[dict], btc4: list[dict], universe: list[dict]) ->
             "correction": {"defense1": round(low + span * 0.45, 2), "defense2": round(low + span * 0.15, 2), "invalid": round(low * 0.98, 2)},
             "spark": [round(x["close"], 2) for x in btc4[-48:]],
         },
-        "gates": {t: {"code": GATE_RULES[stage][t], "label": GATE_LABELS[GATE_RULES[stage][t]]} for t in "ABCDEG"},
+        "gates": {t: {"code": GATE_RULES[stage][t], "label": GATE_LABELS[GATE_RULES[stage][t]]} for t in "ABCDEGH"},
     }
 
 
@@ -618,10 +683,11 @@ def scan() -> dict:
         symbol=row["symbol"]
         try:
             daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 200)
-            item = scan_g(row, daily)
-            if item:
-                found.append(apply_gate(item, regime))
-                g_found += 1
+            for scan_fn in (scan_g, scan_h):
+                item = scan_fn(row, daily)
+                if item:
+                    found.append(apply_gate(item, regime))
+                    if item["type"] == "G": g_found += 1
         except Exception as exc:
             failures.append(f"G {symbol}: {exc}")
         if idx % 50 == 0:
@@ -633,7 +699,7 @@ def scan() -> dict:
         x["score"],
         float(x["rr"] or 0),
     ), reverse=True)
-    counts = {t: sum(1 for x in found if x["type"] == t) for t in "ABCDEG"}
+    counts = {t: sum(1 for x in found if x["type"] == t) for t in "ABCDEGH"}
     now = datetime.now(KST)
     completed_4h = datetime.fromtimestamp(btc4[-1]["close_time"] / 1000, timezone.utc).astimezone(KST).isoformat(timespec="seconds")
     result = {
