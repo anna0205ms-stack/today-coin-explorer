@@ -128,6 +128,32 @@ def main():
     OUT.write_text(json.dumps({"generated_at":"2026-09-28","rule":"시각검수용 넓은 후보: 아래 가격층 → 과거 윗박스 하단 접근/진입, 상단 미장악","candidates":out},ensure_ascii=False,indent=2),encoding="utf-8")
     summary=[{k:v for k,v in x.items() if k!="ohlc"} for x in out]
     (OUT.parent/"g_visual_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf-8")
+
+    def ascii_chart(x, width=64, height=18):
+        a=x["ohlc"][-width:]
+        vals=[p["c"] for p in a]
+        lo=min(min(p["l"] for p in a),x["box_low"])
+        hi=max(max(p["h"] for p in a),x["box_high"])
+        span=max(hi-lo,1e-12)
+        grid=[[" " for _ in range(len(a))] for _ in range(height)]
+        def row(v):
+            return max(0,min(height-1, int(round((hi-v)/span*(height-1)))))
+        rlo=row(x["box_low"]); rhi=row(x["box_high"])
+        for col in range(len(a)):
+            if grid[rlo][col]==" ": grid[rlo][col]="-"
+            if grid[rhi][col]==" ": grid[rhi][col]="="
+        for col,p in enumerate(a):
+            rh=row(p["h"]); rl=row(p["l"]); rc=row(p["c"])
+            for rr in range(min(rh,rl),max(rh,rl)+1):
+                if grid[rr][col]==" ": grid[rr][col]="|"
+            grid[rc][col]="*"
+        lines=["".join(r) for r in grid]
+        return "\n".join(lines)
+
+    visual=[]
+    for x in [z for z in out if z.get("first_take")][:20]:
+        visual.append(f'### {x["market"]} {x["name"]}  box={x["box_low"]:.8g}~{x["box_high"]:.8g} close={x["close"]:.8g}\n'+ascii_chart(x))
+    (OUT.parent/"g_visual_ascii.txt").write_text("\n\n".join(visual),encoding="utf-8")
     print(json.dumps(summary[:30],ensure_ascii=False,indent=2))
 
 if __name__=="__main__": main()
