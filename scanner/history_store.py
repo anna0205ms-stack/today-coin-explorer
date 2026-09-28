@@ -107,7 +107,7 @@ def normalize_f(row: dict) -> dict:
 
 
 def normalize_g(row: dict) -> dict:
-    """G형 4H 상위 박스 하단 지지 후보를 공통 후보 형식으로 옮긴다."""
+    """G형 일봉 장악 + 1H/4H 트리거를 공통 후보 형식으로 옮긴다."""
     return {
         "market": row.get("market"), "name": row.get("name"), "type": "G",
         "score": row.get("score", 0), "status": row.get("status"),
@@ -115,9 +115,19 @@ def normalize_g(row: dict) -> dict:
         "stop": row.get("stop"), "targets": row.get("targets") or [],
         "flow": row.get("status"), "action": row.get("action", "확인 대기"),
         "reason": row.get("reason"), "missing": row.get("missing") or [],
-        "rr": row.get("rr"), "g_box": row.get("box") or {},
-        "g_box_position_pct": row.get("box_position_pct"),
-        "g_room_to_top_pct": row.get("room_to_top_pct"),
+        "rr": row.get("rr"),
+        "g_reclaim_date": row.get("g_reclaim_date"),
+        "g_supply_low": row.get("g_supply_low"),
+        "g_supply_high": row.get("g_supply_high"),
+        "g_wick_support": row.get("g_wick_support"),
+        "g_box_top": row.get("g_box_top"),
+        "g_room_to_top_pct": row.get("g_room_to_top_pct"),
+        "g_one_hour_trigger": row.get("g_one_hour_trigger"),
+        "g_one_hour_reason": row.get("g_one_hour_reason"),
+        "g_four_hour_confirm": row.get("g_four_hour_confirm"),
+        "g_four_hour_reason": row.get("g_four_hour_reason"),
+        "g_one_hour_last_close": row.get("g_one_hour_last_close"),
+        "g_four_hour_last_close": row.get("g_four_hour_last_close"),
     }
 
 def completed_4h_at(now: datetime) -> datetime:
