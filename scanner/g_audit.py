@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 API="https://api.upbit.com/v1"
-OUT=Path(__file__).resolve().parents[1]/"outputs"/"g_audit_latest.json"
+OUT=Path(__file__).resolve().parents[1]/"outputs"/"g_visual_candidates.json"
 HEAD={"Accept":"application/json","User-Agent":"g-audit/1.0"}
 
 def get(path, params=None):
@@ -58,31 +58,54 @@ def historical_boxes(a, upto):
     return out
 
 def classify(market,name,a):
+    """넓은 시각검수용 후보: 아래 가격층에서 올라와 과거 윗박스 하단 근처/안쪽에 도달한 차트."""
     if len(a)<100: return None
     i=len(a)-1
     cur=a[i]; prev=a[i-1]
-    prior45=a[max(0,i-45):i]
-    recent_low=min(x["l"] for x in prior45)
+    recent=a[max(0,i-45):i]
+    recent_low=min(x["l"] for x in recent)
+    recent_high=max(x["h"] for x in recent)
     best=None
     for b in historical_boxes(a,i):
         lo,hi=b["low"],b["high"]; span=hi-lo
-        if prev["c"]>=lo*.995: continue
-        if recent_low>lo*.93: continue
-        if min(cur["o"],prev["c"])>lo*1.005: continue
-        if cur["c"]<=lo: continue
-        depth=(cur["c"]-lo)/span
-        if depth<.10: continue
-        # only lower-edge reclaim; upper half/top not captured
-        if cur["c"]>=lo+span*.60: continue
-        if cur["h"]>=hi*1.02: continue
+        if span<=0: continue
+
+        # 분명한 아래 가격층이 있었어야 함
+        lower_zone_days=sum(1 for x in recent if x["c"] < lo*0.93)
+        if lower_zone_days < 5: continue
+        if recent_low > lo*0.88: continue
+
+        # 최근 12봉은 아래에서 윗박스 하단 쪽으로 올라오는 흐름
+        r12=a[max(0,i-11):i+1]
+        if len(r12)<6: continue
+        first_avg=sum(x["c"] for x in r12[:4])/4
+        last_avg=sum(x["c"] for x in r12[-4:])/4
+        if last_avg <= first_avg*1.04: continue
+
+        # 현재 완성 일봉이 하단 주변 또는 박스 하단부에 있어야 함
+        pos=(cur["c"]-lo)/span
+        if pos < -0.08 or pos > 0.62: continue
+
+        # 윗박스 상단까지 이미 장악/돌파한 움직임은 제외
+        if cur["c"] >= hi*0.985 or cur["h"] >= hi*1.03: continue
+
+        # 오늘이 '첫 하단 장악'이면 A급 플래그
         earlier=a[max(0,i-10):i]
-        if any(x["c"]>=lo*.995 for x in earlier): continue
+        first_take=(prev["c"]<lo*.995 and cur["c"]>lo and
+                    all(x["c"]<lo*.995 for x in earlier))
+        depth=(cur["c"]-lo)/span*100
+
         cand={"market":market,"name":name,"date":cur["date"],"box_low":lo,"box_high":hi,
               "open":cur["o"],"high":cur["h"],"low":cur["l"],"close":cur["c"],
-              "depth_pct":depth*100,"box_days":b["days"],"inside_pct":b["inside"]*100}
-        score=b["inside"]*100 + b["days"]*.15 - depth*8
+              "position_pct":pos*100,"first_take":bool(first_take),
+              "box_days":b["days"],"inside_pct":b["inside"]*100,
+              "lower_zone_days":lower_zone_days,
+              "ohlc":a[-120:]}
+        # visual review priority: first_take, close near lower edge, clear old box
+        score=(100 if first_take else 0)+b["inside"]*30+b["days"]*.1-abs(pos)*10
         if best is None or score>best[0]: best=(score,cand)
     return best[1] if best else None
+
 
 def main():
     markets=get("/market/all",{"is_details":"true"})
@@ -96,8 +119,8 @@ def main():
         except Exception as e:
             pass
         if n%30==0: print("scan",n,"/",len(krw),"hits",len(out),flush=True)
-    out.sort(key=lambda x:(-x["inside_pct"],-x["box_days"],x["depth_pct"]))
-    OUT.write_text(json.dumps({"generated_at":"2026-09-28","rule":"오늘 완성 일봉이 과거 횡보박스 하단을 처음 장악, 상단 미장악","candidates":out},ensure_ascii=False,indent=2),encoding="utf-8")
+    out.sort(key=lambda x:(not x["first_take"], abs(x["position_pct"]), -x["inside_pct"], -x["box_days"]))
+    OUT.write_text(json.dumps({"generated_at":"2026-09-28","rule":"시각검수용 넓은 후보: 아래 가격층 → 과거 윗박스 하단 접근/진입, 상단 미장악","candidates":out},ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(out[:20],ensure_ascii=False,indent=2))
 
 if __name__=="__main__": main()
