@@ -37,6 +37,12 @@ GATE_RULES["M2"]["G"] = ("CONDITIONAL", "상위 박스 하단 지지 확인 후 
 GATE_RULES["M3"]["G"] = ("ALLOW", "알트 순환 시작에서 상위 박스 하단 지지형을 우선 관찰")
 GATE_RULES["M4"]["G"] = ("ALLOW", "알트 확산에서 박스 하단 지지 후 상단 재도전 대응")
 GATE_RULES["M5"]["G"] = ("PROTECT", "과열 구간에서는 박스 상단 접근 시 수익 보호 우선")
+GATE_RULES["M0"]["H"] = ("BLOCK", "위험장에서는 상단 돌파 실패 가능성 확대")
+GATE_RULES["M1"]["H"] = ("WATCH", "BTC 주도 구간에서는 일봉 상단 돌파만 관찰")
+GATE_RULES["M2"]["H"] = ("CONDITIONAL", "돌파 뒤 상단 지지와 거래대금 확인")
+GATE_RULES["M3"]["H"] = ("ALLOW", "상단 종가 돌파 후 짧은 매매만 검토")
+GATE_RULES["M4"]["H"] = ("ALLOW", "상단 종가 돌파 뒤 과도한 이격은 추격 금지")
+GATE_RULES["M5"]["H"] = ("PROTECT", "과열 구간에는 짧은 수익 보호 우선")
 
 GATE_LABELS = {"ALLOW": "진입 허용", "CONDITIONAL": "조건부", "WATCH": "관찰만", "BLOCK": "신규 금지", "PROTECT": "익절 우선"}
 

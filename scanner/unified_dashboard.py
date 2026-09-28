@@ -199,14 +199,14 @@ def market_gate_panel(regime):
     labels = {
         "A": "강한 상승 후 눌림", "B": "바닥 추세반전", "C": "돌파 후 재지지",
         "D": "급등 전 재탈환", "E": "급락 후 기술적 반등", "F": "글로벌 과거 매물대",
-        "G": "상위 박스 하단 지지",
+        "G": "상위 박스 하단 지지", "H": "매물대 상단 종가 돌파 단타",
     }
     cells = []
-    for key in "ABCDEFG":
+    for key in "ABCDEFGH":
         gate = gates.get(key) or {"code": "BLOCK", "label": "판정 없음", "reason": "시장 데이터 확인 대기"}
         code = gate.get("code", "BLOCK")
         cells.append(f'<div class="gate-item gate-{fmt(code)}"><b>{key}형 · {labels[key]}</b><span>{icons.get(code,"·")} {fmt(gate.get("label"))}</span><div class="sub">{fmt(gate.get("reason"))}</div></div>')
-    return f'<section class="panel"><h2>현재 시장에서 A~G형을 어떻게 볼까?</h2><div class="sub">개별 차트 조건을 충족해도 이 허용표가 최종 행동을 결정해.</div><div class="gate-grid" style="margin-top:12px">{"".join(cells)}</div></section>'
+    return f'<section class="panel"><h2>현재 시장에서 A~H형을 어떻게 볼까?</h2><div class="sub">개별 차트 조건을 충족해도 이 허용표가 최종 행동을 결정해.</div><div class="gate-grid" style="margin-top:12px">{"".join(cells)}</div></section>'
 
 
 def tradingview_widget(symbol, title, note):
