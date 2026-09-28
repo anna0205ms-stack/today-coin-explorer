@@ -314,134 +314,257 @@ def fetch_minute_candles(market: str, unit: int, count: int = 200) -> pd.DataFra
 
 
 # G_TYPE_4H_BEGIN
-def analyze_g_type_4h(row: pd.Series, frame: pd.DataFrame) -> Optional[dict]:
-    """G형: 최근 상승으로 위 가격대를 도전한 뒤 눌림에서 새 하단 지지가 생긴 차트.
+def _g_pivot_clusters(prior: pd.DataFrame, reference: float) -> List[dict]:
+    """일봉 과거 고점 반응을 3% 이내 가격대로 묶어 위 매물대 후보를 만든다."""
+    hist = prior.tail(160).copy()
+    if len(hist) < 35 or reference <= 0:
+        return []
+    highs = hist["High"].to_numpy(float)
+    pivots: List[float] = []
+    for i in range(2, len(hist) - 2):
+        if highs[i] >= highs[i-2:i].max() and highs[i] >= highs[i+1:i+3].max():
+            if highs[i] >= reference * 1.01:
+                pivots.append(float(highs[i]))
+    if not pivots:
+        return []
 
-    G형은 정밀한 미래예측이 아니라 '상승 국면 전환 모양'을 넓게 리스트업하는 보조 유형이다.
-    핵심은 ① 최근 위 가격대 도전 ② 이전 베이스보다 높은 곳에서 눌림 지지 ③ 다시 반등/소화 중 여부다.
-    """
-    recent = frame.tail(120).copy()
-    if len(recent) < 60:
-        return None
+    pivots.sort()
+    clusters: List[List[float]] = []
+    for value in pivots:
+        if not clusters or value / (sum(clusters[-1]) / len(clusters[-1])) - 1.0 > 0.035:
+            clusters.append([value])
+        else:
+            clusters[-1].append(value)
 
-    # 최근 약 7일(4H 42봉) 안의 가장 높은 도전 가격을 잡는다.
-    tail = recent.tail(42)
-    peak_rel = int(np.argmax(tail["High"].to_numpy(float)))
-    peak_i = len(recent) - len(tail) + peak_rel
-    peak = float(recent["High"].iloc[peak_i])
-    if peak <= 0 or peak_i >= len(recent) - 3:
-        return None
+    out: List[dict] = []
+    for cluster in clusters:
+        center = float(np.median(cluster))
+        touches = hist[(hist["High"] >= center * 0.975) & (hist["Low"] <= center * 1.015)]
+        if len(cluster) < 2 and len(touches) < 3:
+            continue
+        zone_low = center * 0.985
+        zone_high = center * 1.012
+        out.append({
+            "center": center,
+            "low": zone_low,
+            "high": zone_high,
+            "pivot_count": len(cluster),
+            "touch_count": int(len(touches)),
+        })
+    return out
 
-    # 급등 전 가격대: 정교한 박스 분해 대신 직전 24봉의 중간 종가를 기준 베이스로 쓴다.
-    pre = recent.iloc[max(0, peak_i - 30):max(0, peak_i - 6)]
-    if len(pre) < 12:
-        return None
-    base = float(pre["Close"].median())
-    if base <= 0 or peak < base * 1.12:
-        return None
 
-    after = recent.iloc[peak_i + 1:].copy()
-    if len(after) < 3:
-        return None
-
-    # 상단 도전 뒤 형성된 눌림 구간 자체에서 하단 지지대를 계산한다.
-    lows = after["Low"].to_numpy(float)
-    closes = after["Close"].to_numpy(float)
-    support_low = float(np.nanpercentile(lows, 15))
-    support_high = float(np.nanpercentile(closes, 40))
-    support_high = max(support_high, support_low * 1.025)
-    support_high = min(support_high, peak * 0.90)
-    if support_high <= support_low:
-        return None
-
-    # 눌림이 과거 베이스까지 완전히 무너지면 '상위 박스 안착'으로 보지 않는다.
-    if support_low < base * 1.02:
-        return None
-
-    close = float(recent["Close"].iloc[-1])
-    live = float(row.get("CurrentPrice", close) or close)
-    if close < support_low * 0.97:
+def _g_daily_structure(daily: pd.DataFrame) -> Optional[dict]:
+    """완성 일봉에서 '윗 매물대 하단 장악 → 아랫꼬리 지지선' 구조를 찾는다."""
+    if len(daily) < 90:
         return None
 
-    # 하단 지지 흔적: 하단권을 실제로 터치한 뒤 종가가 다시 위에 있거나,
-    # 최근 봉 중 아래꼬리/양봉 반응이 한 번이라도 있으면 충분하다.
-    touch_mask = after["Low"] <= support_high * 1.03
-    if not bool(touch_mask.any()):
-        return None
-    touched = after[touch_mask].tail(8)
-    rebound = False
-    for _, candle in touched.iterrows():
+    # 최근 18개 완성 일봉 안에서 가장 최근의 장악 캔들을 찾는다.
+    begin = max(40, len(daily) - 18)
+    found: Optional[dict] = None
+    for i in range(begin, len(daily)):
+        prev_close = float(daily["Close"].iloc[i - 1])
+        prior = daily.iloc[:i]
+        clusters = _g_pivot_clusters(prior, prev_close)
+        if not clusters:
+            continue
+
+        # 직전 종가 위의 가장 가까운 매물대 하단을 우선한다.
+        clusters = [z for z in clusters if z["low"] >= prev_close * 0.995]
+        if not clusters:
+            continue
+        clusters.sort(key=lambda z: z["low"])
+        zone = clusters[0]
+
+        candle = daily.iloc[i]
         op, hi, lo, cl = map(float, (candle["Open"], candle["High"], candle["Low"], candle["Close"]))
-        body = abs(cl - op)
-        lower_wick = min(op, cl) - lo
-        if cl >= op or lower_wick >= max(body * 0.45, (hi - lo) * 0.12):
-            rebound = True
-            break
-    if not rebound and close < support_high:
+        # 하단을 몸통/종가로 장악. 꼬리만 찍고 밀린 것은 제외한다.
+        captured = hi >= zone["low"] and cl >= zone["low"] and min(op, prev_close) <= zone["low"] * 1.01
+        if not captured:
+            continue
+
+        # 같은 상위 박스의 윗 목표: 선택한 하단 매물대보다 위에 있는 다음 고점 군집,
+        # 없으면 과거 90일의 가까운 상단 고점을 쓴다.
+        higher = [z for z in clusters[1:] if z["center"] > zone["center"] * 1.025]
+        if higher:
+            box_top = float(higher[0]["high"])
+        else:
+            upper_highs = prior.tail(90)["High"]
+            candidates = upper_highs[(upper_highs > zone["high"] * 1.02) & (upper_highs < zone["high"] * 1.35)]
+            box_top = float(candidates.quantile(0.85)) if len(candidates) else float(zone["high"] * 1.10)
+        box_top = max(box_top, zone["high"] * 1.03)
+
+        since = daily.iloc[i:].copy()
+        # 장악 이후 상위 매물대 안에서 만들어진 가장 낮은 아랫꼬리를 '지켜야 할 선'으로 저장한다.
+        valid = since[since["Close"] >= zone["low"] * 0.94]
+        if valid.empty:
+            continue
+        wick_support = float(valid["Low"].min())
+        if wick_support < zone["low"] * 0.86:
+            continue
+
+        latest_close = float(daily["Close"].iloc[-1])
+        if latest_close < wick_support * 0.985:
+            continue
+
+        found = {
+            "reclaim_index": i,
+            "reclaim_date": str(daily.index[i])[:10],
+            "supply_low": float(zone["low"]),
+            "supply_high": float(zone["high"]),
+            "wick_support": wick_support,
+            "box_top": box_top,
+            "daily_close": latest_close,
+            "daily_reclaim_close": cl,
+            "touch_count": zone["touch_count"],
+        }
+    return found
+
+
+def _g_intraday_trigger(market: str, structure: dict) -> dict:
+    """일봉 후보만 1H/4H로 좁혀 '밟기 → 재장악'을 빠르게 확인한다."""
+    supply_low = float(structure["supply_low"])
+    wick_support = float(structure["wick_support"])
+    one = fetch_minute_candles(market, 60, 96)
+    four = fetch_minute_candles(market, 240, 80)
+
+    one_trigger = False
+    one_reason = "1H 재장악 대기"
+    if len(one) >= 3:
+        last3 = one.tail(3)
+        stepped = bool((last3["Low"] <= supply_low * 1.012).any())
+        reclaimed = bool((last3["Close"] >= supply_low).any())
+        support_ok = float(last3["Low"].min()) >= wick_support * 0.985
+        if stepped and reclaimed and support_ok:
+            one_trigger = True
+            one_reason = "1H가 매물대 하단을 밟고 위에서 마감"
+
+    four_confirm = False
+    four_reason = "4H 재장악 확인 대기"
+    four_broken = False
+    if len(four) >= 2:
+        latest = four.iloc[-1]
+        previous = four.iloc[-2]
+        latest_close = float(latest["Close"])
+        latest_low = float(latest["Low"])
+        previous_close = float(previous["Close"])
+        four_broken = latest_close < wick_support * 0.985
+        crossed = previous_close < supply_low <= latest_close
+        retest = latest_low <= supply_low * 1.01 and latest_close >= supply_low
+        if not four_broken and (crossed or retest):
+            four_confirm = True
+            four_reason = "4H가 매물대 하단을 재장악해 마감"
+
+    return {
+        "one_hour_trigger": one_trigger,
+        "one_hour_reason": one_reason,
+        "four_hour_confirm": four_confirm,
+        "four_hour_reason": four_reason,
+        "four_hour_broken": four_broken,
+        "one_hour_last_close": rounded_price(float(one["Close"].iloc[-1])) if len(one) else None,
+        "four_hour_last_close": rounded_price(float(four["Close"].iloc[-1])) if len(four) else None,
+    }
+
+
+def analyze_g_type(row: pd.Series, daily: pd.DataFrame) -> Optional[dict]:
+    """G형: 일봉 장악 후보를 먼저 만들고 1H 빠른 신호와 4H 확정을 붙인다."""
+    structure = _g_daily_structure(daily)
+    if not structure:
         return None
 
-    span = peak - support_low
-    position = (close - support_low) / max(span, 1e-9) * 100.0
-    room = max(0.0, (peak / close - 1.0) * 100.0)
+    market = str(row["Code"])
+    live = float(row.get("CurrentPrice", structure["daily_close"]) or structure["daily_close"])
+    trigger = _g_intraday_trigger(market, structure)
+    if trigger["four_hour_broken"]:
+        return None
 
-    if close <= support_high * 1.05:
-        state = "하단 지지 확인" if rebound else "하단 소화중"
-    elif close < peak * 0.90:
-        state = "박스내 반등"
-    else:
+    supply_low = float(structure["supply_low"])
+    supply_high = float(structure["supply_high"])
+    wick_support = float(structure["wick_support"])
+    box_top = float(structure["box_top"])
+
+    if live < wick_support * 0.985:
+        return None
+
+    if trigger["four_hour_confirm"]:
+        state = "4H 재장악 확인"
+        action = "진입 검토"
+    elif trigger["one_hour_trigger"]:
+        state = "1H 재장악"
+        action = "확인 대기"
+    elif wick_support <= live <= supply_low * 1.02:
+        state = "지지선 접근"
+        action = "확인 대기"
+    elif live > supply_high * 1.06:
         state = "상단 재도전"
+        action = "추격 금지"
+    else:
+        state = "일봉 장악 후보"
+        action = "진입가 대기"
 
-    expansion = (peak / base - 1.0) * 100.0
-    score = 3.0
-    score += 2.0 if rebound else 1.0
-    score += 2.0 if room >= 15 else 1.0 if room >= 7 else 0.0
-    score += 1.0 if expansion >= 25 else 0.0
+    stop = rounded_price(wick_support * 0.985)
+    target1 = rounded_price(box_top)
+    room = max(0.0, (box_top / live - 1.0) * 100.0)
+    score = 4.0
+    score += 2.0 if trigger["one_hour_trigger"] else 0.0
+    score += 2.0 if trigger["four_hour_confirm"] else 0.0
+    score += 1.0 if live <= supply_low * 1.02 else 0.0
+    score += 1.0 if structure["touch_count"] >= 4 else 0.0
 
-    stop = rounded_price(support_low * 0.975)
-    target1 = rounded_price(peak * 0.94)
-    target2 = rounded_price(peak)
     return {
-        "market": str(row["Code"]),
+        "market": market,
         "name": str(row["Name"]),
         "type": "G",
         "status": state,
         "score": round(score, 1),
         "price": rounded_price(live),
-        "analysis_close": rounded_price(close),
-        "entry": [rounded_price(support_low), rounded_price(support_high)],
+        "analysis_close": rounded_price(float(structure["daily_close"])),
+        "entry": [rounded_price(wick_support), rounded_price(supply_low)],
         "stop": stop,
-        "targets": [target1, target2],
-        "box": {
-            "low": rounded_price(support_low),
-            "high": rounded_price(peak),
-            "buy_zone": [rounded_price(support_low), rounded_price(support_high)],
-        },
-        "box_position_pct": round(position, 1),
-        "room_to_top_pct": round(room, 1),
-        "action": "확인 대기" if state in {"하단 지지 확인", "하단 소화중"} else "진입가 대기",
-        "reason": "위 매물대 도전 이력 · 눌림 뒤 상위 박스 하단 지지",
+        "targets": [target1],
+        "action": action,
+        "reason": "일봉 윗 매물대 하단 장악 · 매물대 아랫꼬리 지지선 유지",
         "missing": (
-            ["하단 지지 유지 · 박스 내부 반등 확인"]
-            if state in {"하단 지지 확인", "하단 소화중"}
-            else ["박스 상단 매도존 접근 시 분할 대응"]
+            ["1H에서 매물대 하단 밟기·재장악 확인"]
+            if state in {"일봉 장악 후보", "지지선 접근"}
+            else ["4H 재장악 마감 확인"]
+            if state == "1H 재장악"
+            else ["추격하지 말고 재지지/눌림 대기"]
+            if state == "상단 재도전"
+            else ["재장악선 유지"]
         ),
+        "g_reclaim_date": structure["reclaim_date"],
+        "g_supply_low": rounded_price(supply_low),
+        "g_supply_high": rounded_price(supply_high),
+        "g_wick_support": rounded_price(wick_support),
+        "g_box_top": rounded_price(box_top),
+        "g_room_to_top_pct": round(room, 1),
+        "g_one_hour_trigger": trigger["one_hour_trigger"],
+        "g_one_hour_reason": trigger["one_hour_reason"],
+        "g_four_hour_confirm": trigger["four_hour_confirm"],
+        "g_four_hour_reason": trigger["four_hour_reason"],
+        "g_one_hour_last_close": trigger["one_hour_last_close"],
+        "g_four_hour_last_close": trigger["four_hour_last_close"],
     }
 
 
-def scan_g_type_4h(universe: pd.DataFrame) -> List[dict]:
+def scan_g_type(universe: pd.DataFrame, frames: Dict[str, pd.DataFrame]) -> List[dict]:
     records: List[dict] = []
     for idx, row in universe.iterrows():
+        code = str(row["Code"])
+        daily = frames.get(code)
+        if daily is None or daily.empty:
+            continue
         try:
-            frame = fetch_minute_candles(str(row["Code"]), 240, 200)
-            candidate = analyze_g_type_4h(row, frame)
+            candidate = analyze_g_type(row, daily)
             if candidate:
                 records.append(candidate)
         except Exception as exc:  # noqa: BLE001
-            logging.debug("G형 4H 분석 실패 %s: %s", row["Code"], exc)
-        if (idx + 1) % 30 == 0:
-            logging.info("G형 4H 스캔: %d/%d · 후보 %d", idx + 1, len(universe), len(records))
-    order = {"하단 지지 확인": 0, "하단 소화중": 1, "박스내 반등": 2, "상단 재도전": 3}
-    records.sort(key=lambda x: (order.get(x["status"], 5), -float(x["score"]), -float(x["room_to_top_pct"])))
+            logging.debug("G형 분석 실패 %s: %s", code, exc)
+        if (idx + 1) % 25 == 0:
+            logging.info("G형 일봉→1H/4H 스캔: %d/%d · 후보 %d", idx + 1, len(universe), len(records))
+    order = {"4H 재장악 확인": 0, "1H 재장악": 1, "지지선 접근": 2, "일봉 장악 후보": 3, "상단 재도전": 4}
+    records.sort(key=lambda x: (order.get(x["status"], 9), -float(x["score"]), -float(x["g_room_to_top_pct"])))
     return records[:G_TYPE_TARGET_COUNT]
 # G_TYPE_4H_END
 
@@ -1394,9 +1517,9 @@ def main() -> int:
         universe = fetch_universe()
         frames, sources, failed = collect_daily_data(universe)
         records = select_candidates(universe, frames)
-        g_records = scan_g_type_4h(universe)
+        g_records = scan_g_type(universe, frames)
         G_TYPE_OUTPUT.write_text(json.dumps(g_records, ensure_ascii=False, indent=2), encoding="utf-8")
-        logging.info("G형 4H 후보: %d페어", len(g_records))
+        logging.info("G형 일봉장악→1H/4H 후보: %d페어", len(g_records))
         intraday_frames, intraday_failed = collect_intraday_data(records)
         apply_intraday_gates(records, intraday_frames)
         write_outputs(records, universe, frames, sources, failed, intraday_frames, intraday_failed)
