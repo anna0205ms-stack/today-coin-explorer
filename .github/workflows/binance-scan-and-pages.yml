@@ -91,6 +91,8 @@ jobs:
           git config user.email "binance-scanner@users.noreply.github.com"
           git add -A outputs/binance history/binance
           git diff --cached --quiet || git commit -m "binance scan: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+          # Other renderers may touch Upbit files; keep this Binance commit isolated.
+          git stash push --include-untracked -m "binance generated unrelated files" || true
           git pull --rebase -X theirs origin main
           git push
       - uses: actions/configure-pages@v5
