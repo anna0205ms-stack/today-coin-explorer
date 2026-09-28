@@ -391,7 +391,7 @@ def _g_daily_structure(daily: pd.DataFrame) -> Optional[dict]:
 
         # 아래 가격층에서 충분히 머문 뒤 올라오는 모양
         lower_days = int((recent["Close"] < b0 * 0.93).sum())
-        if lower_days < 5 or recent_low > b0 * 0.88:
+        if lower_days < 3 or recent_low > b0 * 0.94:
             continue
 
         # 최근 12봉은 위쪽으로 진행 중
@@ -400,16 +400,16 @@ def _g_daily_structure(daily: pd.DataFrame) -> Optional[dict]:
             continue
         first_avg = float(r12["Close"].iloc[:4].mean())
         last_avg = float(r12["Close"].iloc[-4:].mean())
-        if last_avg <= first_avg * 1.04:
+        if last_avg <= first_avg * 1.02:
             continue
 
         # 전날까지 하단 아래, 오늘 몸통/종가가 하단을 처음 장악
-        earlier = daily.iloc[max(0, i-10):i]
+        earlier = daily.iloc[max(0, i-4):i]
         first_take = (
-            prev_close < b0 * 0.995
-            and min(op, prev_close) <= b0 * 1.005
+            prev_close < b0 * 0.998
+            and min(op, prev_close) <= b0 * 1.008
             and cl > b0
-            and bool((earlier["Close"] < b0 * 0.995).all())
+            and bool((earlier["Close"] < b0 * 1.002).all())
         )
         if not first_take:
             continue
@@ -417,9 +417,9 @@ def _g_daily_structure(daily: pd.DataFrame) -> Optional[dict]:
         pos = (cl - b0) / span
         # TRUST/DOGE처럼 경계만 스친 약한 장악은 제외,
         # POL/SUI처럼 상단까지 먹은 다음 단계도 제외
-        if pos < 0.15 or pos > 0.60:
+        if pos < 0.08 or pos > 0.68:
             continue
-        if cl >= b1 * 0.985 or hi >= b1 * 1.03:
+        if cl >= b1 * 0.99 or hi >= b1 * 1.05:
             continue
 
         score = box["inside_ratio"] * 100 + box["length"] * 0.15 - abs(pos - 0.30) * 10
