@@ -129,7 +129,7 @@ def main():
     summary=[{k:v for k,v in x.items() if k!="ohlc"} for x in out]
     (OUT.parent/"g_visual_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf-8")
 
-    def ascii_chart(x, width=64, height=18):
+    def ascii_chart(x, width=110, height=20):
         a=x["ohlc"][-width:]
         vals=[p["c"] for p in a]
         lo=min(min(p["l"] for p in a),x["box_low"])
