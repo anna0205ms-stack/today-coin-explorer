@@ -26,15 +26,16 @@ def analyze_h_breakout(row, daily):
     recent_value = float(daily["Close"].iloc[-1] * daily["Volume"].iloc[-1])
     if recent_value < MIN_DAILY_TRADE_KRW or daily_rise > MAX_DAILY_RISE_PCT:
         return None
+    meaningful_resistance = float(daily["High"].astype(float).iloc[-185:-5].quantile(.85))
 
     # Find historic horizontal boxes whose upper boundary was resistance before
     # the latest breakout. A box must finish before the 5-bar breakout window.
     choices = []
     for box in _g_historical_boxes(daily, len(daily)):
         upper, lower = box["high"], box["low"]
-        if box["end"] >= len(daily) - 6 or not lower < upper < last:
+        if box["end"] >= len(daily) - 6 or not lower < upper < last or upper < meaningful_resistance:
             continue
-        if (last / upper - 1) * 100 > 18:
+        if not 1.5 <= (last / upper - 1) * 100 <= 18:
             continue
         closed = closes.iloc[box["end"] + 1:-5]
         if len(closed) >= 12 and (closed > upper * 1.025).mean() > .15:
@@ -63,7 +64,7 @@ def analyze_h_breakout(row, daily):
             if len(touches) < 2 or max(touches) - min(touches) < 10:
                 continue
             upper = float(highs.iloc[touches].median())
-            if not upper < last or (last / upper - 1) * 100 > 18:
+            if not upper >= meaningful_resistance or not 1.5 <= (last / upper - 1) * 100 <= 18:
                 continue
             if (closes.iloc[-60:-5] > upper * 1.025).sum() > 4:
                 continue
