@@ -143,7 +143,7 @@ def _event_flags(item: dict) -> Tuple[bool, List[str]]:
     return warning, caution_flags
 
 
-def fetch_universe() -> pd.DataFrame:
+def fetch_universe(min_trade_amount: Optional[float] = MIN_24H_TRADE_AMOUNT) -> pd.DataFrame:
     markets = upbit_get("/market/all", {"is_details": "true"}, label="업비트 페어 목록")
     if not isinstance(markets, list) or not markets:
         raise ScanError("업비트 페어 목록이 비어 있습니다.")
@@ -194,7 +194,8 @@ def fetch_universe() -> pd.DataFrame:
         raise ScanError("업비트 현재가 데이터 결합 결과가 비어 있습니다.")
 
     universe = universe[universe["CurrentPrice"] > 0]
-    universe = universe[universe["Amount"] >= MIN_24H_TRADE_AMOUNT]
+    if min_trade_amount is not None:
+        universe = universe[universe["Amount"] >= float(min_trade_amount)]
     if EXCLUDE_WARNING:
         universe = universe[~universe["Warning"]]
     if EXCLUDE_CAUTION:
@@ -204,11 +205,11 @@ def fetch_universe() -> pd.DataFrame:
     if len(universe) < 10:
         raise ScanError(
             f"유니버스가 비정상적으로 작습니다: {len(universe)}페어. "
-            "UPBIT_MIN_24H_TRADE_AMOUNT 또는 경보 제외 설정을 확인하세요."
+            "거래대금/경보 제외 설정을 확인하세요."
         )
     logging.info(
-        "유니버스: %d페어 / 최소 24시간 거래대금 %.0f원 / 경보 제외=%s / 주의 제외=%s",
-        len(universe), MIN_24H_TRADE_AMOUNT, EXCLUDE_WARNING, EXCLUDE_CAUTION,
+        "유니버스: %d페어 / 최소 24시간 거래대금 %s / 경보 제외=%s / 주의 제외=%s",
+        len(universe), ("없음" if min_trade_amount is None else f"{float(min_trade_amount):.0f}원"), EXCLUDE_WARNING, EXCLUDE_CAUTION,
     )
     return universe
 
@@ -1451,9 +1452,14 @@ def main() -> int:
         universe = fetch_universe()
         frames, sources, failed = collect_daily_data(universe)
         records = select_candidates(universe, frames)
-        g_records = scan_g_type(universe, frames)
+
+        # G형은 거래대금으로 선필터링하지 않는다.
+        # 업비트 KRW 전체(경보/주의 제외는 유지)를 별도 스캔해 초기 장악형을 놓치지 않는다.
+        g_universe = fetch_universe(min_trade_amount=None)
+        g_frames, _, _ = collect_daily_data(g_universe)
+        g_records = scan_g_type(g_universe, g_frames)
         G_TYPE_OUTPUT.write_text(json.dumps(g_records, ensure_ascii=False, indent=2), encoding="utf-8")
-        logging.info("G형 일봉장악→1H/4H 후보: %d페어", len(g_records))
+        logging.info("G형 거래대금 필터 없음 후보: %d페어 / 검사 %d페어", len(g_records), len(g_universe))
         intraday_frames, intraday_failed = collect_intraday_data(records)
         apply_intraday_gates(records, intraday_frames)
         write_outputs(records, universe, frames, sources, failed, intraday_frames, intraday_failed)
