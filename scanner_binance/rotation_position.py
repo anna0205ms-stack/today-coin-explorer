@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
@@ -19,8 +21,10 @@ sys.path.insert(0, str(ROOT))
 from scanner.rotation_position import classify  # shared chart-position math only
 
 OUT = ROOT / 'outputs' / 'binance'
-API = 'https://api.binance.com/api/v3'
+API = os.getenv('BINANCE_SPOT_API', 'https://data-api.binance.vision/api/v3')
 KST = timezone(timedelta(hours=9))
+request_lock = threading.Lock()
+last_request = 0.0
 # Exact base-asset symbols: no fuzzy matching that would drop unrelated coins.
 PEGGED = {'USDT', 'USDC', 'USDS', 'USD1', 'USDG', 'USDE', 'DAI', 'FDUSD', 'TUSD',
           'PYUSD', 'RLUSD', 'USDD', 'EURC', 'EURCV', 'GUSD', 'FRAX', 'LUSD',
@@ -30,9 +34,15 @@ PEGGED = {'USDT', 'USDC', 'USDS', 'USD1', 'USDG', 'USDE', 'DAI', 'FDUSD', 'TUSD'
 
 
 def get(path: str, params: dict | None = None):
+    global last_request
     url = API + path + ('?' + urlencode(params) if params else '')
     for attempt in range(5):
         try:
+            with request_lock:
+                wait = last_request + 0.04 - time.monotonic()
+                if wait > 0:
+                    time.sleep(wait)
+                last_request = time.monotonic()
             with urlopen(Request(url, headers={'User-Agent': 'okotam-binance-rotation/1.0'}), timeout=20) as response:
                 return json.load(response)
         except (HTTPError, URLError, TimeoutError):
