@@ -54,6 +54,21 @@ def build_current_trade_plan(row: dict) -> dict:
     else:
         status, remain = "재탈환 확인", f"진입구간 아래 · {label} 재탈환 확인"
 
+    if str(row.get("type")) == "G":
+        # G형은 일반 거리판정보다 일봉 장악→1H/4H 재장악 트리거를 우선한다.
+        g_status = str(row.get("status") or "")
+        if current <= stop:
+            status, remain = "구조 무효", "매물대 아랫꼬리 기준저점 회복 전 재진입 금지"
+        elif g_status == "4H 재장악 확인":
+            status, remain = "진입 검토", "4H 재장악선 유지 확인"
+        elif g_status == "1H 재장악":
+            status, remain = "확인 대기", "4H 마감 전이라 빠른 신호만 확인된 상태"
+        elif g_status == "지지선 접근":
+            status, remain = "확인 대기", "아랫꼬리 기준저점~매물대 하단에서 1H 지지 확인"
+        elif g_status == "상단 재도전":
+            status, remain = "추격 금지", "이미 위로 진행 중 · 새 눌림이나 재지지 대기"
+        else:
+            status, remain = "진입가 대기", "아랫꼬리 기준저점 또는 매물대 하단 재접근 대기"
     notes = [label, "현재 위치 양호" if abs(distance) <= 3 else "매수자리 이격", "손절 짧음" if risk_pct <= 6 else "손절폭 큼"]
     plan = {"current": tick_price(current), "status": status, "reason": " · ".join(notes), "remain": remain,
             "entry_low": tick_price(low, "down"), "entry_high": tick_price(high, "down"),
