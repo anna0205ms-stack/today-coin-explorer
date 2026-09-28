@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json, time, urllib.parse, urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import numpy as np
 
@@ -14,7 +15,7 @@ def get(path, params=None):
         try:
             with urllib.request.urlopen(urllib.request.Request(url,headers=HEAD),timeout=30) as r:
                 data=json.loads(r.read().decode())
-            time.sleep(0.12)
+            time.sleep(0.03)
             return data
         except Exception:
             if n==4: raise
@@ -111,14 +112,18 @@ def main():
     markets=get("/market/all",{"is_details":"true"})
     krw=[m for m in markets if m["market"].startswith("KRW-")]
     out=[]
-    for n,m in enumerate(krw,1):
+    def one(m):
         try:
             a=days(m["market"])
-            r=classify(m["market"],m.get("korean_name") or m["market"],a)
+            return classify(m["market"],m.get("korean_name") or m["market"],a)
+        except Exception:
+            return None
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futs=[ex.submit(one,m) for m in krw]
+        for n,fut in enumerate(as_completed(futs),1):
+            r=fut.result()
             if r: out.append(r)
-        except Exception as e:
-            pass
-        if n%30==0: print("scan",n,"/",len(krw),"hits",len(out),flush=True)
+            if n%30==0: print("scan",n,"/",len(krw),"hits",len(out),flush=True)
     out.sort(key=lambda x:(not x["first_take"], abs(x["position_pct"]), -x["inside_pct"], -x["box_days"]))
     OUT.write_text(json.dumps({"generated_at":"2026-09-28","rule":"시각검수용 넓은 후보: 아래 가격층 → 과거 윗박스 하단 접근/진입, 상단 미장악","candidates":out},ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(out[:20],ensure_ascii=False,indent=2))
