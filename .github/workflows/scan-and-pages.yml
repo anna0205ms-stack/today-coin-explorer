@@ -32,6 +32,9 @@ on:
       - "scanner/header_art.py"
       - "scanner/apply_space_header.py"
       - "scanner/add_explorer_switch.py"
+      - "scanner/rotation_position.py"
+      - "scanner/rotation_position.css"
+      - "scanner/rotation_position.js"
       - "outputs/dashboard_v5.css"
       - "outputs/dashboard_v5.js"
       - "outputs/header_astronaut.b64"
@@ -113,6 +116,7 @@ jobs:
           python scanner/apply_space_header.py
           python scanner/market_dashboard_v5.py
           python scanner/add_explorer_switch.py
+          python scanner/rotation_position.py
       - name: Send selected Kakao alerts
         if: steps.guard.outputs.should_run == 'true'
         continue-on-error: true
