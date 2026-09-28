@@ -83,9 +83,10 @@ def selected_markets(limit: int | None = None) -> list[str]:
 def main() -> None:
     cache = {}
     markets = selected_markets()
+    h_markets = {row.get("market") for row in read(OUT / "h_breakout.json", [])}
 
     def load(market):
-        return market, {"day": fetch(market, "day", 60), "4h": fetch(market, "4h", 48)}
+        return market, {"day": fetch(market, "day", 180 if market in h_markets else 60), "4h": fetch(market, "4h", 48)}
 
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = {pool.submit(load, market): market for market in markets}
