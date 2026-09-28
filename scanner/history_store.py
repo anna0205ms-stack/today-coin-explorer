@@ -130,6 +130,9 @@ def normalize_g(row: dict) -> dict:
         "g_four_hour_last_close": row.get("g_four_hour_last_close"),
     }
 
+def normalize_h_breakout(row: dict) -> dict:
+    return dict(row)
+
 def completed_4h_at(now: datetime) -> datetime:
     """KST 01/05/09/13/17/21시 중 가장 최근 마감 시각을 반환한다."""
     now = now.astimezone(KST)
@@ -145,11 +148,13 @@ def append_snapshot(at: datetime | None = None) -> dict:
     e_rows = read_json(OUTPUTS / "technical_rebound.json", [])
     f_rows = read_json(OUTPUTS / "global_supply.json", [])
     g_rows = read_json(OUTPUTS / "four_hour_g.json", [])
+    h_rows = read_json(OUTPUTS / "h_breakout.json", [])
     candidates = [normalize_abc(r) for r in abc_rows if abc_type(r) in "ABC"]
     candidates += [normalize_d(r) for r in d_rows if r.get("status") not in {"제외", "자료부족", "오류"}]
     candidates += [normalize_e(r) for r in e_rows if r.get("status") != "E실패"]
     candidates += [normalize_f(r) for r in f_rows]
     candidates += [normalize_g(r) for r in g_rows]
+    candidates += [normalize_h_breakout(r) for r in h_rows]
     market_names = read_json(MARKET_NAMES, {})
     for row in candidates:
         names = market_names.get(row.get("market"), {})
@@ -165,7 +170,7 @@ def append_snapshot(at: datetime | None = None) -> dict:
             row["charts"] = chart_cache[row["market"]]
     payload = {
         "snapshot_at": at.isoformat(), "date": at.strftime("%Y-%m-%d"), "time": at.strftime("%H:%M"),
-        "counts": {k: sum(r["type"] == k for r in candidates) for k in "ABCDEFG"},
+        "counts": {k: sum(r["type"] == k for r in candidates) for k in (*"ABCDEFG", "H")},
         "candidates": candidates,
     }
     if market_regime:

@@ -53,7 +53,7 @@ def fetch(market: str, unit: str, count: int) -> list[list]:
 
 
 def selected_markets(limit: int | None = None) -> list[str]:
-    groups = {kind: [] for kind in "ABCDEFG"}
+    groups = {kind: [] for kind in (*"ABCDEFG", "H")}
     for row in read(OUT / "latest_scan.json", []):
         kind = abc_type(row)
         if kind in groups:
@@ -71,8 +71,10 @@ def selected_markets(limit: int | None = None) -> list[str]:
         groups["F"].append((action_rank.get(row.get("action"), 9), -float(row.get("score") or 0), row.get("market")))
     for row in read(OUT / "four_hour_g.json", []):
         groups["G"].append((action_rank.get(row.get("action"), 9), -float(row.get("score") or 0), row.get("market")))
+    for row in read(OUT / "h_breakout.json", []):
+        groups["H"].append((action_rank.get(row.get("action"), 9), -float(row.get("score") or 0), row.get("market")))
     markets = []
-    for kind in "ABCDEFG":
+    for kind in (*"ABCDEFG", "H"):
         ranked=sorted(groups[kind])
         markets.extend(market for _, _, market in (ranked[:limit] if limit else ranked) if market)
     return list(dict.fromkeys(markets))

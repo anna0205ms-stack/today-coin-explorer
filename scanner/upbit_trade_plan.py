@@ -16,6 +16,17 @@ def _numbers(values):
 
 def build_current_trade_plan(row: dict) -> dict:
     out = dict(row)
+    if row.get("type") == "H":
+        # The upper zone is a support reference, not an automatic buy order.
+        # Until the next overhead supply is known, do not invent a scalp target.
+        upper = row.get("h_zone_high")
+        out["trade_plan"] = {"current": row.get("price"), "status": row.get("action"),
+            "reason": row.get("reason"), "remain": "상단 지지와 다음 저항 확인 후 단기 목표 설정",
+            "entry_low": upper, "entry_high": row.get("entry", [None, None])[-1],
+            "average_entry": None, "stop": row.get("stop"), "target1": None,
+            "target2": None, "extension": None, "rr1": None,
+            "distance_pct": row.get("h_distance_pct")}
+        return out
     current = row.get("price")
     entries = _numbers(row.get("entry"))
     targets = _numbers(row.get("targets"))

@@ -49,6 +49,7 @@ CHART_DIR = OUTPUT_DIR / "charts"
 LOG_DIR = OUTPUT_DIR / "logs"
 INTRADAY_DIR = OUTPUT_DIR / "intraday"
 G_TYPE_OUTPUT = OUTPUT_DIR / "four_hour_g.json"
+H_BREAKOUT_OUTPUT = OUTPUT_DIR / "h_breakout.json"
 # G_TYPE_4H_BEGIN
 G_TYPE_TARGET_COUNT = int(os.getenv("UPBIT_G_TYPE_TARGET_COUNT", "30"))
 # G_TYPE_4H_END
@@ -1459,6 +1460,10 @@ def main() -> int:
         g_frames, _, _ = collect_daily_data(g_universe)
         g_records = scan_g_type(g_universe, g_frames)
         G_TYPE_OUTPUT.write_text(json.dumps(g_records, ensure_ascii=False, indent=2), encoding="utf-8")
+        from h_breakout import scan_h_breakout
+        h_records = scan_h_breakout(g_universe, g_frames)
+        H_BREAKOUT_OUTPUT.write_text(json.dumps(h_records, ensure_ascii=False, indent=2), encoding="utf-8")
+        logging.info("H형 일봉 상단 돌파 후보: %d페어", len(h_records))
         logging.info("G형 거래대금 필터 없음 후보: %d페어 / 검사 %d페어", len(g_records), len(g_universe))
         intraday_frames, intraday_failed = collect_intraday_data(records)
         apply_intraday_gates(records, intraday_frames)
