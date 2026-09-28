@@ -21,7 +21,7 @@ jobs:
       - run: |
           git config user.name "UPBIT Scanner"
           git config user.email "scanner@users.noreply.github.com"
-          git add outputs/g_audit_latest.json
+          git add outputs/g_visual_candidates.json
           git diff --cached --quiet || git commit -m "scan: G A-grade audit"
           git pull --rebase -X theirs origin main
           git push
