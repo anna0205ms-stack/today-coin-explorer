@@ -25,8 +25,8 @@
     "prior_decline_pct": 46.95,
     "impulse_volume_multiple": 243.61,
     "four_hour_retest_low": 575.0,
-    "four_hour_compression_pct": 44.93,
-    "last_completed_4h_close": 697.0,
+    "four_hour_compression_pct": 38.32,
+    "last_completed_4h_close": 651.0,
     "aggressive_entry_zone": [
       356.4,
       369.927
@@ -49,68 +49,15 @@
       "4H리테스트",
       "4H재압축"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-PUMP",
-    "status": "준비",
-    "d_stage": "D1",
-    "d_stage_label": "하단선 재탈환",
-    "d_stage_reason": "하단 재탈환선 위 첫 4시간봉 안착",
-    "score": 4,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": true,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": true
-    },
-    "level_source": "auto",
-    "lower_reclaim_level": 7.17,
-    "upper_break_level": 8.32,
-    "base_days": 20,
-    "base_low": 4.65,
-    "base_high": 6.6,
-    "base_width_pct": 41.94,
-    "prior_decline_pct": 32.44,
-    "impulse_volume_multiple": 5.62,
-    "four_hour_retest_low": 7.41,
-    "four_hour_compression_pct": 9.72,
-    "last_completed_4h_close": 7.71,
-    "aggressive_entry_zone": [
-      7.41,
-      7.4568
-    ],
-    "confirmation_entry_zone": [
-      8.32,
-      8.4448
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 7.17,
-    "hard_stop": 7.06245,
-    "targets": [
-      8.32,
-      8.6944,
-      10.868
-    ],
-    "first_target_rr": 2.39,
-    "missing_conditions": [
-      "베이스압축",
-      "4H리테스트",
-      "4H재압축"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-BERA",
     "status": "준비",
-    "d_stage": "D1",
-    "d_stage_label": "하단선 재탈환",
-    "d_stage_reason": "하단 재탈환선 위 첫 4시간봉 안착",
+    "d_stage": "D2",
+    "d_stage_label": "하단 리테스트 확인",
+    "d_stage_reason": "하단 재탈환선 리테스트 후 4시간봉 종가 방어",
     "score": 3,
     "checks": {
       "장기하락": false,
@@ -130,31 +77,86 @@
     "base_width_pct": 46.29,
     "prior_decline_pct": 6.03,
     "impulse_volume_multiple": 2.78,
-    "four_hour_retest_low": 323.0,
-    "four_hour_compression_pct": 11.99,
-    "last_completed_4h_close": 351.0,
-    "aggressive_entry_zone": [],
+    "four_hour_retest_low": 326.0,
+    "four_hour_compression_pct": 11.76,
+    "last_completed_4h_close": 348.0,
+    "aggressive_entry_zone": [
+      347.0,
+      347.935
+    ],
     "confirmation_entry_zone": [
       374.76,
       380.3814
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 347.0,
-    "hard_stop": 318.155,
+    "hard_stop": 321.11,
     "targets": [
       374.76,
       391.6242,
       489.53025
     ],
-    "first_target_rr": 0.96,
+    "first_target_rr": 1.04,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
       "거래량시동",
       "하단선재탈환"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-PUMP",
+    "status": "선매수감시",
+    "d_stage": "D1",
+    "d_stage_label": "하단선 재탈환",
+    "d_stage_reason": "하단 재탈환선 위 첫 4시간봉 안착",
+    "score": 5,
+    "checks": {
+      "장기하락": true,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": true,
+      "4H리테스트": false,
+      "4H재압축": true,
+      "상단선접근": true
+    },
+    "level_source": "auto",
+    "lower_reclaim_level": 7.17,
+    "upper_break_level": 8.32,
+    "base_days": 20,
+    "base_low": 4.65,
+    "base_high": 6.6,
+    "base_width_pct": 41.94,
+    "prior_decline_pct": 32.44,
+    "impulse_volume_multiple": 5.62,
+    "four_hour_retest_low": 7.41,
+    "four_hour_compression_pct": 9.99,
+    "last_completed_4h_close": 7.84,
+    "aggressive_entry_zone": [
+      7.41,
+      7.4568
+    ],
+    "confirmation_entry_zone": [
+      8.32,
+      8.4448
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 7.17,
+    "hard_stop": 7.06245,
+    "targets": [
+      8.32,
+      8.6944,
+      10.868
+    ],
+    "first_target_rr": 2.39,
+    "missing_conditions": [
+      "베이스압축",
+      "4H리테스트"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-CC",
@@ -181,9 +183,9 @@
     "base_width_pct": 58.68,
     "prior_decline_pct": 16.29,
     "impulse_volume_multiple": 3.74,
-    "four_hour_retest_low": 166.0,
+    "four_hour_retest_low": 168.0,
     "four_hour_compression_pct": 6.02,
-    "last_completed_4h_close": 168.0,
+    "last_completed_4h_close": 172.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       214.92,
@@ -191,21 +193,21 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 199.0,
-    "hard_stop": 163.51,
+    "hard_stop": 165.48,
     "targets": [
       214.92,
       224.5914,
       280.73925
     ],
-    "first_target_rr": 0.45,
+    "first_target_rr": 0.47,
     "missing_conditions": [
       "베이스압축",
       "하단선재탈환",
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-DATA",
@@ -233,7 +235,7 @@
     "prior_decline_pct": 18.71,
     "impulse_volume_multiple": 5.06,
     "four_hour_retest_low": 292.0,
-    "four_hour_compression_pct": 4.12,
+    "four_hour_compression_pct": 3.77,
     "last_completed_4h_close": 296.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
@@ -255,8 +257,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-PROS",
@@ -283,23 +285,26 @@
     "base_width_pct": 66.32,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 25.49,
-    "four_hour_retest_low": 902.0,
-    "four_hour_compression_pct": 9.53,
-    "last_completed_4h_close": 954.0,
-    "aggressive_entry_zone": [],
+    "four_hour_retest_low": 936.0,
+    "four_hour_compression_pct": 11.97,
+    "last_completed_4h_close": 968.0,
+    "aggressive_entry_zone": [
+      981.5,
+      990.99
+    ],
     "confirmation_entry_zone": [
       1060.02,
       1075.9203
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 981.5,
-    "hard_stop": 888.47,
+    "hard_stop": 921.96,
     "targets": [
       1060.02,
       1112.0,
       1390.0
     ],
-    "first_target_rr": 0.84,
+    "first_target_rr": 1.15,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -307,60 +312,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-PENGU",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 2,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 16.61,
-    "upper_break_level": 18.12,
-    "base_days": 20,
-    "base_low": 9.14,
-    "base_high": 15.1,
-    "base_width_pct": 65.21,
-    "prior_decline_pct": 20.46,
-    "impulse_volume_multiple": 1.58,
-    "four_hour_retest_low": 13.3,
-    "four_hour_compression_pct": 9.92,
-    "last_completed_4h_close": 13.5,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      18.12,
-      18.3918
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 16.61,
-    "hard_stop": 13.1005,
-    "targets": [
-      18.12,
-      18.9354,
-      23.66925
-    ],
-    "first_target_rr": 0.43,
-    "missing_conditions": [
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-USDT",
@@ -388,8 +341,8 @@
     "prior_decline_pct": 6.65,
     "impulse_volume_multiple": 1.07,
     "four_hour_retest_low": 1351.0,
-    "four_hour_compression_pct": 0.67,
-    "last_completed_4h_close": 1357.0,
+    "four_hour_compression_pct": 0.74,
+    "last_completed_4h_close": 1361.0,
     "aggressive_entry_zone": [
       1431.0,
       1438.1075
@@ -414,11 +367,11 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-WLD",
+    "market": "KRW-SEI",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
@@ -433,32 +386,32 @@
       "4H재압축": true,
       "상단선접근": false
     },
-    "level_source": "auto",
-    "lower_reclaim_level": 789.0,
-    "upper_break_level": 852.12,
+    "level_source": "fallback",
+    "lower_reclaim_level": 115.5,
+    "upper_break_level": 126.0,
     "base_days": 20,
-    "base_low": 486.0,
-    "base_high": 746.0,
-    "base_width_pct": 53.5,
-    "prior_decline_pct": 3.41,
-    "impulse_volume_multiple": 3.83,
-    "four_hour_retest_low": 673.0,
-    "four_hour_compression_pct": 17.2,
-    "last_completed_4h_close": 722.0,
+    "base_low": 56.5,
+    "base_high": 105.0,
+    "base_width_pct": 85.84,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 3.6,
+    "four_hour_retest_low": 97.3,
+    "four_hour_compression_pct": 4.83,
+    "last_completed_4h_close": 98.8,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      852.12,
-      864.9018
+      126.0,
+      127.89
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 789.0,
-    "hard_stop": 662.905,
+    "body_invalidation": 115.5,
+    "hard_stop": 95.8405,
     "targets": [
-      852.12,
-      890.4654,
-      1113.08175
+      126.0,
+      131.67,
+      164.5875
     ],
-    "first_target_rr": 0.5,
+    "first_target_rr": 0.53,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -466,60 +419,112 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-TRUMP",
+    "market": "KRW-AAVE",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
     "d_stage_reason": "재탈환 전 단계",
     "score": 2,
     "checks": {
-      "장기하락": true,
+      "장기하락": false,
       "베이스압축": false,
-      "거래량시동": false,
+      "거래량시동": true,
       "하단선재탈환": false,
       "4H리테스트": false,
       "4H재압축": true,
       "상단선접근": false
     },
-    "level_source": "auto",
-    "lower_reclaim_level": 3293.0,
-    "upper_break_level": 3556.44,
+    "level_source": "fallback",
+    "lower_reclaim_level": 233860.0,
+    "upper_break_level": 255120.0,
     "base_days": 20,
-    "base_low": 2483.0,
-    "base_high": 3185.0,
-    "base_width_pct": 28.27,
-    "prior_decline_pct": 78.02,
-    "impulse_volume_multiple": 1.39,
-    "four_hour_retest_low": 2754.0,
-    "four_hour_compression_pct": 5.09,
-    "last_completed_4h_close": 2835.0,
+    "base_low": 155500.0,
+    "base_high": 212600.0,
+    "base_width_pct": 36.72,
+    "prior_decline_pct": 7.8,
+    "impulse_volume_multiple": 5.21,
+    "four_hour_retest_low": 214300.0,
+    "four_hour_compression_pct": 4.81,
+    "last_completed_4h_close": 215300.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      3556.44,
-      3609.7866
+      255120.0,
+      258946.8
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 3293.0,
-    "hard_stop": 2712.69,
+    "body_invalidation": 233860.0,
+    "hard_stop": 211085.5,
     "targets": [
-      3556.44,
-      3716.4798,
-      5045.0
+      255120.0,
+      266600.4,
+      333250.5
     ],
-    "first_target_rr": 0.45,
+    "first_target_rr": 0.93,
     "missing_conditions": [
+      "장기하락",
       "베이스압축",
-      "거래량시동",
       "하단선재탈환",
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-EGLD",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 2,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": true,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 11088.0,
+    "upper_break_level": 12096.0,
+    "base_days": 20,
+    "base_low": 5080.0,
+    "base_high": 10080.0,
+    "base_width_pct": 98.43,
+    "prior_decline_pct": 0.07,
+    "impulse_volume_multiple": 57.93,
+    "four_hour_retest_low": 7160.0,
+    "four_hour_compression_pct": 3.77,
+    "last_completed_4h_close": 7225.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      12096.0,
+      12277.44
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 11088.0,
+    "hard_stop": 7052.6,
+    "targets": [
+      12096.0,
+      12640.32,
+      15800.4
+    ],
+    "first_target_rr": 0.25,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-VIRTUAL",
@@ -546,9 +551,9 @@
     "base_width_pct": 41.06,
     "prior_decline_pct": 20.61,
     "impulse_volume_multiple": 1.82,
-    "four_hour_retest_low": 1053.0,
-    "four_hour_compression_pct": 7.45,
-    "last_completed_4h_close": 1080.0,
+    "four_hour_retest_low": 1056.0,
+    "four_hour_compression_pct": 6.11,
+    "last_completed_4h_close": 1068.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       1335.6,
@@ -556,13 +561,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 1224.3,
-    "hard_stop": 1037.205,
+    "hard_stop": 1040.16,
     "targets": [
       1335.6,
       1395.702,
       1744.6275
     ],
-    "first_target_rr": 0.59,
+    "first_target_rr": 0.6,
     "missing_conditions": [
       "베이스압축",
       "거래량시동",
@@ -570,8 +575,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ETH",
@@ -598,9 +603,9 @@
     "base_width_pct": 16.9,
     "prior_decline_pct": 1.08,
     "impulse_volume_multiple": 1.28,
-    "four_hour_retest_low": 3618000.0,
+    "four_hour_retest_low": 3624000.0,
     "four_hour_compression_pct": 2.63,
-    "last_completed_4h_close": 3643000.0,
+    "last_completed_4h_close": 3630000.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       4532400.0,
@@ -608,13 +613,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 4154700.0,
-    "hard_stop": 3563730.0,
+    "hard_stop": 3569640.0,
     "targets": [
       4532400.0,
       4736358.0,
       5920447.5
     ],
-    "first_target_rr": 0.64,
+    "first_target_rr": 0.65,
     "missing_conditions": [
       "장기하락",
       "거래량시동",
@@ -622,8 +627,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ARDR",
@@ -650,9 +655,9 @@
     "base_width_pct": 83.5,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 7.53,
-    "four_hour_retest_low": 39.7,
-    "four_hour_compression_pct": 10.08,
-    "last_completed_4h_close": 41.5,
+    "four_hour_retest_low": 40.6,
+    "four_hour_compression_pct": 9.04,
+    "last_completed_4h_close": 41.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       65.4,
@@ -660,13 +665,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 59.95,
-    "hard_stop": 39.1045,
+    "hard_stop": 39.991,
     "targets": [
       65.4,
       68.343,
       85.42875
     ],
-    "first_target_rr": 0.26,
+    "first_target_rr": 0.27,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -674,8 +679,60 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-POL",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 2,
+    "checks": {
+      "장기하락": true,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": true,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 180.4,
+    "upper_break_level": 196.8,
+    "base_days": 20,
+    "base_low": 123.0,
+    "base_high": 164.0,
+    "base_width_pct": 33.33,
+    "prior_decline_pct": 23.34,
+    "impulse_volume_multiple": 1.67,
+    "four_hour_retest_low": 153.0,
+    "four_hour_compression_pct": 6.54,
+    "last_completed_4h_close": 154.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      196.8,
+      199.752
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 180.4,
+    "hard_stop": 150.705,
+    "targets": [
+      196.8,
+      205.656,
+      257.07
+    ],
+    "first_target_rr": 0.55,
+    "missing_conditions": [
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ARX",
@@ -702,9 +759,9 @@
     "base_width_pct": 99.45,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 8.43,
-    "four_hour_retest_low": 349.0,
-    "four_hour_compression_pct": 11.01,
-    "last_completed_4h_close": 366.0,
+    "four_hour_retest_low": 351.0,
+    "four_hour_compression_pct": 7.74,
+    "last_completed_4h_close": 373.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       417.42,
@@ -712,13 +769,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 386.5,
-    "hard_stop": 343.765,
+    "hard_stop": 345.735,
     "targets": [
       417.42,
       436.2039,
       545.254875
     ],
-    "first_target_rr": 0.72,
+    "first_target_rr": 0.76,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -726,8 +783,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-CAP",
@@ -754,9 +811,9 @@
     "base_width_pct": 94.3,
     "prior_decline_pct": 34.46,
     "impulse_volume_multiple": 1.87,
-    "four_hour_retest_low": 82.6,
-    "four_hour_compression_pct": 8.56,
-    "last_completed_4h_close": 87.1,
+    "four_hour_retest_low": 83.8,
+    "four_hour_compression_pct": 14.25,
+    "last_completed_4h_close": 92.5,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       130.8,
@@ -764,13 +821,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 119.9,
-    "hard_stop": 81.361,
+    "hard_stop": 82.543,
     "targets": [
       130.8,
       136.686,
       170.8575
     ],
-    "first_target_rr": 0.28,
+    "first_target_rr": 0.29,
     "missing_conditions": [
       "베이스압축",
       "거래량시동",
@@ -778,8 +835,60 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-XLM",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 2,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": true,
+      "상단선접근": false
+    },
+    "level_source": "auto",
+    "lower_reclaim_level": 326.0,
+    "upper_break_level": 352.08,
+    "base_days": 20,
+    "base_low": 230.0,
+    "base_high": 307.0,
+    "base_width_pct": 33.48,
+    "prior_decline_pct": 13.97,
+    "impulse_volume_multiple": 3.85,
+    "four_hour_retest_low": 300.0,
+    "four_hour_compression_pct": 4.33,
+    "last_completed_4h_close": 308.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      352.08,
+      357.3612
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 326.0,
+    "hard_stop": 295.5,
+    "targets": [
+      352.08,
+      367.9236,
+      459.9045
+    ],
+    "first_target_rr": 0.86,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-LINK",
@@ -806,9 +915,9 @@
     "base_width_pct": 35.1,
     "prior_decline_pct": 6.11,
     "impulse_volume_multiple": 4.0,
-    "four_hour_retest_low": 19260.0,
+    "four_hour_retest_low": 19360.0,
     "four_hour_compression_pct": 5.76,
-    "last_completed_4h_close": 19720.0,
+    "last_completed_4h_close": 19490.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       23604.0,
@@ -816,13 +925,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 21637.0,
-    "hard_stop": 18971.1,
+    "hard_stop": 19069.6,
     "targets": [
       23604.0,
       24666.18,
       30832.725
     ],
-    "first_target_rr": 0.74,
+    "first_target_rr": 0.77,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -830,60 +939,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-XRP",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 2,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 2440.9,
-    "upper_break_level": 2662.8,
-    "base_days": 20,
-    "base_low": 1714.0,
-    "base_high": 2219.0,
-    "base_width_pct": 29.46,
-    "prior_decline_pct": 18.54,
-    "impulse_volume_multiple": 1.07,
-    "four_hour_retest_low": 2026.0,
-    "four_hour_compression_pct": 3.32,
-    "last_completed_4h_close": 2045.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      2662.8,
-      2702.742
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 2440.9,
-    "hard_stop": 1995.61,
-    "targets": [
-      2662.8,
-      2782.626,
-      3478.2825
-    ],
-    "first_target_rr": 0.5,
-    "missing_conditions": [
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-TOSHI",
@@ -911,8 +968,8 @@
     "prior_decline_pct": 20.12,
     "impulse_volume_multiple": 1.84,
     "four_hour_retest_low": 0.17,
-    "four_hour_compression_pct": 15.15,
-    "last_completed_4h_close": 0.171,
+    "four_hour_compression_pct": 11.76,
+    "last_completed_4h_close": 0.17,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       0.21924,
@@ -934,171 +991,15 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-ONDO",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 2,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 867.9,
-    "upper_break_level": 946.8,
-    "base_days": 20,
-    "base_low": 442.0,
-    "base_high": 789.0,
-    "base_width_pct": 78.51,
-    "prior_decline_pct": 0.0,
-    "impulse_volume_multiple": 3.98,
-    "four_hour_retest_low": 671.0,
-    "four_hour_compression_pct": 6.56,
-    "last_completed_4h_close": 692.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      946.8,
-      961.002
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 867.9,
-    "hard_stop": 660.935,
-    "targets": [
-      946.8,
-      989.406,
-      1236.7575
-    ],
-    "first_target_rr": 0.38,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-SLX",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 2,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "auto",
-    "lower_reclaim_level": 110.0,
-    "upper_break_level": 118.8,
-    "base_days": 20,
-    "base_low": 79.1,
-    "base_high": 106.0,
-    "base_width_pct": 34.01,
-    "prior_decline_pct": 55.59,
-    "impulse_volume_multiple": 2.13,
-    "four_hour_retest_low": 85.5,
-    "four_hour_compression_pct": 4.0,
-    "last_completed_4h_close": 87.2,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      118.8,
-      120.582
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 110.0,
-    "hard_stop": 84.2175,
-    "targets": [
-      118.8,
-      124.146,
-      155.1825
-    ],
-    "first_target_rr": 0.34,
-    "missing_conditions": [
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-MOODENG",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 2,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 80.41,
-    "upper_break_level": 87.72,
-    "base_days": 20,
-    "base_low": 50.2,
-    "base_high": 73.1,
-    "base_width_pct": 45.62,
-    "prior_decline_pct": 19.71,
-    "impulse_volume_multiple": 0.6,
-    "four_hour_retest_low": 63.5,
-    "four_hour_compression_pct": 7.32,
-    "last_completed_4h_close": 65.1,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      87.72,
-      89.0358
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 80.41,
-    "hard_stop": 62.5475,
-    "targets": [
-      87.72,
-      91.6674,
-      114.58425
-    ],
-    "first_target_rr": 0.41,
-    "missing_conditions": [
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-BTC",
     "status": "제외",
     "d_stage": "D0",
-    "d_stage_label": "바닥 압축 후보",
-    "d_stage_reason": "바닥 압축 뒤 하단 재탈환선 접근 중",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
     "score": 2,
     "checks": {
       "장기하락": false,
@@ -1118,9 +1019,9 @@
     "base_width_pct": 15.29,
     "prior_decline_pct": 2.41,
     "impulse_volume_multiple": 1.35,
-    "four_hour_retest_low": 112713000.0,
+    "four_hour_retest_low": 113148000.0,
     "four_hour_compression_pct": 2.86,
-    "last_completed_4h_close": 114188000.0,
+    "last_completed_4h_close": 113685000.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       141120000.0,
@@ -1128,13 +1029,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 129360000.00000001,
-    "hard_stop": 111022305.0,
+    "hard_stop": 111450780.0,
     "targets": [
       141120000.0,
       147470400.0,
       184338000.0
     ],
-    "first_target_rr": 0.64,
+    "first_target_rr": 0.66,
     "missing_conditions": [
       "장기하락",
       "거래량시동",
@@ -1142,166 +1043,61 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-DEEP",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 2,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 34.98,
-    "upper_break_level": 38.16,
-    "base_days": 20,
-    "base_low": 19.0,
-    "base_high": 31.8,
-    "base_width_pct": 67.37,
-    "prior_decline_pct": 0.39,
-    "impulse_volume_multiple": 6.09,
-    "four_hour_retest_low": 30.8,
-    "four_hour_compression_pct": 13.47,
-    "last_completed_4h_close": 31.8,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      38.16,
-      38.7324
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 34.98,
-    "hard_stop": 30.338,
-    "targets": [
-      38.16,
-      39.8772,
-      49.8465
-    ],
-    "first_target_rr": 0.69,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-LSK",
+    "market": "KRW-PENGU",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
     "d_stage_reason": "재탈환 전 단계",
     "score": 1,
     "checks": {
-      "장기하락": false,
+      "장기하락": true,
       "베이스압축": false,
       "거래량시동": false,
       "하단선재탈환": false,
       "4H리테스트": false,
-      "4H재압축": true,
+      "4H재압축": false,
       "상단선접근": false
     },
     "level_source": "fallback",
-    "lower_reclaim_level": 748.0,
-    "upper_break_level": 816.0,
+    "lower_reclaim_level": 16.61,
+    "upper_break_level": 18.12,
     "base_days": 20,
-    "base_low": 136.0,
-    "base_high": 680.0,
-    "base_width_pct": 400.0,
-    "prior_decline_pct": 0.0,
-    "impulse_volume_multiple": 0.54,
-    "four_hour_retest_low": 377.0,
-    "four_hour_compression_pct": 5.87,
-    "last_completed_4h_close": 386.0,
+    "base_low": 9.14,
+    "base_high": 15.1,
+    "base_width_pct": 65.21,
+    "prior_decline_pct": 20.46,
+    "impulse_volume_multiple": 1.58,
+    "four_hour_retest_low": 13.2,
+    "four_hour_compression_pct": 9.92,
+    "last_completed_4h_close": 13.2,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      816.0,
-      828.24
+      18.12,
+      18.3918
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 748.0,
-    "hard_stop": 371.345,
+    "body_invalidation": 16.61,
+    "hard_stop": 13.002,
     "targets": [
-      816.0,
-      852.72,
-      1065.9
+      18.12,
+      18.9354,
+      23.66925
     ],
-    "first_target_rr": 0.18,
+    "first_target_rr": 0.42,
     "missing_conditions": [
-      "장기하락",
       "베이스압축",
       "거래량시동",
       "하단선재탈환",
       "4H리테스트",
+      "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-DOOD",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 3.564,
-    "upper_break_level": 3.888,
-    "base_days": 20,
-    "base_low": 2.06,
-    "base_high": 3.24,
-    "base_width_pct": 57.28,
-    "prior_decline_pct": 2.26,
-    "impulse_volume_multiple": 2.33,
-    "four_hour_retest_low": 2.47,
-    "four_hour_compression_pct": 8.75,
-    "last_completed_4h_close": 2.52,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      3.888,
-      3.94632
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 3.564,
-    "hard_stop": 2.43295,
-    "targets": [
-      3.888,
-      4.06296,
-      5.0787
-    ],
-    "first_target_rr": 0.29,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-UNI",
@@ -1329,8 +1125,8 @@
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 0.93,
     "four_hour_retest_low": 11890.0,
-    "four_hour_compression_pct": 5.15,
-    "last_completed_4h_close": 12250.0,
+    "four_hour_compression_pct": 5.06,
+    "last_completed_4h_close": 12010.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       17616.0,
@@ -1353,8 +1149,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-DOGE",
@@ -1381,9 +1177,9 @@
     "base_width_pct": 33.64,
     "prior_decline_pct": 11.2,
     "impulse_volume_multiple": 1.87,
-    "four_hour_retest_low": 126.0,
+    "four_hour_retest_low": 127.0,
     "four_hour_compression_pct": 5.56,
-    "last_completed_4h_close": 129.0,
+    "last_completed_4h_close": 127.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       171.6,
@@ -1391,13 +1187,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 157.3,
-    "hard_stop": 124.11,
+    "hard_stop": 125.095,
     "targets": [
       171.6,
       179.322,
       224.1525
     ],
-    "first_target_rr": 0.43,
+    "first_target_rr": 0.44,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -1406,11 +1202,64 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-PEPE",
+    "market": "KRW-WLD",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 1,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "auto",
+    "lower_reclaim_level": 789.0,
+    "upper_break_level": 852.12,
+    "base_days": 20,
+    "base_low": 486.0,
+    "base_high": 746.0,
+    "base_width_pct": 53.5,
+    "prior_decline_pct": 3.41,
+    "impulse_volume_multiple": 3.83,
+    "four_hour_retest_low": 709.0,
+    "four_hour_compression_pct": 14.91,
+    "last_completed_4h_close": 722.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      852.12,
+      864.9018
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 789.0,
+    "hard_stop": 698.365,
+    "targets": [
+      852.12,
+      890.4654,
+      1113.08175
+    ],
+    "first_target_rr": 0.7,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-BCH",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
@@ -1426,31 +1275,31 @@
       "상단선접근": false
     },
     "level_source": "fallback",
-    "lower_reclaim_level": 0.007942,
-    "upper_break_level": 0.008664,
+    "lower_reclaim_level": 545600.0,
+    "upper_break_level": 595200.0,
     "base_days": 20,
-    "base_low": 0.00437,
-    "base_high": 0.00722,
-    "base_width_pct": 65.22,
-    "prior_decline_pct": 8.02,
-    "impulse_volume_multiple": 1.81,
-    "four_hour_retest_low": 0.00581,
-    "four_hour_compression_pct": 5.9,
-    "last_completed_4h_close": 0.00589,
+    "base_low": 290600.0,
+    "base_high": 496000.0,
+    "base_width_pct": 70.68,
+    "prior_decline_pct": 7.12,
+    "impulse_volume_multiple": 1.47,
+    "four_hour_retest_low": 412500.0,
+    "four_hour_compression_pct": 4.36,
+    "last_completed_4h_close": 414900.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      0.008664,
-      0.00879396
+      595200.0,
+      604128.0
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 0.007942,
-    "hard_stop": 0.00572285,
+    "body_invalidation": 545600.0,
+    "hard_stop": 406312.5,
     "targets": [
-      0.008664,
-      0.00905388,
-      0.01131735
+      595200.0,
+      621984.0,
+      777480.0
     ],
-    "first_target_rr": 0.33,
+    "first_target_rr": 0.36,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -1459,167 +1308,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-SHIB",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 0.009284,
-    "upper_break_level": 0.010128,
-    "base_days": 20,
-    "base_low": 0.00651,
-    "base_high": 0.00844,
-    "base_width_pct": 29.65,
-    "prior_decline_pct": 14.25,
-    "impulse_volume_multiple": 1.44,
-    "four_hour_retest_low": 0.00779,
-    "four_hour_compression_pct": 4.12,
-    "last_completed_4h_close": 0.00793,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      0.010128,
-      0.01027992
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 0.009284,
-    "hard_stop": 0.00767315,
-    "targets": [
-      0.010128,
-      0.01058376,
-      0.0132297
-    ],
-    "first_target_rr": 0.52,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-SEI",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 115.5,
-    "upper_break_level": 126.0,
-    "base_days": 20,
-    "base_low": 56.5,
-    "base_high": 105.0,
-    "base_width_pct": 85.84,
-    "prior_decline_pct": 0.0,
-    "impulse_volume_multiple": 3.6,
-    "four_hour_retest_low": 97.3,
-    "four_hour_compression_pct": 4.83,
-    "last_completed_4h_close": 98.6,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      126.0,
-      127.89
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 115.5,
-    "hard_stop": 95.8405,
-    "targets": [
-      126.0,
-      131.67,
-      164.5875
-    ],
-    "first_target_rr": 0.53,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-AAVE",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 233860.0,
-    "upper_break_level": 255120.0,
-    "base_days": 20,
-    "base_low": 155500.0,
-    "base_high": 212600.0,
-    "base_width_pct": 36.72,
-    "prior_decline_pct": 7.8,
-    "impulse_volume_multiple": 5.21,
-    "four_hour_retest_low": 214300.0,
-    "four_hour_compression_pct": 5.09,
-    "last_completed_4h_close": 217200.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      255120.0,
-      258946.8
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 233860.0,
-    "hard_stop": 211085.5,
-    "targets": [
-      255120.0,
-      266600.4,
-      333250.5
-    ],
-    "first_target_rr": 0.93,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-JTO",
@@ -1646,9 +1336,9 @@
     "base_width_pct": 55.08,
     "prior_decline_pct": 34.78,
     "impulse_volume_multiple": 2.64,
-    "four_hour_retest_low": 721.0,
-    "four_hour_compression_pct": 7.63,
-    "last_completed_4h_close": 734.0,
+    "four_hour_retest_low": 720.0,
+    "four_hour_compression_pct": 7.78,
+    "last_completed_4h_close": 722.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       939.6,
@@ -1656,11 +1346,64 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 870.0,
-    "hard_stop": 710.185,
+    "hard_stop": 709.2,
     "targets": [
       939.6,
       981.882,
       1227.3525
+    ],
+    "first_target_rr": 0.43,
+    "missing_conditions": [
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-TRUMP",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 1,
+    "checks": {
+      "장기하락": true,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "auto",
+    "lower_reclaim_level": 3293.0,
+    "upper_break_level": 3556.44,
+    "base_days": 20,
+    "base_low": 2483.0,
+    "base_high": 3185.0,
+    "base_width_pct": 28.27,
+    "prior_decline_pct": 78.02,
+    "impulse_volume_multiple": 1.39,
+    "four_hour_retest_low": 2742.0,
+    "four_hour_compression_pct": 5.09,
+    "last_completed_4h_close": 2759.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      3556.44,
+      3609.7866
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 3293.0,
+    "hard_stop": 2700.87,
+    "targets": [
+      3556.44,
+      3716.4798,
+      5045.0
     ],
     "first_target_rr": 0.44,
     "missing_conditions": [
@@ -1671,61 +1414,8 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-EGLD",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 11088.0,
-    "upper_break_level": 12096.0,
-    "base_days": 20,
-    "base_low": 5080.0,
-    "base_high": 10080.0,
-    "base_width_pct": 98.43,
-    "prior_decline_pct": 0.07,
-    "impulse_volume_multiple": 57.93,
-    "four_hour_retest_low": 7160.0,
-    "four_hour_compression_pct": 14.39,
-    "last_completed_4h_close": 7190.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      12096.0,
-      12277.44
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 11088.0,
-    "hard_stop": 7052.6,
-    "targets": [
-      12096.0,
-      12640.32,
-      15800.4
-    ],
-    "first_target_rr": 0.25,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-NEAR",
@@ -1752,9 +1442,9 @@
     "base_width_pct": 131.15,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 1.55,
-    "four_hour_retest_low": 6775.0,
-    "four_hour_compression_pct": 12.33,
-    "last_completed_4h_close": 7175.0,
+    "four_hour_retest_low": 6960.0,
+    "four_hour_compression_pct": 12.63,
+    "last_completed_4h_close": 7210.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       8460.0,
@@ -1762,13 +1452,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 7755.0,
-    "hard_stop": 6673.375,
+    "hard_stop": 6855.6,
     "targets": [
       8460.0,
       8840.7,
       11050.875
     ],
-    "first_target_rr": 0.65,
+    "first_target_rr": 0.78,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -1777,8 +1467,61 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-BLUR",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 1,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": true,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 33.22,
+    "upper_break_level": 36.24,
+    "base_days": 20,
+    "base_low": 21.9,
+    "base_high": 30.2,
+    "base_width_pct": 37.9,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 1.8,
+    "four_hour_retest_low": 28.0,
+    "four_hour_compression_pct": 16.73,
+    "last_completed_4h_close": 30.4,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      36.24,
+      36.7836
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 33.22,
+    "hard_stop": 27.58,
+    "targets": [
+      36.24,
+      37.8708,
+      47.3385
+    ],
+    "first_target_rr": 0.54,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ARB",
@@ -1807,7 +1550,7 @@
     "impulse_volume_multiple": 1.17,
     "four_hour_retest_low": 272.0,
     "four_hour_compression_pct": 5.88,
-    "last_completed_4h_close": 278.0,
+    "last_completed_4h_close": 275.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       412.8,
@@ -1830,61 +1573,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-POL",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 180.4,
-    "upper_break_level": 196.8,
-    "base_days": 20,
-    "base_low": 123.0,
-    "base_high": 164.0,
-    "base_width_pct": 33.33,
-    "prior_decline_pct": 23.34,
-    "impulse_volume_multiple": 1.67,
-    "four_hour_retest_low": 153.0,
-    "four_hour_compression_pct": 6.54,
-    "last_completed_4h_close": 155.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      196.8,
-      199.752
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 180.4,
-    "hard_stop": 150.705,
-    "targets": [
-      196.8,
-      205.656,
-      257.07
-    ],
-    "first_target_rr": 0.55,
-    "missing_conditions": [
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-CVC",
@@ -1911,9 +1601,9 @@
     "base_width_pct": 120.79,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 0.44,
-    "four_hour_retest_low": 41.1,
-    "four_hour_compression_pct": 11.91,
-    "last_completed_4h_close": 42.4,
+    "four_hour_retest_low": 41.8,
+    "four_hour_compression_pct": 10.54,
+    "last_completed_4h_close": 42.3,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       73.92,
@@ -1921,7 +1611,7 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 67.76,
-    "hard_stop": 40.4835,
+    "hard_stop": 41.173,
     "targets": [
       73.92,
       77.2464,
@@ -1936,114 +1626,61 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-AVAX",
+    "market": "KRW-XRP",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
     "d_stage_reason": "재탈환 전 단계",
     "score": 1,
     "checks": {
-      "장기하락": false,
+      "장기하락": true,
       "베이스압축": false,
-      "거래량시동": true,
+      "거래량시동": false,
       "하단선재탈환": false,
       "4H리테스트": false,
       "4H재압축": false,
       "상단선접근": false
     },
     "level_source": "fallback",
-    "lower_reclaim_level": 17721.0,
-    "upper_break_level": 19332.0,
+    "lower_reclaim_level": 2440.9,
+    "upper_break_level": 2662.8,
     "base_days": 20,
-    "base_low": 9795.0,
-    "base_high": 16110.0,
-    "base_width_pct": 64.47,
-    "prior_decline_pct": 0.0,
-    "impulse_volume_multiple": 4.88,
-    "four_hour_retest_low": 14830.0,
-    "four_hour_compression_pct": 5.66,
-    "last_completed_4h_close": 15040.0,
+    "base_low": 1714.0,
+    "base_high": 2219.0,
+    "base_width_pct": 29.46,
+    "prior_decline_pct": 18.54,
+    "impulse_volume_multiple": 1.07,
+    "four_hour_retest_low": 2024.0,
+    "four_hour_compression_pct": 3.01,
+    "last_completed_4h_close": 2026.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      19332.0,
-      19621.98
+      2662.8,
+      2702.742
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 17721.0,
-    "hard_stop": 14607.55,
+    "body_invalidation": 2440.9,
+    "hard_stop": 1993.64,
     "targets": [
-      19332.0,
-      20201.94,
-      25252.425
+      2662.8,
+      2782.626,
+      3478.2825
     ],
-    "first_target_rr": 0.52,
+    "first_target_rr": 0.5,
     "missing_conditions": [
-      "장기하락",
       "베이스압축",
+      "거래량시동",
       "하단선재탈환",
       "4H리테스트",
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-XLM",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "auto",
-    "lower_reclaim_level": 326.0,
-    "upper_break_level": 352.08,
-    "base_days": 20,
-    "base_low": 230.0,
-    "base_high": 307.0,
-    "base_width_pct": 33.48,
-    "prior_decline_pct": 13.97,
-    "impulse_volume_multiple": 3.85,
-    "four_hour_retest_low": 300.0,
-    "four_hour_compression_pct": 5.03,
-    "last_completed_4h_close": 302.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      352.08,
-      357.3612
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 326.0,
-    "hard_stop": 295.5,
-    "targets": [
-      352.08,
-      367.9236,
-      459.9045
-    ],
-    "first_target_rr": 0.86,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ENA",
@@ -2070,9 +1707,9 @@
     "base_width_pct": 110.87,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 0.91,
-    "four_hour_retest_low": 335.0,
+    "four_hour_retest_low": 342.0,
     "four_hour_compression_pct": 14.8,
-    "last_completed_4h_close": 365.0,
+    "last_completed_4h_close": 357.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       465.6,
@@ -2080,13 +1717,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 426.8,
-    "hard_stop": 329.975,
+    "hard_stop": 336.87,
     "targets": [
       465.6,
       486.552,
       608.19
     ],
-    "first_target_rr": 0.4,
+    "first_target_rr": 0.43,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2095,8 +1732,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ENS",
@@ -2123,9 +1760,9 @@
     "base_width_pct": 40.65,
     "prior_decline_pct": 5.79,
     "impulse_volume_multiple": 1.21,
-    "four_hour_retest_low": 9400.0,
+    "four_hour_retest_low": 9415.0,
     "four_hour_compression_pct": 4.39,
-    "last_completed_4h_close": 9520.0,
+    "last_completed_4h_close": 9450.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       12000.0,
@@ -2133,13 +1770,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 11000.0,
-    "hard_stop": 9259.0,
+    "hard_stop": 9273.775,
     "targets": [
       12000.0,
       12540.0,
       15675.0
     ],
-    "first_target_rr": 0.57,
+    "first_target_rr": 0.58,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2148,8 +1785,114 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-AVAX",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 1,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 17721.0,
+    "upper_break_level": 19332.0,
+    "base_days": 20,
+    "base_low": 9795.0,
+    "base_high": 16110.0,
+    "base_width_pct": 64.47,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 4.88,
+    "four_hour_retest_low": 14820.0,
+    "four_hour_compression_pct": 5.74,
+    "last_completed_4h_close": 14860.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      19332.0,
+      19621.98
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 17721.0,
+    "hard_stop": 14597.7,
+    "targets": [
+      19332.0,
+      20201.94,
+      25252.425
+    ],
+    "first_target_rr": 0.52,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-ONDO",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 1,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 867.9,
+    "upper_break_level": 946.8,
+    "base_days": 20,
+    "base_low": 442.0,
+    "base_high": 789.0,
+    "base_width_pct": 78.51,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 3.98,
+    "four_hour_retest_low": 675.0,
+    "four_hour_compression_pct": 6.56,
+    "last_completed_4h_close": 683.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      946.8,
+      961.002
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 867.9,
+    "hard_stop": 664.875,
+    "targets": [
+      946.8,
+      989.406,
+      1236.7575
+    ],
+    "first_target_rr": 0.39,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-COMP",
@@ -2176,9 +1919,9 @@
     "base_width_pct": 45.78,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 8.03,
-    "four_hour_retest_low": 33620.0,
-    "four_hour_compression_pct": 13.85,
-    "last_completed_4h_close": 34010.0,
+    "four_hour_retest_low": 33170.0,
+    "four_hour_compression_pct": 8.32,
+    "last_completed_4h_close": 33440.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       44364.0,
@@ -2186,13 +1929,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 40667.0,
-    "hard_stop": 33115.7,
+    "hard_stop": 32672.45,
     "targets": [
       44364.0,
       46360.38,
       57950.475
     ],
-    "first_target_rr": 0.49,
+    "first_target_rr": 0.46,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2201,61 +1944,61 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-ADA",
+    "market": "KRW-SLX",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
     "d_stage_reason": "재탈환 전 단계",
     "score": 1,
     "checks": {
-      "장기하락": false,
+      "장기하락": true,
       "베이스압축": false,
       "거래량시동": false,
       "하단선재탈환": false,
       "4H리테스트": false,
-      "4H재압축": true,
+      "4H재압축": false,
       "상단선접근": false
     },
-    "level_source": "fallback",
-    "lower_reclaim_level": 394.9,
-    "upper_break_level": 430.8,
+    "level_source": "auto",
+    "lower_reclaim_level": 110.0,
+    "upper_break_level": 118.8,
     "base_days": 20,
-    "base_low": 260.0,
-    "base_high": 359.0,
-    "base_width_pct": 38.08,
-    "prior_decline_pct": 14.7,
-    "impulse_volume_multiple": 1.65,
-    "four_hour_retest_low": 330.0,
-    "four_hour_compression_pct": 5.79,
-    "last_completed_4h_close": 336.0,
+    "base_low": 79.1,
+    "base_high": 106.0,
+    "base_width_pct": 34.01,
+    "prior_decline_pct": 55.59,
+    "impulse_volume_multiple": 2.13,
+    "four_hour_retest_low": 84.8,
+    "four_hour_compression_pct": 4.25,
+    "last_completed_4h_close": 84.8,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      430.8,
-      437.262
+      118.8,
+      120.582
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 394.9,
-    "hard_stop": 325.05,
+    "body_invalidation": 110.0,
+    "hard_stop": 83.528,
     "targets": [
-      430.8,
-      450.186,
-      562.7325
+      118.8,
+      124.146,
+      155.1825
     ],
-    "first_target_rr": 0.51,
+    "first_target_rr": 0.33,
     "missing_conditions": [
-      "장기하락",
       "베이스압축",
       "거래량시동",
       "하단선재탈환",
       "4H리테스트",
+      "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-DRV",
@@ -2282,9 +2025,9 @@
     "base_width_pct": 826.52,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 2.65,
-    "four_hour_retest_low": 504.0,
-    "four_hour_compression_pct": 7.95,
-    "last_completed_4h_close": 509.0,
+    "four_hour_retest_low": 506.0,
+    "four_hour_compression_pct": 4.17,
+    "last_completed_4h_close": 518.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       2012.4,
@@ -2292,7 +2035,7 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 1844.7,
-    "hard_stop": 496.44,
+    "hard_stop": 498.41,
     "targets": [
       2012.4,
       2102.958,
@@ -2307,61 +2050,61 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-SOL",
+    "market": "KRW-MOODENG",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
     "d_stage_reason": "재탈환 전 단계",
     "score": 1,
     "checks": {
-      "장기하락": false,
+      "장기하락": true,
       "베이스압축": false,
       "거래량시동": false,
       "하단선재탈환": false,
       "4H리테스트": false,
-      "4H재압축": true,
+      "4H재압축": false,
       "상단선접근": false
     },
     "level_source": "fallback",
-    "lower_reclaim_level": 182490.0,
-    "upper_break_level": 199080.0,
+    "lower_reclaim_level": 80.41,
+    "upper_break_level": 87.72,
     "base_days": 20,
-    "base_low": 130800.0,
-    "base_high": 165900.0,
-    "base_width_pct": 26.83,
-    "prior_decline_pct": 2.93,
-    "impulse_volume_multiple": 1.19,
-    "four_hour_retest_low": 160000.0,
-    "four_hour_compression_pct": 3.75,
-    "last_completed_4h_close": 162100.0,
+    "base_low": 50.2,
+    "base_high": 73.1,
+    "base_width_pct": 45.62,
+    "prior_decline_pct": 19.71,
+    "impulse_volume_multiple": 0.6,
+    "four_hour_retest_low": 63.4,
+    "four_hour_compression_pct": 3.47,
+    "last_completed_4h_close": 63.4,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      199080.0,
-      202066.2
+      87.72,
+      89.0358
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 182490.0,
-    "hard_stop": 157600.0,
+    "body_invalidation": 80.41,
+    "hard_stop": 62.449,
     "targets": [
-      199080.0,
-      208038.6,
-      260048.25
+      87.72,
+      91.6674,
+      114.58425
     ],
-    "first_target_rr": 0.67,
+    "first_target_rr": 0.41,
     "missing_conditions": [
-      "장기하락",
       "베이스압축",
       "거래량시동",
       "하단선재탈환",
       "4H리테스트",
+      "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-STX",
@@ -2388,9 +2131,9 @@
     "base_width_pct": 54.31,
     "prior_decline_pct": 1.51,
     "impulse_volume_multiple": 1.37,
-    "four_hour_retest_low": 425.0,
-    "four_hour_compression_pct": 11.61,
-    "last_completed_4h_close": 464.0,
+    "four_hour_retest_low": 430.0,
+    "four_hour_compression_pct": 16.82,
+    "last_completed_4h_close": 490.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       579.6,
@@ -2398,13 +2141,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 531.3,
-    "hard_stop": 418.625,
+    "hard_stop": 423.55,
     "targets": [
       579.6,
       605.682,
       757.1025
     ],
-    "first_target_rr": 0.43,
+    "first_target_rr": 0.45,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2413,61 +2156,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-FLOCK",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 1,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": true,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 145.2,
-    "upper_break_level": 158.4,
-    "base_days": 20,
-    "base_low": 72.5,
-    "base_high": 132.0,
-    "base_width_pct": 82.07,
-    "prior_decline_pct": 9.54,
-    "impulse_volume_multiple": 0.96,
-    "four_hour_retest_low": 86.7,
-    "four_hour_compression_pct": 11.87,
-    "last_completed_4h_close": 90.4,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      158.4,
-      160.776
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 145.2,
-    "hard_stop": 85.3995,
-    "targets": [
-      158.4,
-      165.528,
-      206.91
-    ],
-    "first_target_rr": 0.22,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-SUI",
@@ -2496,7 +2186,7 @@
     "impulse_volume_multiple": 2.25,
     "four_hour_retest_low": 1550.0,
     "four_hour_compression_pct": 5.68,
-    "last_completed_4h_close": 1612.0,
+    "last_completed_4h_close": 1565.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       1972.8,
@@ -2519,8 +2209,8 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-SOMI",
@@ -2547,9 +2237,9 @@
     "base_width_pct": 76.88,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 0.43,
-    "four_hour_retest_low": 283.0,
-    "four_hour_compression_pct": 41.85,
-    "last_completed_4h_close": 316.0,
+    "four_hour_retest_low": 296.0,
+    "four_hour_compression_pct": 37.28,
+    "last_completed_4h_close": 301.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       367.2,
@@ -2557,13 +2247,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 336.6,
-    "hard_stop": 278.755,
+    "hard_stop": 291.56,
     "targets": [
       367.2,
       383.724,
       479.655
     ],
-    "first_target_rr": 0.53,
+    "first_target_rr": 0.68,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2572,8 +2262,115 @@
       "4H리테스트",
       "4H재압축"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-DEEP",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 1,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 34.98,
+    "upper_break_level": 38.16,
+    "base_days": 20,
+    "base_low": 19.0,
+    "base_high": 31.8,
+    "base_width_pct": 67.37,
+    "prior_decline_pct": 0.39,
+    "impulse_volume_multiple": 6.09,
+    "four_hour_retest_low": 30.7,
+    "four_hour_compression_pct": 9.77,
+    "last_completed_4h_close": 30.8,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      38.16,
+      38.7324
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 34.98,
+    "hard_stop": 30.2395,
+    "targets": [
+      38.16,
+      39.8772,
+      49.8465
+    ],
+    "first_target_rr": 0.67,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-LSK",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 748.0,
+    "upper_break_level": 816.0,
+    "base_days": 20,
+    "base_low": 136.0,
+    "base_high": 680.0,
+    "base_width_pct": 400.0,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 0.54,
+    "four_hour_retest_low": 380.0,
+    "four_hour_compression_pct": 5.59,
+    "last_completed_4h_close": 382.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      816.0,
+      828.24
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 748.0,
+    "hard_stop": 374.3,
+    "targets": [
+      816.0,
+      852.72,
+      1065.9
+    ],
+    "first_target_rr": 0.18,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-PUNDIX",
@@ -2600,9 +2397,9 @@
     "base_width_pct": 69.35,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 0.94,
-    "four_hour_retest_low": 163.0,
-    "four_hour_compression_pct": 19.62,
-    "last_completed_4h_close": 173.0,
+    "four_hour_retest_low": 167.0,
+    "four_hour_compression_pct": 17.39,
+    "last_completed_4h_close": 169.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       252.0,
@@ -2610,13 +2407,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 231.0,
-    "hard_stop": 160.555,
+    "hard_stop": 164.495,
     "targets": [
       252.0,
       263.34,
       329.175
     ],
-    "first_target_rr": 0.3,
+    "first_target_rr": 0.32,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2626,8 +2423,8 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-FIL",
@@ -2654,9 +2451,9 @@
     "base_width_pct": 60.93,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 1.64,
-    "four_hour_retest_low": 1415.0,
-    "four_hour_compression_pct": 4.31,
-    "last_completed_4h_close": 1440.0,
+    "four_hour_retest_low": 1395.0,
+    "four_hour_compression_pct": 5.81,
+    "last_completed_4h_close": 1400.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       1996.8,
@@ -2664,13 +2461,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 1830.4,
-    "hard_stop": 1393.775,
+    "hard_stop": 1374.075,
     "targets": [
       1996.8,
       2086.656,
       2608.32
     ],
-    "first_target_rr": 0.38,
+    "first_target_rr": 0.36,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2680,11 +2477,11 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
-    "market": "KRW-BCH",
+    "market": "KRW-DOOD",
     "status": "제외",
     "d_stage": "D0",
     "d_stage_label": "바닥 압축 관찰",
@@ -2700,31 +2497,31 @@
       "상단선접근": false
     },
     "level_source": "fallback",
-    "lower_reclaim_level": 545600.0,
-    "upper_break_level": 595200.0,
+    "lower_reclaim_level": 3.564,
+    "upper_break_level": 3.888,
     "base_days": 20,
-    "base_low": 290600.0,
-    "base_high": 496000.0,
-    "base_width_pct": 70.68,
-    "prior_decline_pct": 7.12,
-    "impulse_volume_multiple": 1.47,
-    "four_hour_retest_low": 412500.0,
-    "four_hour_compression_pct": 4.36,
-    "last_completed_4h_close": 418200.0,
+    "base_low": 2.06,
+    "base_high": 3.24,
+    "base_width_pct": 57.28,
+    "prior_decline_pct": 2.26,
+    "impulse_volume_multiple": 2.33,
+    "four_hour_retest_low": 2.46,
+    "four_hour_compression_pct": 4.9,
+    "last_completed_4h_close": 2.47,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
-      595200.0,
-      604128.0
+      3.888,
+      3.94632
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 545600.0,
-    "hard_stop": 406312.5,
+    "body_invalidation": 3.564,
+    "hard_stop": 2.4231,
     "targets": [
-      595200.0,
-      621984.0,
-      777480.0
+      3.888,
+      4.06296,
+      5.0787
     ],
-    "first_target_rr": 0.36,
+    "first_target_rr": 0.28,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2734,8 +2531,170 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-SHIB",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 0.009284,
+    "upper_break_level": 0.010128,
+    "base_days": 20,
+    "base_low": 0.00651,
+    "base_high": 0.00844,
+    "base_width_pct": 29.65,
+    "prior_decline_pct": 14.25,
+    "impulse_volume_multiple": 1.44,
+    "four_hour_retest_low": 0.00775,
+    "four_hour_compression_pct": 4.39,
+    "last_completed_4h_close": 0.00778,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      0.010128,
+      0.01027992
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 0.009284,
+    "hard_stop": 0.00763375,
+    "targets": [
+      0.010128,
+      0.01058376,
+      0.0132297
+    ],
+    "first_target_rr": 0.51,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-PEPE",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 0.007942,
+    "upper_break_level": 0.008664,
+    "base_days": 20,
+    "base_low": 0.00437,
+    "base_high": 0.00722,
+    "base_width_pct": 65.22,
+    "prior_decline_pct": 8.02,
+    "impulse_volume_multiple": 1.81,
+    "four_hour_retest_low": 0.00576,
+    "four_hour_compression_pct": 5.9,
+    "last_completed_4h_close": 0.0058,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      0.008664,
+      0.00879396
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 0.007942,
+    "hard_stop": 0.0056736,
+    "targets": [
+      0.008664,
+      0.00905388,
+      0.01131735
+    ],
+    "first_target_rr": 0.32,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-G",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 22.66,
+    "upper_break_level": 24.72,
+    "base_days": 20,
+    "base_low": 4.84,
+    "base_high": 20.6,
+    "base_width_pct": 325.62,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 0.9,
+    "four_hour_retest_low": 6.51,
+    "four_hour_compression_pct": 3.07,
+    "last_completed_4h_close": 6.54,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      24.72,
+      25.0908
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 22.66,
+    "hard_stop": 6.41235,
+    "targets": [
+      24.72,
+      25.8324,
+      32.2905
+    ],
+    "first_target_rr": 0.13,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-APT",
@@ -2762,9 +2721,9 @@
     "base_width_pct": 67.73,
     "prior_decline_pct": 2.03,
     "impulse_volume_multiple": 1.09,
-    "four_hour_retest_low": 1060.0,
-    "four_hour_compression_pct": 5.0,
-    "last_completed_4h_close": 1075.0,
+    "four_hour_retest_low": 1046.0,
+    "four_hour_compression_pct": 6.31,
+    "last_completed_4h_close": 1049.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       1447.2,
@@ -2772,13 +2731,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 1326.6,
-    "hard_stop": 1044.1,
+    "hard_stop": 1030.31,
     "targets": [
       1447.2,
       1512.324,
       1890.405
     ],
-    "first_target_rr": 0.43,
+    "first_target_rr": 0.41,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2788,8 +2747,8 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ETC",
@@ -2816,9 +2775,9 @@
     "base_width_pct": 46.36,
     "prior_decline_pct": 4.92,
     "impulse_volume_multiple": 1.66,
-    "four_hour_retest_low": 12150.0,
-    "four_hour_compression_pct": 3.37,
-    "last_completed_4h_close": 12270.0,
+    "four_hour_retest_low": 12010.0,
+    "four_hour_compression_pct": 4.58,
+    "last_completed_4h_close": 12020.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       17028.0,
@@ -2826,13 +2785,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 15609.0,
-    "hard_stop": 11967.75,
+    "hard_stop": 11829.85,
     "targets": [
       17028.0,
       17794.26,
       22242.825
     ],
-    "first_target_rr": 0.39,
+    "first_target_rr": 0.38,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2842,62 +2801,8 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-BLUR",
-    "status": "제외",
-    "d_stage": "D0",
-    "d_stage_label": "바닥 압축 관찰",
-    "d_stage_reason": "재탈환 전 단계",
-    "score": 0,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 33.22,
-    "upper_break_level": 36.24,
-    "base_days": 20,
-    "base_low": 21.9,
-    "base_high": 30.2,
-    "base_width_pct": 37.9,
-    "prior_decline_pct": 0.0,
-    "impulse_volume_multiple": 1.8,
-    "four_hour_retest_low": 27.2,
-    "four_hour_compression_pct": 18.49,
-    "last_completed_4h_close": 29.5,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      36.24,
-      36.7836
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 33.22,
-    "hard_stop": 26.792,
-    "targets": [
-      36.24,
-      37.8708,
-      47.3385
-    ],
-    "first_target_rr": 0.47,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ZRO",
@@ -2924,9 +2829,9 @@
     "base_width_pct": 83.29,
     "prior_decline_pct": 4.58,
     "impulse_volume_multiple": 1.72,
-    "four_hour_retest_low": 2287.0,
-    "four_hour_compression_pct": 13.66,
-    "last_completed_4h_close": 2328.0,
+    "four_hour_retest_low": 2239.0,
+    "four_hour_compression_pct": 14.07,
+    "last_completed_4h_close": 2256.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       2764.8,
@@ -2934,13 +2839,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 2534.4,
-    "hard_stop": 2252.695,
+    "hard_stop": 2205.415,
     "targets": [
       2764.8,
       2889.216,
       3611.52
     ],
-    "first_target_rr": 0.82,
+    "first_target_rr": 0.7,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -2950,8 +2855,8 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-XPL",
@@ -2978,9 +2883,9 @@
     "base_width_pct": 59.05,
     "prior_decline_pct": 13.24,
     "impulse_volume_multiple": 1.77,
-    "four_hour_retest_low": 128.0,
-    "four_hour_compression_pct": 6.25,
-    "last_completed_4h_close": 131.0,
+    "four_hour_retest_low": 125.0,
+    "four_hour_compression_pct": 8.8,
+    "last_completed_4h_close": 125.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       200.4,
@@ -2988,13 +2893,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 183.7,
-    "hard_stop": 126.08,
+    "hard_stop": 123.125,
     "targets": [
       200.4,
       209.418,
       261.7725
     ],
-    "first_target_rr": 0.29,
+    "first_target_rr": 0.28,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -3004,8 +2909,8 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-RED",
@@ -3032,9 +2937,9 @@
     "base_width_pct": 57.76,
     "prior_decline_pct": 0.0,
     "impulse_volume_multiple": 1.03,
-    "four_hour_retest_low": 221.0,
-    "four_hour_compression_pct": 18.06,
-    "last_completed_4h_close": 249.0,
+    "four_hour_retest_low": 231.0,
+    "four_hour_compression_pct": 19.44,
+    "last_completed_4h_close": 239.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       304.8,
@@ -3042,13 +2947,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 279.4,
-    "hard_stop": 217.685,
+    "hard_stop": 227.535,
     "targets": [
       304.8,
       318.516,
       398.145
     ],
-    "first_target_rr": 0.41,
+    "first_target_rr": 0.49,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -3058,8 +2963,62 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-ADA",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 394.9,
+    "upper_break_level": 430.8,
+    "base_days": 20,
+    "base_low": 260.0,
+    "base_high": 359.0,
+    "base_width_pct": 38.08,
+    "prior_decline_pct": 14.7,
+    "impulse_volume_multiple": 1.65,
+    "four_hour_retest_low": 330.0,
+    "four_hour_compression_pct": 5.47,
+    "last_completed_4h_close": 331.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      430.8,
+      437.262
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 394.9,
+    "hard_stop": 325.05,
+    "targets": [
+      430.8,
+      450.186,
+      562.7325
+    ],
+    "first_target_rr": 0.51,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-MEW",
@@ -3086,9 +3045,9 @@
     "base_width_pct": 42.88,
     "prior_decline_pct": 10.75,
     "impulse_volume_multiple": 1.71,
-    "four_hour_retest_low": 0.687,
-    "four_hour_compression_pct": 19.94,
-    "last_completed_4h_close": 0.694,
+    "four_hour_retest_low": 0.674,
+    "four_hour_compression_pct": 16.77,
+    "last_completed_4h_close": 0.682,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       0.8796,
@@ -3096,13 +3055,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 0.8063,
-    "hard_stop": 0.676695,
+    "hard_stop": 0.66389,
     "targets": [
       0.8796,
       0.919182,
       1.1489775
     ],
-    "first_target_rr": 0.57,
+    "first_target_rr": 0.51,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -3112,8 +3071,116 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-SOL",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 182490.0,
+    "upper_break_level": 199080.0,
+    "base_days": 20,
+    "base_low": 130800.0,
+    "base_high": 165900.0,
+    "base_width_pct": 26.83,
+    "prior_decline_pct": 2.93,
+    "impulse_volume_multiple": 1.19,
+    "four_hour_retest_low": 159500.0,
+    "four_hour_compression_pct": 4.08,
+    "last_completed_4h_close": 159600.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      199080.0,
+      202066.2
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 182490.0,
+    "hard_stop": 157107.5,
+    "targets": [
+      199080.0,
+      208038.6,
+      260048.25
+    ],
+    "first_target_rr": 0.65,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-FLOCK",
+    "status": "제외",
+    "d_stage": "D0",
+    "d_stage_label": "바닥 압축 관찰",
+    "d_stage_reason": "재탈환 전 단계",
+    "score": 0,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 145.2,
+    "upper_break_level": 158.4,
+    "base_days": 20,
+    "base_low": 72.5,
+    "base_high": 132.0,
+    "base_width_pct": 82.07,
+    "prior_decline_pct": 9.54,
+    "impulse_volume_multiple": 0.96,
+    "four_hour_retest_low": 88.3,
+    "four_hour_compression_pct": 11.74,
+    "last_completed_4h_close": 89.2,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      158.4,
+      160.776
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 145.2,
+    "hard_stop": 86.9755,
+    "targets": [
+      158.4,
+      165.528,
+      206.91
+    ],
+    "first_target_rr": 0.23,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-MIRA",
@@ -3140,9 +3207,9 @@
     "base_width_pct": 36.84,
     "prior_decline_pct": 2.94,
     "impulse_volume_multiple": 0.82,
-    "four_hour_retest_low": 71.0,
-    "four_hour_compression_pct": 6.39,
-    "last_completed_4h_close": 71.8,
+    "four_hour_retest_low": 70.5,
+    "four_hour_compression_pct": 4.26,
+    "last_completed_4h_close": 70.7,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       89.856,
@@ -3150,13 +3217,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 83.2,
-    "hard_stop": 69.935,
+    "hard_stop": 69.4425,
     "targets": [
       89.856,
       93.89952,
       117.3744
     ],
-    "first_target_rr": 0.5,
+    "first_target_rr": 0.48,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -3166,23 +3233,23 @@
       "4H재압축",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-0G",
-    "status": "준비",
+    "status": "선매수감시",
     "d_stage": "D-W",
     "d_stage_label": "상단 재지지 경고",
     "d_stage_reason": "상단 돌파 후 완성봉이 다시 상단선 아래 마감",
-    "score": 4,
+    "score": 5,
     "checks": {
       "장기하락": false,
       "베이스압축": false,
       "거래량시동": true,
       "하단선재탈환": true,
       "4H리테스트": true,
-      "4H재압축": false,
+      "4H재압축": true,
       "상단선접근": true
     },
     "level_source": "auto",
@@ -3196,7 +3263,7 @@
     "impulse_volume_multiple": 11.03,
     "four_hour_retest_low": 424.0,
     "four_hour_compression_pct": 16.75,
-    "last_completed_4h_close": 427.0,
+    "last_completed_4h_close": 430.0,
     "aggressive_entry_zone": [
       424.0,
       427.4025
@@ -3216,18 +3283,17 @@
     "first_target_rr": 1.18,
     "missing_conditions": [
       "장기하락",
-      "베이스압축",
-      "4H재압축"
+      "베이스압축"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-HBAR",
     "status": "준비",
-    "d_stage": "D-W",
-    "d_stage_label": "상단 재지지 경고",
-    "d_stage_reason": "상단 돌파 후 완성봉이 다시 상단선 아래 마감",
+    "d_stage": "D-F",
+    "d_stage_label": "구조 실패",
+    "d_stage_reason": "하단 재탈환선 아래 4시간봉 2개 연속 마감",
     "score": 3,
     "checks": {
       "장기하락": false,
@@ -3247,12 +3313,12 @@
     "base_width_pct": 37.93,
     "prior_decline_pct": 2.3,
     "impulse_volume_multiple": 11.65,
-    "four_hour_retest_low": 146.0,
-    "four_hour_compression_pct": 11.35,
-    "last_completed_4h_close": 148.0,
+    "four_hour_retest_low": 147.0,
+    "four_hour_compression_pct": 9.03,
+    "last_completed_4h_close": 149.0,
     "aggressive_entry_zone": [
       149.6,
-      153.505
+      153.9975
     ],
     "confirmation_entry_zone": [
       163.2,
@@ -3260,126 +3326,21 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 149.6,
-    "hard_stop": 143.81,
+    "hard_stop": 144.795,
     "targets": [
       163.2,
       178.0,
       222.5
     ],
-    "first_target_rr": 1.5,
+    "first_target_rr": 1.63,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-ARK",
-    "status": "제외",
-    "d_stage": "D-W",
-    "d_stage_label": "하단 재탈환 경고",
-    "d_stage_reason": "하단 재탈환선 아래 첫 4시간봉 마감",
-    "score": 2,
-    "checks": {
-      "장기하락": false,
-      "베이스압축": false,
-      "거래량시동": true,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": true
-    },
-    "level_source": "fallback",
-    "lower_reclaim_level": 438.9,
-    "upper_break_level": 478.8,
-    "base_days": 20,
-    "base_low": 147.0,
-    "base_high": 399.0,
-    "base_width_pct": 171.43,
-    "prior_decline_pct": 0.0,
-    "impulse_volume_multiple": 3.41,
-    "four_hour_retest_low": 356.0,
-    "four_hour_compression_pct": 55.65,
-    "last_completed_4h_close": 416.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      478.8,
-      485.982
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 438.9,
-    "hard_stop": 350.66,
-    "targets": [
-      478.8,
-      500.346,
-      625.4325
-    ],
-    "first_target_rr": 0.45,
-    "missing_conditions": [
-      "장기하락",
-      "베이스압축",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
-  },
-  {
-    "market": "KRW-TRAC",
-    "status": "제외",
-    "d_stage": "D-W",
-    "d_stage_label": "하단 재탈환 경고",
-    "d_stage_reason": "하단 재탈환선 아래 첫 4시간봉 마감",
-    "score": 1,
-    "checks": {
-      "장기하락": true,
-      "베이스압축": false,
-      "거래량시동": false,
-      "하단선재탈환": false,
-      "4H리테스트": false,
-      "4H재압축": false,
-      "상단선접근": false
-    },
-    "level_source": "auto",
-    "lower_reclaim_level": 591.0,
-    "upper_break_level": 638.28,
-    "base_days": 20,
-    "base_low": 410.0,
-    "base_high": 560.0,
-    "base_width_pct": 36.59,
-    "prior_decline_pct": 52.37,
-    "impulse_volume_multiple": 1.81,
-    "four_hour_retest_low": 531.0,
-    "four_hour_compression_pct": 26.69,
-    "last_completed_4h_close": 564.0,
-    "aggressive_entry_zone": [],
-    "confirmation_entry_zone": [
-      638.28,
-      647.8542
-    ],
-    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
-    "body_invalidation": 591.0,
-    "hard_stop": 523.035,
-    "targets": [
-      638.28,
-      667.0026,
-      833.75325
-    ],
-    "first_target_rr": 0.7,
-    "missing_conditions": [
-      "베이스압축",
-      "거래량시동",
-      "하단선재탈환",
-      "4H리테스트",
-      "4H재압축",
-      "상단선접근"
-    ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-ALGO",
@@ -3406,9 +3367,9 @@
     "base_width_pct": 41.88,
     "prior_decline_pct": 1.77,
     "impulse_volume_multiple": 7.97,
-    "four_hour_retest_low": 166.0,
+    "four_hour_retest_low": 167.0,
     "four_hour_compression_pct": 4.82,
-    "last_completed_4h_close": 170.0,
+    "last_completed_4h_close": 168.0,
     "aggressive_entry_zone": [],
     "confirmation_entry_zone": [
       199.2,
@@ -3416,13 +3377,13 @@
     ],
     "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
     "body_invalidation": 182.6,
-    "hard_stop": 163.51,
+    "hard_stop": 164.495,
     "targets": [
       199.2,
       208.164,
       260.205
     ],
-    "first_target_rr": 0.87,
+    "first_target_rr": 0.92,
     "missing_conditions": [
       "장기하락",
       "베이스압축",
@@ -3430,8 +3391,113 @@
       "4H리테스트",
       "상단선접근"
     ],
-    "candle_start_time": "2026-09-30T21:00:00",
-    "candle_end_time": "2026-10-01T01:00:00+09:00"
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-ARK",
+    "status": "제외",
+    "d_stage": "D-F",
+    "d_stage_label": "구조 실패",
+    "d_stage_reason": "하단 재탈환선 아래 4시간봉 2개 연속 마감",
+    "score": 2,
+    "checks": {
+      "장기하락": false,
+      "베이스압축": false,
+      "거래량시동": true,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": true
+    },
+    "level_source": "fallback",
+    "lower_reclaim_level": 438.9,
+    "upper_break_level": 478.8,
+    "base_days": 20,
+    "base_low": 147.0,
+    "base_high": 399.0,
+    "base_width_pct": 171.43,
+    "prior_decline_pct": 0.0,
+    "impulse_volume_multiple": 3.41,
+    "four_hour_retest_low": 337.0,
+    "four_hour_compression_pct": 55.19,
+    "last_completed_4h_close": 351.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      478.8,
+      485.982
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 438.9,
+    "hard_stop": 331.945,
+    "targets": [
+      478.8,
+      500.346,
+      625.4325
+    ],
+    "first_target_rr": 0.37,
+    "missing_conditions": [
+      "장기하락",
+      "베이스압축",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
+  },
+  {
+    "market": "KRW-TRAC",
+    "status": "제외",
+    "d_stage": "D-F",
+    "d_stage_label": "구조 실패",
+    "d_stage_reason": "하단 재탈환선 아래 4시간봉 2개 연속 마감",
+    "score": 1,
+    "checks": {
+      "장기하락": true,
+      "베이스압축": false,
+      "거래량시동": false,
+      "하단선재탈환": false,
+      "4H리테스트": false,
+      "4H재압축": false,
+      "상단선접근": false
+    },
+    "level_source": "auto",
+    "lower_reclaim_level": 591.0,
+    "upper_break_level": 638.28,
+    "base_days": 20,
+    "base_low": 410.0,
+    "base_high": 560.0,
+    "base_width_pct": 36.59,
+    "prior_decline_pct": 52.37,
+    "impulse_volume_multiple": 1.81,
+    "four_hour_retest_low": 542.0,
+    "four_hour_compression_pct": 23.74,
+    "last_completed_4h_close": 560.0,
+    "aggressive_entry_zone": [],
+    "confirmation_entry_zone": [
+      638.28,
+      647.8542
+    ],
+    "confirmation_rule": "상단선 돌파 종가 확인 후 상단선 리테스트 방어 시에만 사용",
+    "body_invalidation": 591.0,
+    "hard_stop": 533.87,
+    "targets": [
+      638.28,
+      667.0026,
+      833.75325
+    ],
+    "first_target_rr": 0.83,
+    "missing_conditions": [
+      "베이스압축",
+      "거래량시동",
+      "하단선재탈환",
+      "4H리테스트",
+      "4H재압축",
+      "상단선접근"
+    ],
+    "candle_start_time": "2026-10-01T01:00:00",
+    "candle_end_time": "2026-10-01T05:00:00+09:00"
   },
   {
     "market": "KRW-PROM",
