@@ -133,6 +133,7 @@ def fetch_universe(min_quote_volume: float | None = MIN_QUOTE_VOLUME, limit: int
     tickers = api_get("/ticker/24hr")
     ticker_map = {str(x.get("symbol")): x for x in tickers if isinstance(x, dict)}
     rows = []
+    known_bases = {str(item.get("baseAsset", "")) for item in info.get("symbols", [])}
     for item in info.get("symbols", []):
         symbol = str(item.get("symbol", ""))
         base = str(item.get("baseAsset", ""))
@@ -141,7 +142,9 @@ def fetch_universe(min_quote_volume: float | None = MIN_QUOTE_VOLUME, limit: int
             continue
         if item.get("isSpotTradingAllowed") is False:
             continue
-        if base in STABLE_BASES or base.endswith(LEVERAGED_SUFFIXES):
+        leveraged = any(base.endswith(suffix) and base[:-len(suffix)] in known_bases
+                        for suffix in LEVERAGED_SUFFIXES)
+        if base in STABLE_BASES or leveraged:
             continue
         ticker = ticker_map.get(symbol)
         if not ticker:

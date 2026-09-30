@@ -112,3 +112,13 @@ def test_d_adapter_imports_in_clean_package_subprocess():
                             input=json.dumps([{'symbol':'TESTUSDT','base':'TEST','tick':.01},data,four]),
                             text=True,capture_output=True,cwd=Path(__file__).resolve().parents[1])
     assert result.returncode == 0, result.stderr
+
+
+def test_real_token_ending_up_is_not_mistaken_for_leveraged_token():
+    info = {"symbols": [{"symbol": base + "USDT", "baseAsset": base, "quoteAsset": "USDT", "status": "TRADING"}
+                        for base in ("JUP", "BTC", "BTCUP", "USDC")]}
+    tickers = [{"symbol": base + "USDT", "quoteVolume": "3000000", "lastPrice": "1", "priceChangePercent": "0"}
+               for base in ("JUP", "BTC", "BTCUP", "USDC")]
+    with patch.object(bn, "api_get", side_effect=[info, tickers]):
+        result = bn.fetch_universe(limit=None)
+    assert {row["base"] for row in result} == {"JUP", "BTC"}
