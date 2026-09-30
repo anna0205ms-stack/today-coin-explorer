@@ -78,7 +78,7 @@ def chart_rows(rows: list[dict]) -> list[list[float]]:
 def enrich_candidate_charts(snapshot: dict) -> bool:
     """UPBIT 후보 페이지와 같은 일봉/4H 상세 차트를 Binance API만으로 채운다."""
     candidates = snapshot.get("candidates") or []
-    h_markets = {item.get("market") for item in candidates if item.get("type") == "H"}
+    long_markets = {item.get("market") for item in candidates if item.get("type") in {"F", "G", "H"}}
     cache: dict[str, dict] = {}
     changed = False
     for row in candidates:
@@ -89,7 +89,7 @@ def enrich_candidate_charts(snapshot: dict) -> bool:
         if not charts.get("day") or not charts.get("4h"):
             if market not in cache:
                 try:
-                    day = fetch_klines(market, "1d", 180 if market in h_markets else 80)
+                    day = fetch_klines(market, "1d", 400 if market in long_markets else 80)
                     h4 = fetch_klines(market, "4h", 80)
                     cache[market] = {"day": chart_rows(day), "4h": chart_rows(h4)}
                 except Exception as exc:
@@ -178,6 +178,8 @@ def synthetic_watch(snapshot: dict) -> dict:
 def binanceize(page: str) -> str:
     replacements = [
         ("upbitPins", "binancePins"),
+        ("업비트 신고가 상승", "BINANCE 최근 200일 고점권 상승"),
+        ("신규상장 신고가", "최근 200일 고점권 상승"),
         ("업비트 KRW", "BINANCE SPOT USDT"),
         ("업비트 차트", "BINANCE 차트"),
         ("업비트에서", "BINANCE에서"),

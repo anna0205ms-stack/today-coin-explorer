@@ -12,6 +12,11 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+try:
+    from .upbit_rate_limit import wait_for_request_slot
+except ImportError:
+    from upbit_rate_limit import wait_for_request_slot
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -20,14 +25,28 @@ KST = timezone(timedelta(hours=9))
 HEADERS = {"Accept": "application/json", "User-Agent": "pre-breakout-reclaim/1.0"}
 
 
-def api_get(path: str, params: dict | None = None):
+def api_get(path: str, params: dict | None = None, *, attempts: int = 5):
     url = API + path
     if params:
         url += "?" + urlencode(params)
-    with urlopen(Request(url, headers=HEADERS), timeout=30) as response:  # noqa: S310
-        payload = json.loads(response.read().decode("utf-8"))
-    time.sleep(0.13)
-    return payload
+    for attempt in range(attempts):
+        wait_for_request_slot()
+        try:
+            with urlopen(Request(url, headers=HEADERS), timeout=30) as response:  # noqa: S310
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            if exc.code not in {429, 500, 502, 503, 504} or attempt + 1 >= attempts:
+                raise
+            retry_after = exc.headers.get("Retry-After", "1") if exc.headers else "1"
+            try:
+                retry_delay = float(retry_after)
+            except (TypeError, ValueError):
+                retry_delay = 1.0
+            time.sleep(max(1.0, retry_delay) * (attempt + 1))
+        except (URLError, TimeoutError):
+            if attempt + 1 >= attempts:
+                raise
+            time.sleep(min(2 ** (attempt + 1), 12))
 
 
 def parse_time(value: str | None) -> datetime | None:

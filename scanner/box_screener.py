@@ -36,6 +36,7 @@ try:
 except ImportError:  # 시세 스캔은 계속하고 HTML 차트만 생략한다.
     go = None
     make_subplots = None
+from upbit_rate_limit import wait_for_request_slot
 from strategy_rules import LIVE_CHASE_PCT, MIN_TARGET1_RR, build_trade_plan, execution_gate
 from timeframe_rules import multi_timeframe_gate
 from overtrade_rules import evaluate_overtrade, load_trade_history
@@ -109,6 +110,7 @@ def upbit_get(path: str, params: Optional[dict] = None, *, attempts: int = 5, la
             query = urlencode(params or {})
             request_url = f"{url}?{query}" if query else url
             request = Request(request_url, headers=HTTP_HEADERS)
+            wait_for_request_slot(API_INTERVAL)
             with urlopen(request, timeout=30) as response:  # noqa: S310 - 고정된 공식 API 호스트
                 payload = json.loads(response.read().decode("utf-8"))
                 remaining = _remaining_sec(response.headers.get("Remaining-Req", ""))
@@ -505,7 +507,9 @@ def scan_g_type(universe: pd.DataFrame, frames: Dict[str, pd.DataFrame]) -> List
 # G_TYPE_4H_END
 
 
-def collect_daily_data(universe: pd.DataFrame) -> Tuple[Dict[str, pd.DataFrame], Dict[str, str], List[str]]:
+def collect_daily_data(
+    universe: pd.DataFrame, *, min_candles: int = MIN_DAILY_CANDLES
+) -> Tuple[Dict[str, pd.DataFrame], Dict[str, str], List[str]]:
     frames: Dict[str, pd.DataFrame] = {}
     sources: Dict[str, str] = {}
     failed: List[str] = []
@@ -514,7 +518,7 @@ def collect_daily_data(universe: pd.DataFrame) -> Tuple[Dict[str, pd.DataFrame],
         code = str(row["Code"])
         try:
             frame = fetch_daily_candles(code)
-            if len(frame) >= MIN_DAILY_CANDLES:
+            if len(frame) >= min_candles:
                 frames[code] = frame
                 sources[code] = "Upbit Quotation API / candles/days"
             else:
@@ -1300,10 +1304,13 @@ def write_outputs(
     intraday_frames: Dict[str, Dict[int, pd.DataFrame]],
     intraday_failed: List[str],
 ) -> None:
-    if not records:
-        raise ScanError("선별된 후보가 0페어입니다.")
-
-    market_date = max(r["데이터기준일"] for r in records)
+    # An empty pattern match is a successful scan when daily collection passed.
+    # Do not abort the D/E/F/G/H pipeline or leave yesterday's ABC candidates live.
+    valid_frames = [frame for frame in frames.values() if not frame.empty]
+    if not valid_frames:
+        raise ScanError("출력할 정상 일봉 데이터가 없습니다.")
+    market_date = (max(r["데이터기준일"] for r in records) if records else
+                   max(pd.Timestamp(frame.index.max()).date().isoformat() for frame in valid_frames))
     generated_at = datetime.now(KST).isoformat(timespec="seconds")
     market_names = {
         str(row["Code"]): {"korean_name": str(row["Name"]), "english_name": str(row["EnglishName"])}
@@ -1457,7 +1464,9 @@ def main() -> int:
         # G형은 거래대금으로 선필터링하지 않는다.
         # 업비트 KRW 전체(경보/주의 제외는 유지)를 별도 스캔해 초기 장악형을 놓치지 않는다.
         g_universe = fetch_universe(min_trade_amount=None)
-        g_frames, _, _ = collect_daily_data(g_universe)
+        # G/H classifiers require 100 completed bars, unlike the 220-bar ABC scan.
+        # Applying the ABC history floor here silently excluded newly listed pairs.
+        g_frames, _, _ = collect_daily_data(g_universe, min_candles=100)
         g_records = scan_g_type(g_universe, g_frames)
         G_TYPE_OUTPUT.write_text(json.dumps(g_records, ensure_ascii=False, indent=2), encoding="utf-8")
         from h_breakout import scan_h_breakout

@@ -11,6 +11,7 @@ import json
 import math
 import os
 import statistics
+import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -19,6 +20,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 OUT = ROOT / "outputs" / "binance"
 HISTORY_DIR = ROOT / "history" / "binance"
 LATEST = OUT / "latest.json"
@@ -26,7 +28,8 @@ SNAPSHOTS = HISTORY_DIR / "snapshots.json"
 
 API = os.getenv("BINANCE_SPOT_API", "https://data-api.binance.vision/api/v3")
 MIN_QUOTE_VOLUME = float(os.getenv("BINANCE_MIN_24H_QUOTE_VOLUME", "2000000"))
-MAX_SYMBOLS = max(30, min(180, int(os.getenv("BINANCE_MAX_SYMBOLS", "120"))))
+_configured_symbol_limit = int(os.getenv("BINANCE_MAX_SYMBOLS", "0"))
+MAX_SYMBOLS = _configured_symbol_limit if _configured_symbol_limit > 0 else None
 REQUEST_INTERVAL = float(os.getenv("BINANCE_API_INTERVAL", "0.035"))
 KST = timezone(timedelta(hours=9))
 HEADERS = {"Accept": "application/json", "User-Agent": "okotan-binance-spot/1.0"}
@@ -34,6 +37,8 @@ HEADERS = {"Accept": "application/json", "User-Agent": "okotan-binance-spot/1.0"
 STABLE_BASES = {
     "USDC", "FDUSD", "TUSD", "USDP", "DAI", "EUR", "AEUR", "EURI", "TRY", "BRL", "GBP",
     "JPY", "RUB", "UAH", "BIDR", "IDRT", "BVND", "NGN", "ZAR", "PLN", "RON", "ARS",
+    "USDT", "USDS", "USD1", "USDG", "USDE", "USDD", "PYUSD", "RLUSD",
+    "EURC", "EURCV", "GUSD", "FRAX", "LUSD", "UST", "USTC",
 }
 LEVERAGED_SUFFIXES = ("UP", "DOWN", "BULL", "BEAR")
 
@@ -47,6 +52,7 @@ GATE_RULES = {
 }
 for _stage, _code in {"M0": "BLOCK", "M1": "WATCH", "M2": "CONDITIONAL", "M3": "ALLOW", "M4": "ALLOW", "M5": "PROTECT"}.items():
     GATE_RULES[_stage]["H"] = _code
+    GATE_RULES[_stage]["F"] = _code
 GATE_LABELS = {"ALLOW": "진입 허용", "CONDITIONAL": "조건부", "WATCH": "관찰", "BLOCK": "신규 금지", "PROTECT": "익절 우선"}
 STAGE_INFO = {
     "M0": ("위험장", 0), "M1": ("BTC만 강함", 20), "M2": ("알트 준비", 35),
@@ -304,43 +310,34 @@ def scan_c(row: dict, d: list[dict], h4: list[dict]) -> dict | None:
 
 
 def scan_d(row: dict, d: list[dict], h4: list[dict]) -> dict | None:
-    if len(d) < 70 or len(h4) < 12:
+    """Use the shared pure D scorer/lifecycle with Binance-only completed bars."""
+    from scanner.pre_breakout_reclaim import analyze
+    def adapt(rows):
+        return [{**x, "time": datetime.fromtimestamp(x["open_time"]/1000, timezone.utc)
+                 .astimezone(KST).isoformat()} for x in rows]
+    result = analyze(row["symbol"], adapt(d[-120:]), adapt(h4[-100:]))
+    if result["status"] in {"제외", "자료부족", "오류"}:
         return None
-    base = d[-23:-3]
-    earlier = d[-63:-23]
-    impulse = d[-3:]
-    base_low = min(x["low"] for x in base)
-    base_high = max(x["high"] for x in base)
-    base_mid = (base_low + base_high) / 2
-    base_width = pct(base_high, base_low)
-    prior_high = max(x["high"] for x in earlier)
-    decline = max(0, (1 - base_mid / prior_high) * 100)
-    med = max(median([x["volume"] for x in base]), 1e-9)
-    volume_multiple = max(x["volume"] for x in impulse) / med
-    if decline < 15 or base_width > 20 or volume_multiple < 2.2:
-        return None
-    lower = base_high
-    overhead = sorted(x["high"] for x in earlier if x["high"] > lower * 1.04)
-    upper = quantile(overhead, 0.30) if overhead else lower * 1.10
-    current = h4[-1]["close"]
-    closes = [x["close"] for x in h4[-12:]]
-    if current < lower * 0.94:
-        stage, action = "D0", "관찰"
-    elif any(c >= upper for c in closes) and current >= upper:
-        stage, action = "D3", "진입 검토"
-    elif any(c >= lower for c in closes):
-        retest = any(x["low"] <= lower * 1.03 and x["close"] >= lower for x in h4[-8:])
-        stage, action = ("D2", "진입 검토") if retest else ("D1", "확인 대기")
-    else:
-        stage, action = "D0", "관찰"
-    entry_low = lower
-    entry_high = min(lower * 1.035, (upper + lower) / 2)
-    stop = min(lower * 0.975, min(x["low"] for x in h4[-6:]) * 0.985)
-    target = upper
-    score = 4.9 + min(1.5, decline / 20) + min(1.6, volume_multiple / 2.5) + (1.5 if stage in {"D2", "D3"} else 0.5) + (0.5 if base_width <= 14 else 0)
-    return candidate(row["symbol"], "D", stage, score, action, current, entry_low, entry_high, stop, target,
-                     row["tick"], f"하락 {decline:.1f}% 뒤 {len(base)}일 압축 · 폭 {base_width:.1f}% · 거래량 {volume_multiple:.1f}배",
-                     [x["close"] for x in h4], {"lower": lower, "upper": upper})
+    tick = row["tick"]
+    status = result["status"]
+    action = {"진입확인":"진입 검토", "선매수감시":"확인 대기", "준비":"진입가 대기", "늦음·추격금지":"추격 금지"}.get(status,"진입가 대기")
+    entry = result["aggressive_entry_zone"] or result["confirmation_entry_zone"]
+    return {
+        "market":row["symbol"],"name":row.get("base",row["symbol"]),"type":"D",
+        "stage":result["d_stage"],"status":status,"score":result["score"],
+        "d_stage":result["d_stage"],"d_stage_label":result["d_stage_label"],
+        "d_stage_reason":result["d_stage_reason"],"checks":result["checks"],
+        "pattern_action":action,"action":action,
+        "price":round_tick(result["last_completed_4h_close"],tick),
+        "entry":[round_tick(x,tick) for x in entry],
+        "stop":round_tick(result["hard_stop"],tick,"down"),
+        "targets":[round_tick(x,tick,"down") for x in result["targets"]],
+        "rr":result["first_target_rr"],
+        "reason":" · ".join(k for k,v in result["checks"].items() if v),
+        "missing":result["missing_conditions"],
+        "spark":[round(x["close"],10) for x in h4[-30:]],
+        "extra":{"lower":result["lower_reclaim_level"],"upper":result["upper_break_level"]},
+    }
 
 
 def scan_e(row: dict, d: list[dict], h4: list[dict]) -> dict | None:
@@ -426,7 +423,8 @@ def _g_historical_boxes(d: list[dict], upto: int) -> list[dict]:
                 continue
             if sum(1 for x in closes if x>=mid)<max(4,int(length*.15)):
                 continue
-            boxes.append({"low":box_low,"high":box_high,"length":length,"inside":inside})
+            boxes.append({"low":box_low,"high":box_high,"length":length,"inside":inside,
+                          "start":end_i-length,"end":end_i-1})
     boxes.sort(key=lambda z:(z["low"],-z["length"],-z["inside"]))
     out=[]
     for box in boxes:
@@ -522,7 +520,7 @@ def scan_h(row: dict, d: list[dict]) -> dict | None:
     upper_floor = quantile([x["high"] for x in d[-185:-5]], .85)
     choices = []
 
-    def consider(low: float, high: float, strength: float):
+    def consider(low: float, high: float, strength: float, fallback: bool = False):
         if high < upper_floor or not 1.5 <= pct(last, high) <= 18:
             return
         # One of the last five completed bars first closed above the upper
@@ -530,12 +528,18 @@ def scan_h(row: dict, d: list[dict]) -> dict | None:
         for age in range(4, -1, -1):
             i = len(d) - 1 - age
             if d[i-1]["close"] <= high < d[i]["close"] and all(x["close"] > high for x in d[i:]):
-                choices.append(((strength, -age, -pct(last, high)), low, high, age))
+                rank = (-pct(last, high), strength, -age) if fallback else (strength, -age, -pct(last, high))
+                choices.append((rank, low, high, age))
                 break
 
-    for box in _g_historical_boxes(d[:-5], len(d)-5):
+    # Keep the same box windows and post-box resistance validation as Upbit.
+    # Truncating five bars before box discovery shifts every rolling window.
+    for box in _g_historical_boxes(d, len(d)):
         low, high = box["low"], box["high"]
-        if sum(x["close"] > high*1.025 for x in d[-60:-5]) > 4:
+        if box["end"] >= len(d)-6:
+            continue
+        closed = d[box["end"]+1:-5]
+        if len(closed) >= 12 and sum(x["close"] > high*1.025 for x in closed)/len(closed) > .15:
             continue
         consider(low, high, box["length"]*box["inside"])
     if not choices:
@@ -549,7 +553,7 @@ def scan_h(row: dict, d: list[dict]) -> dict | None:
                 continue
             low = quantile([x["low"] for x in d[min(touches):max(touches)+1]], .25)
             if .70 <= low/high <= .96:
-                consider(low, high, -(pct(last, high)))
+                consider(low, high, (max(touches)-min(touches))*min(1.0,len(touches)/4), fallback=True)
     if not choices:
         return None
     _, low, high, age = max(choices, key=lambda x:x[0])
@@ -573,6 +577,52 @@ def scan_h(row: dict, d: list[dict]) -> dict | None:
         "h_candle_date": datetime.fromtimestamp(d[-1]["close_time"]/1000, timezone.utc).astimezone(KST).strftime("%Y-%m-%d"),
         "extra": {},
     }
+
+
+def scan_f(row: dict, d: list[dict]) -> dict | None:
+    """Binance recent-high trend meeting its own older supply; no Upbit I/O."""
+    from scanner.global_supply import (upbit_new_high_trend, historical_supply_zone,
+                                      classify_stage, f2_zone_position)
+    if len(d) < 120:
+        return None
+    # The trend's horizon is explicit: Binance has a much longer listing history
+    # than a newly listed KRW pair. Compare the current 200-day cycle to older
+    # Binance supply rather than silently treating a 400-bar high as listing ATH.
+    trend = upbit_new_high_trend([
+        {"trade_price": x["close"], "high_price": x["high"], "low_price": x["low"]}
+        for x in d[-200:]
+    ])
+    if not trend:
+        return None
+    raw = [[x["open_time"], x["open"], x["high"], x["low"], x["close"],
+            x["volume"], x["close_time"]] for x in d]
+    current = d[-1]["close"]
+    zone = historical_supply_zone(raw, current)
+    if not zone:
+        return None
+    stage, label, missing = classify_stage(current, zone, raw)
+    low, high = zone["lower"], zone["upper"]
+    if stage == "F3":
+        entry_low, entry_high, stop, target = high*.99, high*1.02, high*.955, high+(high-low)*.70
+        action = "진입 검토"
+    else:
+        entry_low, entry_high, stop, target = low*.98, low*(1.03 if stage == "F2" else 1.02), low*.95, high
+        action = "확인 대기" if stage == "F2" else "진입가 대기"
+    item = candidate(row["symbol"], "F", stage,
+        min(10, 5+trend["upbit_rise_pct"]/50+zone["inside_ratio"]*2+zone["days"]/60),
+        action, current, entry_low, entry_high, stop, target, row["tick"],
+        f'Binance 최근 200일 고점권 상승 + {zone["start"]}~{zone["end"]} 과거 횡보 매물대',
+        [x["close"] for x in d])
+    if item is None:
+        return None
+    position = f2_zone_position(current, zone)
+    item.update({"status": label, "f_stage": stage, "f_stage_label": label,
+                 "global_zone": zone, "missing": missing,
+                 "f2_zone_position": position["label"] if stage == "F2" else None,
+                 "f2_zone_position_pct": position["ratio_pct"] if stage == "F2" else None,
+                 "f2_zone_mid": position["mid"], "trend_lookback_days": 200,
+                 "trend_basis": "BINANCE_200_DAY_HIGH"})
+    return item
 
 
 def btc_regime(btc_daily: list[dict], btc4: list[dict], universe: list[dict]) -> dict:
@@ -620,7 +670,7 @@ def btc_regime(btc_daily: list[dict], btc4: list[dict], universe: list[dict]) ->
             "correction": {"defense1": round(low + span * 0.45, 2), "defense2": round(low + span * 0.15, 2), "invalid": round(low * 0.98, 2)},
             "spark": [round(x["close"], 2) for x in btc4[-48:]],
         },
-        "gates": {t: {"code": GATE_RULES[stage][t], "label": GATE_LABELS[GATE_RULES[stage][t]]} for t in "ABCDEGH"},
+        "gates": {t: {"code": GATE_RULES[stage][t], "label": GATE_LABELS[GATE_RULES[stage][t]]} for t in "ABCDEFGH"},
     }
 
 
@@ -660,14 +710,17 @@ def scan() -> dict:
 
     found: list[dict] = []
     failures: list[str] = []
+    examined = {key: 0 for key in "ABCDEFGH"}
+    scope = {}
     for idx, row in enumerate(universe, start=1):
         symbol = row["symbol"]
         try:
-            daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 110)
+            daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 120)
             four = btc4 if symbol == "BTCUSDT" else fetch_klines(symbol, "4h", 100)
             if len(daily) < 50 or len(four) < 8:
                 continue
             for fn in (scan_a, scan_b, scan_c, scan_d, scan_e):
+                examined[fn.__name__[-1].upper()] += 1
                 item = fn(row, daily, four)
                 if item:
                     found.append(apply_gate(item, regime))
@@ -682,9 +735,11 @@ def scan() -> dict:
     for idx, row in enumerate(g_universe, start=1):
         symbol=row["symbol"]
         try:
-            daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 200)
-            for scan_fn in (scan_g, scan_h):
-                item = scan_fn(row, daily)
+            supply_daily = fetch_klines(symbol, "1d", 1000)
+            daily = supply_daily[-400:]
+            for scan_fn in (scan_f, scan_g, scan_h):
+                examined[scan_fn.__name__[-1].upper()] += 1
+                item = scan_fn(row, supply_daily if scan_fn is scan_f else daily)
                 if item:
                     found.append(apply_gate(item, regime))
                     if item["type"] == "G": g_found += 1
@@ -693,19 +748,25 @@ def scan() -> dict:
         if idx % 50 == 0:
             print(f"Binance G scan {idx}/{len(g_universe)} · G candidates {g_found}")
 
+    scope = {row["symbol"]: {"liquid_universe": row["symbol"] in by_symbol,
+             "quote_volume": row["quote_volume"], "F_G_H": "full_spot_universe"}
+             for row in g_universe}
     found.sort(key=lambda x: (
         x["type"] == "G" and x.get("stage") == "A급 · 오늘 첫 장악",
         x["action"] in {"진입 검토", "조건부 진입"},
         x["score"],
         float(x["rr"] or 0),
     ), reverse=True)
-    counts = {t: sum(1 for x in found if x["type"] == t) for t in "ABCDEGH"}
+    counts = {t: sum(1 for x in found if x["type"] == t) for t in "ABCDEFGH"}
     now = datetime.now(KST)
     completed_4h = datetime.fromtimestamp(btc4[-1]["close_time"] / 1000, timezone.utc).astimezone(KST).isoformat(timespec="seconds")
     result = {
         "generated_at": now.isoformat(timespec="seconds"), "basis_4h_end": completed_4h,
         "source": "BINANCE SPOT USDT", "universe_count": len(universe), "min_quote_volume": MIN_QUOTE_VOLUME, "g_universe_count": len(g_universe), "g_min_quote_volume": None,
-        "market_regime": regime, "counts": counts, "candidates": found, "failures": failures[:30],
+        "market_regime": regime, "counts": counts, "candidates": found, "failures": failures[:30], "failure_count": len(failures),
+        "scan_diagnostics": {"examined_counts": examined, "symbol_scope": scope,
+            "daily_lookback": {"A_B_C_D_E": 120, "G_H": 400, "F_supply": 1000, "F_trend": 200},
+            "liquid_universe_limit": MAX_SYMBOLS},
     }
     LATEST.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     try:

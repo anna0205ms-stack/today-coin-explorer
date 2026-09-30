@@ -1,4 +1,4 @@
-name: BINANCE Spot ABCDE
+name: BINANCE Spot A–H
 
 on:
   push:
@@ -6,6 +6,11 @@ on:
     paths:
       - ".github/workflows/binance-scan-and-pages.yml"
       - "scanner_binance/**"
+      - "scanner/h_breakout.py"
+      - "scanner/box_screener.py"
+      - "scanner/global_supply.py"
+      - "scanner/pre_breakout_reclaim.py"
+      - "scanner/upbit_rate_limit.py"
       - "scanner/rotation_position.py"
       - "scanner/rotation_position.js"
       - "scanner/rotation_position.css"
@@ -65,11 +70,11 @@ jobs:
         if: steps.guard.outputs.should_run == 'true'
         with:
           python-version: "3.12"
-      - name: Scan BINANCE Spot USDT A/B/C/D/E
+      - name: Scan BINANCE Spot USDT A–H
         if: steps.guard.outputs.should_run == 'true'
         env:
           BINANCE_MIN_24H_QUOTE_VOLUME: "2000000"
-          BINANCE_MAX_SYMBOLS: "120"
+          BINANCE_MAX_SYMBOLS: "0"
         run: python scanner_binance/binance_spot_scanner.py
       - name: Render BINANCE dashboard
         if: steps.guard.outputs.should_run == 'true'
