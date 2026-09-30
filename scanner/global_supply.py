@@ -12,6 +12,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+try:
+    from .pre_breakout_reclaim import api_get as paced_upbit_get
+except ImportError:
+    from pre_breakout_reclaim import api_get as paced_upbit_get
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
@@ -23,6 +27,8 @@ BINANCE_API = "https://data-api.binance.vision/api/v3"
 
 
 def get_json(url: str):
+    if url.startswith("https://api.upbit.com/v1/"):
+        return paced_upbit_get(url.removeprefix("https://api.upbit.com/v1"))
     with urlopen(Request(url, headers=HEADERS), timeout=25) as response:  # noqa: S310
         return json.loads(response.read().decode("utf-8"))
 

@@ -9,7 +9,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+try:
+    from .pre_breakout_reclaim import api_get as paced_upbit_get
+except ImportError:
+    from pre_breakout_reclaim import api_get as paced_upbit_get
 
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,10 +27,7 @@ def read() -> list[dict]:
 
 def fetch(market: str, count: int = 200) -> list[dict]:
     """최근 4시간봉을 받아 모든 미완료 24H/72H 구간에 재사용한다."""
-    url = API + "?" + urlencode({"market": market, "count": count})
-    with urlopen(Request(url, headers=HEADERS), timeout=25) as response:  # noqa: S310
-        rows = json.loads(response.read().decode("utf-8"))
-    time.sleep(0.13)
+    rows = paced_upbit_get("/candles/minutes/240", {"market": market, "count": count})
     return sorted(
         [{
             "at": datetime.fromisoformat(row["candle_date_time_kst"]).replace(tzinfo=KST),
