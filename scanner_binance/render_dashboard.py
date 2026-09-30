@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from concurrent.futures import ThreadPoolExecutor
 import json
 import sys
 from datetime import datetime, timedelta
@@ -79,7 +80,22 @@ def enrich_candidate_charts(snapshot: dict) -> bool:
     """UPBIT 후보 페이지와 같은 일봉/4H 상세 차트를 Binance API만으로 채운다."""
     candidates = snapshot.get("candidates") or []
     long_markets = {item.get("market") for item in candidates if item.get("type") in {"F", "G", "H"}}
-    cache: dict[str, dict] = {}
+    missing_markets = list(dict.fromkeys(
+        str(row.get("market")) for row in candidates if row.get("market")
+        and (not (row.get("charts") or {}).get("day") or not (row.get("charts") or {}).get("4h"))
+    ))
+
+    def load_charts(market):
+        try:
+            day = fetch_klines(market, "1d", 400 if market in long_markets else 80)
+            h4 = fetch_klines(market, "4h", 80)
+            return {"day": chart_rows(day), "4h": chart_rows(h4)}
+        except Exception as exc:
+            print(f"BINANCE chart enrichment skipped {market}: {exc}")
+            return {"day": [], "4h": []}
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        cache = dict(zip(missing_markets, pool.map(load_charts, missing_markets)))
     changed = False
     for row in candidates:
         market = str(row.get("market") or "")
@@ -87,14 +103,6 @@ def enrich_candidate_charts(snapshot: dict) -> bool:
             continue
         charts = row.get("charts") or {}
         if not charts.get("day") or not charts.get("4h"):
-            if market not in cache:
-                try:
-                    day = fetch_klines(market, "1d", 400 if market in long_markets else 80)
-                    h4 = fetch_klines(market, "4h", 80)
-                    cache[market] = {"day": chart_rows(day), "4h": chart_rows(h4)}
-                except Exception as exc:
-                    print(f"BINANCE chart enrichment skipped {market}: {exc}")
-                    cache[market] = {"day": [], "4h": []}
             row["charts"] = cache[market]
             changed = True
         if row.get("type") == "D":

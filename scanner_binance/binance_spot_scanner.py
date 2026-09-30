@@ -13,6 +13,8 @@ import os
 import statistics
 import sys
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -30,7 +32,10 @@ API = os.getenv("BINANCE_SPOT_API", "https://data-api.binance.vision/api/v3")
 MIN_QUOTE_VOLUME = float(os.getenv("BINANCE_MIN_24H_QUOTE_VOLUME", "2000000"))
 _configured_symbol_limit = int(os.getenv("BINANCE_MAX_SYMBOLS", "0"))
 MAX_SYMBOLS = _configured_symbol_limit if _configured_symbol_limit > 0 else None
-REQUEST_INTERVAL = float(os.getenv("BINANCE_API_INTERVAL", "0.035"))
+REQUEST_INTERVAL = max(0.05, float(os.getenv("BINANCE_API_INTERVAL", "0.05")))
+REQUEST_START_LOCK = threading.Lock()
+_next_request_start = 0.0
+SCAN_WORKERS = 4
 KST = timezone(timedelta(hours=9))
 HEADERS = {"Accept": "application/json", "User-Agent": "okotan-binance-spot/1.0"}
 
@@ -64,6 +69,33 @@ class ScanError(RuntimeError):
     pass
 
 
+def wait_for_request_start() -> None:
+    """Pace starts across every worker/retry; never hold the lock during I/O."""
+    global _next_request_start
+    with REQUEST_START_LOCK:
+        delay = _next_request_start - time.monotonic()
+        if delay > 0:
+            time.sleep(delay)
+        _next_request_start = time.monotonic() + REQUEST_INTERVAL
+
+
+def collect_market_frames(row: dict, btc_daily: list[dict], btc4: list[dict]):
+    symbol = row["symbol"]
+    try:
+        daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 120)
+        four = btc4 if symbol == "BTCUSDT" else fetch_klines(symbol, "4h", 100)
+        return row, daily, four, None
+    except Exception as exc:
+        return row, [], [], exc
+
+
+def collect_supply_frames(row: dict):
+    try:
+        return row, fetch_klines(row["symbol"], "1d", 1000), None
+    except Exception as exc:
+        return row, [], exc
+
+
 def api_get(path: str, params: dict | None = None, attempts: int = 5):
     url = API + path
     if params:
@@ -72,9 +104,9 @@ def api_get(path: str, params: dict | None = None, attempts: int = 5):
     for attempt in range(1, attempts + 1):
         try:
             req = Request(url, headers=HEADERS)
+            wait_for_request_start()
             with urlopen(req, timeout=30) as response:
                 payload = json.loads(response.read().decode("utf-8"))
-            time.sleep(REQUEST_INTERVAL)
             return payload
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
             last = exc
@@ -715,41 +747,47 @@ def scan() -> dict:
     failures: list[str] = []
     examined = {key: 0 for key in "ABCDEFGH"}
     scope = {}
-    for idx, row in enumerate(universe, start=1):
-        symbol = row["symbol"]
-        try:
-            daily = btc_daily if symbol == "BTCUSDT" else fetch_klines(symbol, "1d", 120)
-            four = btc4 if symbol == "BTCUSDT" else fetch_klines(symbol, "4h", 100)
-            if len(daily) < 50 or len(four) < 8:
-                continue
-            for fn in (scan_a, scan_b, scan_c, scan_d, scan_e):
-                examined[fn.__name__[-1].upper()] += 1
-                item = fn(row, daily, four)
-                if item:
-                    found.append(apply_gate(item, regime))
-        except Exception as exc:
-            failures.append(f"{symbol}: {exc}")
-        if idx % 20 == 0:
-            print(f"Binance scan {idx}/{len(universe)} · candidates {len(found)}")
+    # executor.map yields in universe order even when requests finish out of
+    # order. Classifiers and diagnostics remain on the main thread.
+    with ThreadPoolExecutor(max_workers=SCAN_WORKERS) as pool:
+        collected = pool.map(lambda row: collect_market_frames(row, btc_daily, btc4), universe)
+        for idx, (row, daily, four, collection_error) in enumerate(collected, start=1):
+            symbol = row["symbol"]
+            try:
+                if collection_error is not None:
+                    raise collection_error
+                if len(daily) < 50 or len(four) < 8:
+                    continue
+                for fn in (scan_a, scan_b, scan_c, scan_d, scan_e):
+                    examined[fn.__name__[-1].upper()] += 1
+                    item = fn(row, daily, four)
+                    if item:
+                        found.append(apply_gate(item, regime))
+            except Exception as exc:
+                failures.append(f"{symbol}: {exc}")
+            if idx % 20 == 0:
+                print(f"Binance scan {idx}/{len(universe)} · candidates {len(found)}")
 
-    # G형은 거래대금/상위 N 필터 없이 Binance Spot USDT 전체를 별도 스캔한다.
+    # F/G/H examine all Spot USDT pairs without the liquidity/rank filter.
     g_universe = fetch_universe(min_quote_volume=None, limit=None)
     g_found = 0
-    for idx, row in enumerate(g_universe, start=1):
-        symbol=row["symbol"]
-        try:
-            supply_daily = fetch_klines(symbol, "1d", 1000)
-            daily = supply_daily[-400:]
-            for scan_fn in (scan_f, scan_g, scan_h):
-                examined[scan_fn.__name__[-1].upper()] += 1
-                item = scan_fn(row, supply_daily if scan_fn is scan_f else daily)
-                if item:
-                    found.append(apply_gate(item, regime))
-                    if item["type"] == "G": g_found += 1
-        except Exception as exc:
-            failures.append(f"G {symbol}: {exc}")
-        if idx % 50 == 0:
-            print(f"Binance G scan {idx}/{len(g_universe)} · G candidates {g_found}")
+    with ThreadPoolExecutor(max_workers=SCAN_WORKERS) as pool:
+        for idx, (row, supply_daily, collection_error) in enumerate(pool.map(collect_supply_frames, g_universe), start=1):
+            symbol = row["symbol"]
+            try:
+                if collection_error is not None:
+                    raise collection_error
+                daily = supply_daily[-400:]
+                for scan_fn in (scan_f, scan_g, scan_h):
+                    examined[scan_fn.__name__[-1].upper()] += 1
+                    item = scan_fn(row, supply_daily if scan_fn is scan_f else daily)
+                    if item:
+                        found.append(apply_gate(item, regime))
+                        if item["type"] == "G": g_found += 1
+            except Exception as exc:
+                failures.append(f"G {symbol}: {exc}")
+            if idx % 50 == 0:
+                print(f"Binance G scan {idx}/{len(g_universe)} · G candidates {g_found}")
 
     scope = {row["symbol"]: {"liquid_universe": row["symbol"] in by_symbol,
              "quote_volume": row["quote_volume"], "F_G_H": "full_spot_universe"}
@@ -769,7 +807,8 @@ def scan() -> dict:
         "market_regime": regime, "counts": counts, "candidates": found, "failures": failures[:30], "failure_count": len(failures),
         "scan_diagnostics": {"examined_counts": examined, "symbol_scope": scope,
             "daily_lookback": {"A_B_C_D_E": 120, "G_H": 400, "F_supply": 1000, "F_trend": 200},
-            "liquid_universe_limit": MAX_SYMBOLS},
+            "liquid_universe_limit": MAX_SYMBOLS, "collection_workers": SCAN_WORKERS,
+            "request_start_interval_seconds": REQUEST_INTERVAL},
     }
     LATEST.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     try:

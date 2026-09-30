@@ -21,6 +21,7 @@ import os
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -514,22 +515,30 @@ def collect_daily_data(
     sources: Dict[str, str] = {}
     failed: List[str] = []
 
-    for idx, row in universe.iterrows():
-        code = str(row["Code"])
+    codes = [str(row["Code"]) for _, row in universe.iterrows()]
+
+    def collect_one(code: str):
         try:
             frame = fetch_daily_candles(code)
             if len(frame) >= min_candles:
+                return code, frame
+            logging.warning("%s 일봉 부족: %d개", code, len(frame))
+        except Exception as exc:  # noqa: BLE001
+            logging.warning("%s 일봉 수집 실패: %s", code, exc)
+        return code, None
+
+    # Four workers overlap network latency; the process-wide Upbit request
+    # limiter still spaces every request. map preserves universe ordering even
+    # if individual downloads complete out of order.
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for idx, (code, frame) in enumerate(pool.map(collect_one, codes), start=1):
+            if frame is not None:
                 frames[code] = frame
                 sources[code] = "Upbit Quotation API / candles/days"
             else:
                 failed.append(code)
-                logging.warning("%s 일봉 부족: %d개", code, len(frame))
-        except Exception as exc:  # noqa: BLE001
-            failed.append(code)
-            logging.warning("%s 일봉 수집 실패: %s", code, exc)
-
-        if (idx + 1) % 20 == 0 or idx + 1 == len(universe):
-            logging.info("일봉 수집: %d/%d / 성공 %d / 실패 %d", idx + 1, len(universe), len(frames), len(failed))
+            if idx % 20 == 0 or idx == len(codes):
+                logging.info("일봉 수집: %d/%d / 성공 %d / 실패 %d", idx, len(codes), len(frames), len(failed))
 
     if len(frames) < max(10, int(len(universe) * 0.5)):
         raise ScanError(f"일봉 확보 페어가 부족합니다: {len(frames)}/{len(universe)}")
