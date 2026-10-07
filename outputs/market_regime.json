@@ -1,49 +1,50 @@
 {
-  "generated_at": "2026-10-07T13:12:27+09:00",
-  "stage": "M0",
-  "name": "위험장",
-  "plain": "코인을 새로 사면 안 되는 장",
-  "confidence": 88,
-  "alt_entry_limit_pct": 0,
+  "generated_at": "2026-10-07T20:08:54+09:00",
+  "stage": "M2",
+  "name": "알트 준비",
+  "plain": "알트가 버티기 시작해 후보를 골라둘 장",
+  "confidence": 70,
+  "alt_entry_limit_pct": 35,
   "reasons": [
-    "알트 자금 동반 이탈: TOTAL2 -2.0% · OTHERS -2.5%",
-    "상위 10개 밖 알트 상승 비율 23% · 중앙값 -1.7%"
+    "BTC.D +0.00%p · TOTAL2 +0.0% · OTHERS -3.5%",
+    "알트 순환 확정 전 · 상위 10개 밖 알트 상승 비율 19% · 중앙값 -3.6%",
+    "BTC는 상단 과열 구간 · 알트 펌핑은 인정하되 추격 대신 눌림만 선별"
   ],
   "gates": {
     "A": {
-      "code": "BLOCK",
-      "label": "신규 금지",
-      "reason": "시장 하락에서 첫 눌림은 추가 하락 위험"
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "첫 눌림 지지 확인 후 작은 비중"
     },
     "B": {
-      "code": "BLOCK",
-      "label": "신규 금지",
-      "reason": "바닥 확인 전에는 추세반전으로 보지 않음"
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "바닥 방어와 고점 상승을 모두 확인"
     },
     "C": {
-      "code": "BLOCK",
-      "label": "신규 금지",
-      "reason": "돌파 실패 가능성이 높은 위험장"
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "돌파보다 재지지 확인을 우선"
     },
     "D": {
-      "code": "BLOCK",
-      "label": "신규 금지",
-      "reason": "재탈환이 나와도 시장 확인 전에는 대기"
+      "code": "WATCH",
+      "label": "관찰만",
+      "reason": "D1~D2 후보를 미리 선별"
     },
     "E": {
       "code": "CONDITIONAL",
       "label": "조건부",
-      "reason": "극단적 과매도와 반등 확인 때만 최소 비중"
+      "reason": "시장 추세 매매와 별도로 짧게"
     },
     "G": {
-      "code": "BLOCK",
-      "label": "신규 금지",
-      "reason": "시장 하락에서는 상위 박스 하단 지지도 쉽게 무너질 수 있음"
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "상위 박스 하단 지지 확인 후 짧은 박스 매매"
     },
     "H": {
-      "code": "BLOCK",
-      "label": "신규 금지",
-      "reason": "위험장에서는 상단 돌파 실패 가능성 확대"
+      "code": "CONDITIONAL",
+      "label": "조건부",
+      "reason": "돌파 뒤 상단 지지와 거래대금 확인"
     }
   },
   "data_status": "ok",
